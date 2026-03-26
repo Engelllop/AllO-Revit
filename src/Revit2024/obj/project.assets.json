@@ -1,0 +1,146 @@
+{
+  "version": 3,
+  "targets": {
+    ".NETFramework,Version=v4.8": {
+      "Autodesk.Revit.Sdk.Refs.2024/1.2.0": {
+        "type": "package",
+        "compile": {
+          "ref/net48/AdWindows.dll": {},
+          "ref/net48/PackageContentsParser.dll": {},
+          "ref/net48/RevitAPI.dll": {
+            "related": ".xml"
+          },
+          "ref/net48/RevitAPIBrowserUtils.dll": {
+            "related": ".xml"
+          },
+          "ref/net48/RevitAPIIFC.dll": {
+            "related": ".xml"
+          },
+          "ref/net48/RevitAPIMacros.dll": {
+            "related": ".xml"
+          },
+          "ref/net48/RevitAPIUI.dll": {
+            "related": ".xml"
+          },
+          "ref/net48/RevitAPIUIMacros.dll": {},
+          "ref/net48/RevitAddInUtility.dll": {},
+          "ref/net48/RevitNET.dll": {},
+          "ref/net48/UIFramework.dll": {}
+        }
+      },
+      "AllO.Shared/1.0.0": {
+        "type": "project",
+        "framework": ".NETFramework,Version=v4.8",
+        "compile": {
+          "bin/placeholder/AllO.Shared.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/AllO.Shared.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Autodesk.Revit.Sdk.Refs.2024/1.2.0": {
+      "sha512": "gMT8WzQneWuTxtzP2kf3nyH1GzX90zbZi/Y4OtYR6BQUCG2EoHJ/xhNe41OTlGZ/6UucPstlm18hFzK889nz/Q==",
+      "type": "package",
+      "path": "autodesk.revit.sdk.refs.2024/1.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.md",
+        "README.md",
+        "Revit.png",
+        "autodesk.revit.sdk.refs.2024.1.2.0.nupkg.sha512",
+        "autodesk.revit.sdk.refs.2024.nuspec",
+        "ref/net48/AdWindows.dll",
+        "ref/net48/PackageContentsParser.dll",
+        "ref/net48/RevitAPI.dll",
+        "ref/net48/RevitAPI.xml",
+        "ref/net48/RevitAPIBrowserUtils.dll",
+        "ref/net48/RevitAPIBrowserUtils.xml",
+        "ref/net48/RevitAPIIFC.dll",
+        "ref/net48/RevitAPIIFC.xml",
+        "ref/net48/RevitAPIMacros.dll",
+        "ref/net48/RevitAPIMacros.xml",
+        "ref/net48/RevitAPIUI.dll",
+        "ref/net48/RevitAPIUI.xml",
+        "ref/net48/RevitAPIUIMacros.dll",
+        "ref/net48/RevitAddInUtility.dll",
+        "ref/net48/RevitNET.dll",
+        "ref/net48/UIFramework.dll"
+      ]
+    },
+    "AllO.Shared/1.0.0": {
+      "type": "project",
+      "path": "../Shared/AllO.Shared.csproj",
+      "msbuildProject": "../Shared/AllO.Shared.csproj"
+    }
+  },
+  "projectFileDependencyGroups": {
+    ".NETFramework,Version=v4.8": [
+      "AllO.Shared >= 1.0.0",
+      "Autodesk.Revit.SDK.Refs.2024 >= *"
+    ]
+  },
+  "packageFolders": {
+    "C:\\Users\\Engelllop\\.nuget\\packages\\": {}
+  },
+  "project": {
+    "version": "1.0.0",
+    "restore": {
+      "projectUniqueName": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Revit2024\\AllO.csproj",
+      "projectName": "AllO",
+      "projectPath": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Revit2024\\AllO.csproj",
+      "packagesPath": "C:\\Users\\Engelllop\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Revit2024\\obj\\",
+      "projectStyle": "PackageReference",
+      "configFilePaths": [
+        "C:\\Users\\Engelllop\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+      ],
+      "originalTargetFrameworks": [
+        "net48"
+      ],
+      "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "https://api.nuget.org/v3/index.json": {}
+      },
+      "frameworks": {
+        "net48": {
+          "targetAlias": "net48",
+          "projectReferences": {
+            "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Shared\\AllO.Shared.csproj": {
+              "projectPath": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Shared\\AllO.Shared.csproj"
+            }
+          }
+        }
+      },
+      "warningProperties": {
+        "warnAsError": [
+          "NU1605"
+        ]
+      },
+      "restoreAuditProperties": {
+        "enableAudit": "true",
+        "auditLevel": "low",
+        "auditMode": "direct"
+      },
+      "SdkAnalysisLevel": "10.0.200"
+    },
+    "frameworks": {
+      "net48": {
+        "targetAlias": "net48",
+        "dependencies": {
+          "Autodesk.Revit.SDK.Refs.2024": {
+            "include": "Compile, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+            "suppressParent": "All",
+            "target": "Package",
+            "version": "[*, )"
+          }
+        },
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201\\RuntimeIdentifierGraph.json"
+      }
+    }
+  }
+}

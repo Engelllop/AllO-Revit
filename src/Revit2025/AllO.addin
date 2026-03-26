@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>AllO</Name>
+    <Assembly>AllO.dll</Assembly>
+    <FullClassName>AllO.Revit2025.App</FullClassName>
+    <ClientId>7f3e2a91-b4c8-4d6e-9a1f-5c7d8e0b3f62</ClientId>
+    <VendorId>AllO</VendorId>
+    <VendorDescription>AllO Revit Add-in</VendorDescription>
+  </AddIn>
+</RevitAddIns>
