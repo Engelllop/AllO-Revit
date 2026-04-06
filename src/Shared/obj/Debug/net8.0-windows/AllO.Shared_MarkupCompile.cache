@@ -4,17 +4,17 @@
 library
 C#
 .cs
-C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net8.0-windows\
+C:\Users\Engelllop\Documents\Nex\AllO\src\Shared\obj\Debug\net8.0-windows\
 AllO
 none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 
-8-388014732
+91787101141
 
-42448324772
-209-1499899770
-UI\Views\AlignWindow.xaml;UI\Views\ColorCoderWindow.xaml;UI\Views\ConnectorWindow.xaml;UI\Views\MainWindow.xaml;UI\Views\PublishWindow.xaml;UI\Views\SheetManagerWindow.xaml;UI\Views\SuperToolWindow.xaml;UI\Views\TableGenWindow.xaml;
+57-941360189
+2091932643074
+UI\Views\AlignWindow.xaml;UI\Views\ColorCoderWindow.xaml;UI\Views\ConnectorWindow.xaml;UI\Views\FamilyTransferWindow.xaml;UI\Views\MainWindow.xaml;UI\Views\PublishWindow.xaml;UI\Views\SheetManagerWindow.xaml;UI\Views\SuperToolWindow.xaml;UI\Views\TableGenWindow.xaml;
 
 False
 

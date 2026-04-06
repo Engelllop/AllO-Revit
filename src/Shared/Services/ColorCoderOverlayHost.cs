@@ -8,12 +8,19 @@ using AppServicesApplication = Autodesk.Revit.ApplicationServices.Application;
 namespace AllO.Services;
 
 /// <summary>
-/// Manages semi-transparent overlays on top of each open Revit UIView.
+/// Manages semi-transparent overlays on top of each open Revit UIView drawing rectangle.
 /// </summary>
+/// <remarks>
+/// pyRevit "Tab Coloring" uses <c>DocumentTabEventUtils</c> from the IronPython-bound <c>pyrevit.runtime</c> assembly
+/// (see <c>pyrevit/revit/tabs.py</c>) to paint native document tabs. That API is not part of the public Revit SDK and is
+/// not shipped as a standalone reference we can call from AllO without bundling pyRevit's runtime DLLs and matching Revit versions.
+/// </remarks>
 public static class ColorCoderOverlayHost
 {
     private static bool _registered;
     private static DispatcherTimer? _timer;
+    /// <summary>Coalesces rapid ViewActivated events so layout settles before recomputing strip positions.</summary>
+    private static DispatcherTimer? _debounceRefresh;
     private static readonly List<ColorCoderStripWindow> Overlays = new();
 
     /// <summary>Last UIApplication seen (set from commands / refresh).</summary>
@@ -24,7 +31,7 @@ public static class ColorCoderOverlayHost
         if (_registered) return;
         _registered = true;
 
-        application.ViewActivated += (_, _) => RefreshIfActive();
+        application.ViewActivated += (_, _) => ScheduleDebouncedRefresh();
         try
         {
             // Revit 2023/2024: use ControlledApplication (UIControlledApplication.Application is newer).
@@ -42,6 +49,30 @@ public static class ColorCoderOverlayHost
             IsEnabled = false
         };
         _timer.Tick += (_, _) => RefreshIfActive();
+
+        _debounceRefresh = new DispatcherTimer(DispatcherPriority.Background, Dispatcher.CurrentDispatcher)
+        {
+            Interval = TimeSpan.FromMilliseconds(95),
+            IsEnabled = false
+        };
+        _debounceRefresh.Tick += (_, _) =>
+        {
+            _debounceRefresh!.IsEnabled = false;
+            RefreshIfActive();
+        };
+    }
+
+    /// <summary>Waits briefly after a view switch so Revit finishes resizing UIView rectangles before we place strips.</summary>
+    private static void ScheduleDebouncedRefresh()
+    {
+        if (_debounceRefresh == null)
+        {
+            RefreshIfActive();
+            return;
+        }
+
+        _debounceRefresh.IsEnabled = false;
+        _debounceRefresh.IsEnabled = true;
     }
 
     public static void SetTimerEnabled(bool enabled)
@@ -149,6 +180,8 @@ public static class ColorCoderOverlayHost
     public static void Shutdown()
     {
         SetTimerEnabled(false);
+        if (_debounceRefresh != null)
+            _debounceRefresh.IsEnabled = false;
         ClearOverlays();
         LastUiApp = null;
     }

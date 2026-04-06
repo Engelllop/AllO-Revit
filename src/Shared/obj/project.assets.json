@@ -132,7 +132,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Engelllop\\.nuget\\packages\\": {}
+    "C:\\Users\\Engelllop\\AppData\\Local\\Temp\\cursor-sandbox-cache\\0237057bae3ae402259dc5a1aa610505\\nuget": {}
   },
   "project": {
     "version": "1.0.0",
@@ -140,7 +140,7 @@
       "projectUniqueName": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Shared\\AllO.Shared.csproj",
       "projectName": "AllO.Shared",
       "projectPath": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Shared\\AllO.Shared.csproj",
-      "packagesPath": "C:\\Users\\Engelllop\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\Engelllop\\AppData\\Local\\Temp\\cursor-sandbox-cache\\0237057bae3ae402259dc5a1aa610505\\nuget",
       "outputPath": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Shared\\obj\\",
       "projectStyle": "PackageReference",
       "crossTargeting": true,

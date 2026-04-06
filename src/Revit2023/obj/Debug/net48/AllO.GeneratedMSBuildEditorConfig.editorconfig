@@ -1,6 +1,6 @@
 is_global = true
 build_property.RootNamespace = AllO.Revit2023
-build_property.ProjectDir = C:\Users\Engelllop\Documents\AllO\src\Revit2023\
+build_property.ProjectDir = C:\Users\Engelllop\Documents\Nex\AllO\src\Revit2023\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
 build_property.CsWinRTUseWindowsUIXamlProjections = false

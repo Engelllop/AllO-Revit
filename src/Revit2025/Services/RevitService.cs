@@ -1562,7 +1562,7 @@ public class RevitService : IRevitService
                 if (view is ViewSchedule vs)
                 {
                     var grid = TableGenGridConverter.BuildGrid(data);
-                    FillKeyScheduleBody(vs, grid);
+                    FillKeyScheduleBody(Doc, vs, grid);
                 }
                 else
                 {
@@ -1640,9 +1640,8 @@ public class RevitService : IRevitService
                 }
 
                 ConfigureKeyScheduleFields(schedule);
-                Doc.Regenerate();
                 var grid = TableGenGridConverter.BuildGrid(data);
-                FillKeyScheduleBody(schedule, grid);
+                FillKeyScheduleBody(Doc, schedule, grid);
 
                 try
                 {
@@ -1673,8 +1672,10 @@ public class RevitService : IRevitService
             def.RemoveField(f.FieldId);
         }
 
+        // KEY_VALUE = "Key Value" column (key name). Required for key schedules; must align with Excel column 0.
         BuiltInParameter[] order =
         {
+            BuiltInParameter.KEY_VALUE,
             BuiltInParameter.ALL_MODEL_MARK,
             BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS,
             BuiltInParameter.ALL_MODEL_TYPE_COMMENTS,
@@ -1697,40 +1698,105 @@ public class RevitService : IRevitService
         }
     }
 
-    private static void ClearBodyRows(TableSectionData body)
+    /// <summary>Match body row count to Excel rows (key schedule API forbids SetCellText on body — use key elements).</summary>
+    private static void EnsureKeyScheduleBodyRowCount(TableSectionData body, int desiredRows)
     {
-        while (body.NumberOfRows > 0)
+        if (desiredRows < 1) return;
+        while (body.NumberOfRows > desiredRows)
         {
-            try { body.RemoveRow(body.FirstRowNumber); }
+            try { body.RemoveRow(body.LastRowNumber); }
             catch { break; }
         }
+
+        while (body.NumberOfRows < desiredRows)
+            body.InsertRow(body.FirstRowNumber + body.NumberOfRows);
     }
 
-    private static void FillKeyScheduleBody(ViewSchedule schedule, string[,] grid)
+    private static void TrySetKeyScheduleParameter(Parameter? p, string value)
+    {
+        if (p == null || p.IsReadOnly || string.IsNullOrEmpty(value)) return;
+        try
+        {
+            switch (p.StorageType)
+            {
+                case StorageType.String:
+                    p.Set(value);
+                    break;
+                case StorageType.Double:
+                    if (double.TryParse(value, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out double d))
+                        p.Set(d);
+                    break;
+                case StorageType.Integer:
+                    if (int.TryParse(value, out int i)) p.Set(i);
+                    break;
+                default:
+                    p.SetValueString(value);
+                    break;
+            }
+        }
+        catch { /* wrong storage / units */ }
+    }
+
+    /// <summary>
+    /// Key schedule body cells cannot use <see cref="TableSectionData.SetCellText"/> (Revit forbids it like standard schedules).
+    /// Rows are created with <see cref="TableSectionData.InsertRow"/>; values are written to the per-row key elements
+    /// (elements with <see cref="FilteredElementCollector.OwnedByView"/> = schedule).
+    /// </summary>
+    private static void FillKeyScheduleBody(Document doc, ViewSchedule schedule, string[,] grid)
     {
         int fieldCount = schedule.Definition.GetFieldCount();
         if (fieldCount == 0 || grid.GetLength(0) == 0) return;
 
-        TableData td = schedule.GetTableData();
-        TableSectionData body = td.GetSectionData(SectionType.Body);
-        ClearBodyRows(body);
-
+        TableSectionData body = schedule.GetTableData().GetSectionData(SectionType.Body);
         int rows = grid.GetLength(0);
-        for (int r = 0; r < rows; r++)
-            body.InsertRow(body.FirstRowNumber + body.NumberOfRows);
+        EnsureKeyScheduleBodyRowCount(body, rows);
 
-        for (int r = 0; r < rows; r++)
+        doc.Regenerate();
+
+        ScheduleDefinition def = schedule.Definition;
+        var owned = new FilteredElementCollector(doc)
+            .OwnedByView(schedule.Id)
+            .WhereElementIsNotElementType()
+            .ToList();
+
+        var keys = owned.Where(e =>
+                e.Category != null && e.Category.Id.Value == (long)BuiltInCategory.OST_GenericModel)
+            .ToList();
+        if (keys.Count < rows)
+            keys = owned;
+
+        keys.Sort((a, b) => a.Id.Value.CompareTo(b.Id.Value));
+
+        if (keys.Count < rows)
+        {
+            Logging.Warning(
+                $"Key schedule '{schedule.Name}': need {rows} key rows but only {keys.Count} view-owned elements were found after InsertRow.");
+        }
+
+        int n = Math.Min(rows, keys.Count);
+        for (int r = 0; r < n; r++)
         {
             string[] rowVals = TableGenGridConverter.GetRowForSchedule(grid, r, fieldCount);
-            for (int c = 0; c < rowVals.Length && c < fieldCount; c++)
+            Element el = keys[r];
+            for (int c = 0; c < fieldCount && c < rowVals.Length; c++)
             {
-                try
+                ScheduleField field = def.GetField(c);
+                ElementId pid = field.ParameterId;
+                Parameter? p = el.LookupParameter(field.GetName());
+                if (p == null && pid != ElementId.InvalidElementId)
                 {
-                    body.SetCellText(body.FirstRowNumber + r, body.FirstColumnNumber + c, rowVals[c]);
+                    foreach (Parameter pr in el.Parameters)
+                    {
+                        if (pr.Id.Equals(pid)) { p = pr; break; }
+                    }
                 }
-                catch { }
+
+                TrySetKeyScheduleParameter(p, rowVals[c]);
             }
         }
+
+        doc.Regenerate();
     }
 
     private View? CreateDraftingView()

@@ -67,9 +67,9 @@ public class ColorCoderViewModel : ViewModelBase
     {
         get
         {
-            if (ModeFill) return "Colored strip along the top of each view window.";
-            if (ModeBorder) return "Colored frame around each view window.";
-            return "Colored strip along the bottom of each view window.";
+            if (ModeFill) return "Soft glow from the top edge (diffuse light wash, not a hard line).";
+            if (ModeBorder) return "Outline around the entire view window.";
+            return "Soft glow from the bottom edge.";
         }
     }
 
