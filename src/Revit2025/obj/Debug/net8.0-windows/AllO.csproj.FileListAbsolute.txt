@@ -13,3 +13,4 @@ C:\Users\Engelllop\Documents\AllO\src\Revit2025\obj\Debug\net8.0-windows\AllO.dl
 C:\Users\Engelllop\Documents\AllO\src\Revit2025\obj\Debug\net8.0-windows\refint\AllO.dll
 C:\Users\Engelllop\Documents\AllO\src\Revit2025\obj\Debug\net8.0-windows\AllO.pdb
 C:\Users\Engelllop\Documents\AllO\src\Revit2025\obj\Debug\net8.0-windows\ref\AllO.dll
+C:\Users\Engelllop\Documents\AllO\src\Revit2025\obj\Debug\net8.0-windows\AllO.sourcelink.json

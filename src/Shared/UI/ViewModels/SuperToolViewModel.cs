@@ -1,7 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
+using System.Windows.Data;
 using AllO.Core;
 using AllO.Models;
 using AllO.Services;
@@ -11,10 +12,10 @@ namespace AllO.UI.ViewModels;
 public class SuperToolViewModel : ViewModelBase
 {
     private readonly IRevitService _service;
+    private readonly Dispatcher _dispatcher;
 
     public string DocumentName { get; }
 
-    // ── Active Tab ──────────────────────────────────────────
     private int _selectedTabIndex;
     public int SelectedTabIndex
     {
@@ -24,7 +25,6 @@ public class SuperToolViewModel : ViewModelBase
             if (SetProperty(ref _selectedTabIndex, value))
             {
                 OnPropertyChanged(nameof(IsCropTab));
-                OnPropertyChanged(nameof(IsFamilyTab));
                 OnPropertyChanged(nameof(IsGridTab));
                 OnPropertyChanged(nameof(IsLevelTab));
                 LoadCurrentTab();
@@ -33,16 +33,35 @@ public class SuperToolViewModel : ViewModelBase
     }
 
     public bool IsCropTab => SelectedTabIndex == 0;
-    public bool IsFamilyTab => SelectedTabIndex == 1;
-    public bool IsGridTab => SelectedTabIndex == 2;
-    public bool IsLevelTab => SelectedTabIndex == 3;
+    public bool IsGridTab => SelectedTabIndex == 1;
+    public bool IsLevelTab => SelectedTabIndex == 2;
 
-    // ── Status ──────────────────────────────────────────────
     private string _statusMessage = "Ready";
     public string StatusMessage
     {
         get => _statusMessage;
         set => SetProperty(ref _statusMessage, value);
+    }
+
+    private bool _showProgress;
+    public bool ShowProgress
+    {
+        get => _showProgress;
+        set => SetProperty(ref _showProgress, value);
+    }
+
+    private double _progressValue;
+    public double ProgressValue
+    {
+        get => _progressValue;
+        set => SetProperty(ref _progressValue, value);
+    }
+
+    private double _progressMax = 100;
+    public double ProgressMax
+    {
+        get => _progressMax;
+        set => SetProperty(ref _progressMax, value);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -60,7 +79,11 @@ public class SuperToolViewModel : ViewModelBase
     public CropViewInfo? CropSourceView
     {
         get => _cropSourceView;
-        set => SetProperty(ref _cropSourceView, value);
+        set
+        {
+            if (SetProperty(ref _cropSourceView, value))
+                CommandManager.InvalidateRequerySuggested();
+        }
     }
 
     private string _cropSearch = string.Empty;
@@ -75,53 +98,26 @@ public class SuperToolViewModel : ViewModelBase
     public ICommand CropSelectNoneCommand { get; }
 
     // ═══════════════════════════════════════════════════════════
-    // FAMILIES
-    // ═══════════════════════════════════════════════════════════
-    public ObservableCollection<FamilyInfo> Families { get; } = new();
-    private ICollectionView? _familiesView;
-    public ICollectionView? FamiliesView
-    {
-        get => _familiesView;
-        private set => SetProperty(ref _familiesView, value);
-    }
-
-    private string _familySearch = string.Empty;
-    public string FamilySearch
-    {
-        get => _familySearch;
-        set { if (SetProperty(ref _familySearch, value)) FamiliesView?.Refresh(); }
-    }
-
-    private bool _showUnusedOnly;
-    public bool ShowUnusedOnly
-    {
-        get => _showUnusedOnly;
-        set { if (SetProperty(ref _showUnusedOnly, value)) FamiliesView?.Refresh(); }
-    }
-
-    public ICommand DeleteFamiliesCommand { get; }
-    public ICommand SelectUnusedCommand { get; }
-    public ICommand FamilySelectAllCommand { get; }
-    public ICommand FamilySelectNoneCommand { get; }
-
-    private int _familyCount;
-    public int FamilyCount
-    {
-        get => _familyCount;
-        set => SetProperty(ref _familyCount, value);
-    }
-
-    private int _unusedFamilyCount;
-    public int UnusedFamilyCount
-    {
-        get => _unusedFamilyCount;
-        set => SetProperty(ref _unusedFamilyCount, value);
-    }
-
-    // ═══════════════════════════════════════════════════════════
     // GRIDS
     // ═══════════════════════════════════════════════════════════
     public ObservableCollection<GridInfo> Grids { get; } = new();
+    public ObservableCollection<LinkDocumentInfo> ReferenceLinks { get; } = new();
+
+    private LinkDocumentInfo? _selectedReferenceLink;
+    /// <summary>Linked model used as reference for grid/level copy and mismatch checks.</summary>
+    public LinkDocumentInfo? SelectedReferenceLink
+    {
+        get => _selectedReferenceLink;
+        set
+        {
+            if (SetProperty(ref _selectedReferenceLink, value))
+            {
+                if (IsGridTab) ApplyGridSyncWarnings();
+                else if (IsLevelTab) ApplyLevelSyncWarnings();
+            }
+        }
+    }
+
     private ICollectionView? _gridsView;
     public ICollectionView? GridsView
     {
@@ -155,6 +151,9 @@ public class SuperToolViewModel : ViewModelBase
     public ICommand GridSelectAllCommand { get; }
     public ICommand GridSelectNoneCommand { get; }
     public ICommand ApplyGridPrefixSuffixCommand { get; }
+    public ICommand CopyGridsFromLinkCommand { get; }
+    public ICommand CopyNewGridsOnlyCommand { get; }
+    public ICommand SyncGridsFromLinkCommand { get; }
 
     // ═══════════════════════════════════════════════════════════
     // LEVELS
@@ -187,8 +186,10 @@ public class SuperToolViewModel : ViewModelBase
     public ICommand LevelSelectAllCommand { get; }
     public ICommand LevelSelectNoneCommand { get; }
     public ICommand ApplyElevationOffsetCommand { get; }
+    public ICommand CopyLevelsFromLinkCommand { get; }
+    public ICommand CopyNewLevelsOnlyCommand { get; }
+    public ICommand SyncLevelsFromLinkCommand { get; }
 
-    // ── Common ──────────────────────────────────────────────
     public ICommand RefreshCommand { get; }
     public ICommand CloseCommand { get; }
     public Action? CloseAction { get; set; }
@@ -196,25 +197,14 @@ public class SuperToolViewModel : ViewModelBase
     public SuperToolViewModel(IRevitService service)
     {
         _service = service;
+        _dispatcher = Dispatcher.CurrentDispatcher;
         DocumentName = _service.GetDocumentName();
 
-        // CopyCrop
         CopyCropCommand = new RelayCommand(_ => ExecuteCopyCrop(),
-            _ => CropSourceView != null && CropViews.Any(v => v.IsSelected));
+            _ => CropSourceView != null && CropViews.Any(v => v.IsSelected && v.ElementId != CropSourceView.ElementId));
         CropSelectAllCommand = new RelayCommand(_ => { foreach (var v in CropViews) v.IsSelected = true; });
         CropSelectNoneCommand = new RelayCommand(_ => { foreach (var v in CropViews) v.IsSelected = false; });
 
-        // Families
-        DeleteFamiliesCommand = new RelayCommand(_ => ExecuteDeleteFamilies(),
-            _ => Families.Any(f => f.IsSelected));
-        SelectUnusedCommand = new RelayCommand(_ =>
-        {
-            foreach (var f in Families) f.IsSelected = f.IsUnused;
-        });
-        FamilySelectAllCommand = new RelayCommand(_ => { foreach (var f in Families) f.IsSelected = true; });
-        FamilySelectNoneCommand = new RelayCommand(_ => { foreach (var f in Families) f.IsSelected = false; });
-
-        // Grids
         RenameGridsCommand = new RelayCommand(_ => ExecuteRenameGrids(),
             _ => Grids.Any(g => g.WillChange));
         DeleteGridsCommand = new RelayCommand(_ => ExecuteDeleteGrids(),
@@ -223,7 +213,13 @@ public class SuperToolViewModel : ViewModelBase
         GridSelectNoneCommand = new RelayCommand(_ => { foreach (var g in Grids) g.IsSelected = false; });
         ApplyGridPrefixSuffixCommand = new RelayCommand(_ => ApplyGridPrefixSuffix());
 
-        // Levels
+        CopyGridsFromLinkCommand = new RelayCommand(_ => ExecuteCopyGridsFromLink(false),
+            _ => SelectedReferenceLink != null && SelectedReferenceLink.IsLoaded);
+        CopyNewGridsOnlyCommand = new RelayCommand(_ => ExecuteCopyGridsFromLink(true),
+            _ => SelectedReferenceLink != null && SelectedReferenceLink.IsLoaded);
+        SyncGridsFromLinkCommand = new RelayCommand(_ => ExecuteSyncGridsFromLink(),
+            _ => SelectedReferenceLink != null && SelectedReferenceLink.IsLoaded);
+
         RenameLevelsCommand = new RelayCommand(_ => ExecuteRenameLevels(),
             _ => Levels.Any(l => l.WillRename));
         MoveLevelsCommand = new RelayCommand(_ => ExecuteMoveLevels(),
@@ -234,11 +230,37 @@ public class SuperToolViewModel : ViewModelBase
         LevelSelectNoneCommand = new RelayCommand(_ => { foreach (var l in Levels) l.IsSelected = false; });
         ApplyElevationOffsetCommand = new RelayCommand(_ => ApplyElevationOffset());
 
-        // Common
+        CopyLevelsFromLinkCommand = new RelayCommand(_ => ExecuteCopyLevelsFromLink(false),
+            _ => SelectedReferenceLink != null && SelectedReferenceLink.IsLoaded);
+        CopyNewLevelsOnlyCommand = new RelayCommand(_ => ExecuteCopyLevelsFromLink(true),
+            _ => SelectedReferenceLink != null && SelectedReferenceLink.IsLoaded);
+        SyncLevelsFromLinkCommand = new RelayCommand(_ => ExecuteSyncLevelsFromLink(),
+            _ => SelectedReferenceLink != null && SelectedReferenceLink.IsLoaded);
+
         RefreshCommand = new RelayCommand(_ => LoadCurrentTab());
         CloseCommand = new RelayCommand(_ => CloseAction?.Invoke());
 
         LoadCurrentTab();
+    }
+
+    private void ForceUiUpdate()
+    {
+        _dispatcher.Invoke(() => { }, DispatcherPriority.Render);
+    }
+
+    private void LoadReferenceLinks()
+    {
+        int? keepId = SelectedReferenceLink?.LinkInstanceId;
+        ReferenceLinks.Clear();
+        foreach (var link in _service.GetLinkedDocuments())
+            ReferenceLinks.Add(link);
+
+        if (keepId.HasValue)
+        {
+            SelectedReferenceLink = ReferenceLinks.FirstOrDefault(l => l.LinkInstanceId == keepId.Value);
+        }
+        if (SelectedReferenceLink == null && ReferenceLinks.Count > 0)
+            SelectedReferenceLink = ReferenceLinks.FirstOrDefault(l => l.IsLoaded) ?? ReferenceLinks[0];
     }
 
     private void LoadCurrentTab()
@@ -246,20 +268,20 @@ public class SuperToolViewModel : ViewModelBase
         switch (SelectedTabIndex)
         {
             case 0: LoadCropViews(); break;
-            case 1: LoadFamilies(); break;
-            case 2: LoadGrids(); break;
-            case 3: LoadLevels(); break;
+            case 1: LoadGrids(); break;
+            case 2: LoadLevels(); break;
         }
     }
-
-    // ── CopyCrop ────────────────────────────────────────────
 
     private void LoadCropViews()
     {
         CropViews.Clear();
         CropSourceView = null;
         foreach (var v in _service.GetCroppableViews())
+        {
+            v.Status = string.Empty;
             CropViews.Add(v);
+        }
 
         CropViewsView = CollectionViewSource.GetDefaultView(CropViews);
         CropViewsView.Filter = o =>
@@ -274,54 +296,51 @@ public class SuperToolViewModel : ViewModelBase
     private void ExecuteCopyCrop()
     {
         if (CropSourceView == null) return;
-        var targets = CropViews.Where(v => v.IsSelected && v.ElementId != CropSourceView.ElementId)
-            .Select(v => v.ElementId).ToList();
+        var targets = CropViews.Where(v => v.IsSelected && v.ElementId != CropSourceView.ElementId).ToList();
         if (targets.Count == 0) return;
 
-        int count = _service.CopyCropRegion(CropSourceView.ElementId, targets);
+        foreach (var v in targets)
+            v.Status = string.Empty;
 
-        foreach (var v in CropViews.Where(v => targets.Contains(v.ElementId)))
-            v.Status = "Copied";
+        ShowProgress = true;
+        ProgressMax = targets.Count;
+        ProgressValue = 0;
+        StatusMessage = "Applying crop region...";
+        ForceUiUpdate();
 
-        StatusMessage = $"Crop region copied to {count} view(s)";
-    }
-
-    // ── Families ────────────────────────────────────────────
-
-    private void LoadFamilies()
-    {
-        Families.Clear();
-        foreach (var f in _service.GetAllFamilies())
-            Families.Add(f);
-
-        FamiliesView = CollectionViewSource.GetDefaultView(Families);
-        FamiliesView.Filter = o =>
+        int okCount = 0;
+        int step = 0;
+        try
         {
-            if (o is not FamilyInfo f) return false;
-            if (ShowUnusedOnly && !f.IsUnused) return false;
-            if (string.IsNullOrWhiteSpace(FamilySearch)) return true;
-            var s = FamilySearch.Trim();
-            return f.FamilyName.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0
-                || f.Category.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0;
-        };
+            foreach (var v in targets)
+            {
+                step++;
+                v.Status = "Applying...";
+                StatusMessage = $"Copy crop: {v.Name} ({step}/{targets.Count})";
+                ProgressValue = step - 1;
+                ForceUiUpdate();
 
-        FamilyCount = Families.Count;
-        UnusedFamilyCount = Families.Count(f => f.IsUnused);
-        StatusMessage = $"{FamilyCount} families loaded ({UnusedFamilyCount} unused)";
+                bool ok = _service.CopyCropToSingleView(CropSourceView.ElementId, v.ElementId);
+                v.Status = ok ? "Done" : "Failed";
+                if (ok) okCount++;
+                ProgressValue = step;
+                ForceUiUpdate();
+            }
+
+            ProgressValue = ProgressMax;
+            StatusMessage = okCount == targets.Count
+                ? $"Crop applied to {okCount} view(s)."
+                : $"Crop applied to {okCount} of {targets.Count} view(s); some failed.";
+        }
+        finally
+        {
+            ShowProgress = false;
+        }
     }
-
-    private void ExecuteDeleteFamilies()
-    {
-        var ids = Families.Where(f => f.IsSelected).Select(f => f.ElementId).ToList();
-        int count = _service.DeleteFamilies(ids);
-        StatusMessage = $"{count} family(ies) deleted";
-        LoadFamilies();
-    }
-
-    // ── Grids ───────────────────────────────────────────────
 
     private void LoadGrids()
     {
+        LoadReferenceLinks();
         Grids.Clear();
         foreach (var g in _service.GetAllGrids())
         {
@@ -336,7 +355,43 @@ public class SuperToolViewModel : ViewModelBase
             if (string.IsNullOrWhiteSpace(GridSearch)) return true;
             return g.Name.IndexOf(GridSearch.Trim(), StringComparison.OrdinalIgnoreCase) >= 0;
         };
+        ApplyGridSyncWarnings();
         StatusMessage = $"{Grids.Count} grids loaded";
+    }
+
+    private void ApplyGridSyncWarnings()
+    {
+        if (SelectedReferenceLink == null || !SelectedReferenceLink.IsLoaded)
+        {
+            foreach (var g in Grids)
+            {
+                g.SyncWarning = null;
+                g.HasSyncMismatch = false;
+            }
+            return;
+        }
+
+        _service.PopulateGridSyncWarnings(SelectedReferenceLink.LinkInstanceId, Grids.ToList());
+    }
+
+    private void ExecuteCopyGridsFromLink(bool onlyNewNames)
+    {
+        if (SelectedReferenceLink == null || !SelectedReferenceLink.IsLoaded) return;
+        int n = _service.CopyGridsFromLink(SelectedReferenceLink.LinkInstanceId, onlyNewNames);
+        StatusMessage = onlyNewNames
+            ? $"Copied {n} new grid(s) from link (names not in host)."
+            : $"Copied {n} grid(s) from link.";
+        LoadGrids();
+    }
+
+    private void ExecuteSyncGridsFromLink()
+    {
+        if (SelectedReferenceLink == null || !SelectedReferenceLink.IsLoaded) return;
+        int n = _service.SyncGridsFromLink(SelectedReferenceLink.LinkInstanceId);
+        StatusMessage = n > 0
+            ? $"Synced {n} grid(s) with reference link (geometry updated)."
+            : "No grid geometry changes were needed.";
+        LoadGrids();
     }
 
     private void ApplyGridPrefixSuffix()
@@ -362,10 +417,9 @@ public class SuperToolViewModel : ViewModelBase
         LoadGrids();
     }
 
-    // ── Levels ──────────────────────────────────────────────
-
     private void LoadLevels()
     {
+        LoadReferenceLinks();
         Levels.Clear();
         foreach (var l in _service.GetAllLevels())
         {
@@ -381,7 +435,43 @@ public class SuperToolViewModel : ViewModelBase
             if (string.IsNullOrWhiteSpace(LevelSearch)) return true;
             return l.Name.IndexOf(LevelSearch.Trim(), StringComparison.OrdinalIgnoreCase) >= 0;
         };
+        ApplyLevelSyncWarnings();
         StatusMessage = $"{Levels.Count} levels loaded";
+    }
+
+    private void ApplyLevelSyncWarnings()
+    {
+        if (SelectedReferenceLink == null || !SelectedReferenceLink.IsLoaded)
+        {
+            foreach (var l in Levels)
+            {
+                l.SyncWarning = null;
+                l.HasSyncMismatch = false;
+            }
+            return;
+        }
+
+        _service.PopulateLevelSyncWarnings(SelectedReferenceLink.LinkInstanceId, Levels.ToList());
+    }
+
+    private void ExecuteCopyLevelsFromLink(bool onlyNewNames)
+    {
+        if (SelectedReferenceLink == null || !SelectedReferenceLink.IsLoaded) return;
+        int n = _service.CopyLevelsFromLink(SelectedReferenceLink.LinkInstanceId, onlyNewNames);
+        StatusMessage = onlyNewNames
+            ? $"Copied {n} new level(s) from link (names not in host)."
+            : $"Copied {n} level(s) from link.";
+        LoadLevels();
+    }
+
+    private void ExecuteSyncLevelsFromLink()
+    {
+        if (SelectedReferenceLink == null || !SelectedReferenceLink.IsLoaded) return;
+        int n = _service.SyncLevelsFromLink(SelectedReferenceLink.LinkInstanceId);
+        StatusMessage = n > 0
+            ? $"Moved {n} level(s) to match reference link elevations."
+            : "No level elevation changes were needed.";
+        LoadLevels();
     }
 
     private void ApplyElevationOffset()

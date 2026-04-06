@@ -23,7 +23,6 @@ C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net48\UI\Views\AlignWindo
 C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net48\UI\Views\ConnectorWindow.baml
 C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net48\UI\Views\AlignWindow.g.cs
 C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net48\UI\Views\ConnectorWindow.g.cs
-C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net48\UI\Views\QuickSearchWindow.baml
-C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net48\UI\Views\QuickSearchWindow.g.cs
 C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net48\UI\Views\TableGenWindow.baml
 C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net48\UI\Views\TableGenWindow.g.cs
+C:\Users\Engelllop\Documents\AllO\src\Shared\obj\Debug\net48\AllO.Shared.sourcelink.json

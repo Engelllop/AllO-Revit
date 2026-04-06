@@ -16,6 +16,8 @@ public class App : IExternalApplication
             AllO.Services.RevitServiceFactory.Creator = uiApp =>
                 new AllO.Revit2024.Services.RevitService(uiApp);
 
+            AllO.Services.ColorCoderOverlayHost.Register(application);
+
             application.CreateRibbonTab(TabName);
             RibbonPanel panel = application.CreateRibbonPanel(TabName, PanelName);
 
@@ -62,41 +64,41 @@ public class App : IExternalApplication
                 tg.LongDescription = "AllO Table Gen. Create schedule templates, manage existing schedules, and place them on sheets.";
             }
 
-            // Productivity panel
+            // Productivity panel (stacked buttons — one column)
             RibbonPanel prodPanel = application.CreateRibbonPanel(TabName, "Productivity");
 
-            // Color Coder button
             var colorBtn = new PushButtonData(
                 "ColorCoder", "Color\nCoder",
                 sharedAssemblyPath, "AllO.Commands.ColorCoderCommand");
-            if (prodPanel.AddItem(colorBtn) is PushButton cb)
-            {
-                cb.ToolTip = "Color-code views by document for multi-model workflows.";
-                cb.LongDescription = "AllO Color Coder. Assign colors to open documents to visually identify which model each view belongs to.";
-            }
-
-            // Align button
             var alignBtn = new PushButtonData(
                 "LevelAlign", "Level\nAlign",
                 sharedAssemblyPath, "AllO.Commands.AlignCommand");
-            if (prodPanel.AddItem(alignBtn) is PushButton ab)
-                ab.ToolTip = "Align MEP element elevation to a reference element.";
-
-            // Connector button
             var connBtn = new PushButtonData(
                 "Connector", "Connector",
                 sharedAssemblyPath, "AllO.Commands.ConnectorCommand");
-            if (prodPanel.AddItem(connBtn) is PushButton cn)
+
+            IList<RibbonItem> prodStack = prodPanel.AddStackedItems(colorBtn, alignBtn, connBtn);
+            if (prodStack.Count >= 1 && prodStack[0] is PushButton cb)
+            {
+                cb.ToolTip =
+                    "1st click: tint each open model’s views. 2nd click: settings. Reset in settings turns off.";
+                cb.LongDescription =
+                    "AllO Color Coder. First click enables per-document tint on view windows; second click opens settings. Reset removes overlays.";
+            }
+            if (prodStack.Count >= 2 && prodStack[1] is PushButton ab)
+                ab.ToolTip = "Align MEP element elevation to a reference element.";
+            if (prodStack.Count >= 3 && prodStack[2] is PushButton cn)
                 cn.ToolTip = "Select 2 MEP elements to align and connect them.";
 
-            // Quick Search button
-            var searchBtn = new PushButtonData(
-                "QuickSearch", "Quick\nSearch",
-                sharedAssemblyPath, "AllO.Commands.QuickSearchCommand");
-            if (prodPanel.AddItem(searchBtn) is PushButton qb)
+            var linkFamilyBtn = new PushButtonData(
+                "LinkFamily", "Link\nFamily",
+                sharedAssemblyPath, "AllO.Commands.FamilyTransferCommand");
+            if (prodPanel.AddItem(linkFamilyBtn) is PushButton lfb)
             {
-                qb.ToolTip = "Search elements by name, ID, category, family or parameter.";
-                qb.LongDescription = "AllO Quick Search. Spotlight-like search to find, select and isolate elements instantly.";
+                lfb.ToolTip =
+                    "Copy a family type from a linked Revit model into the host (all instances, same positions).";
+                lfb.LongDescription =
+                    "AllO Link Family. Pick a linked model, category, and family type; copies instances into the host with the link transform.";
             }
 
             return Result.Succeeded;
@@ -109,5 +111,9 @@ public class App : IExternalApplication
         }
     }
 
-    public Result OnShutdown(UIControlledApplication application) => Result.Succeeded;
+    public Result OnShutdown(UIControlledApplication application)
+    {
+        AllO.Services.ColorCoderOverlayHost.Shutdown();
+        return Result.Succeeded;
+    }
 }

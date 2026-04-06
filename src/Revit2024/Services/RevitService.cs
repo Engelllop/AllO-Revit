@@ -1,13 +1,14 @@
-using System.Linq;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using AllO.Models;
 using AllO.Services;
+using AllO.Helpers;
 
 namespace AllO.Revit2024.Services;
 
 /// <summary>
-/// Implementacion completa de IRevitService para Revit 2024.
+/// Implementacion de IRevitService para Revit 2024.
+/// Usa ElementId.Value (long) - API moderna sin deprecated warnings.
 /// </summary>
 public class RevitService : IRevitService
 {
@@ -30,32 +31,31 @@ public class RevitService : IRevitService
         catch { return "No document"; }
     }
 
-    // ── Sheets ──────────────────────────────────────────────────
-
     public List<SheetInfo> GetAllSheets()
     {
         if (Doc == null) return new List<SheetInfo>();
-
         return new FilteredElementCollector(Doc)
             .OfClass(typeof(ViewSheet))
             .Cast<ViewSheet>()
             .Select(sheet =>
             {
-                // Obtener el nombre y tipo del TitleBlock
                 string tbName = "No title block";
-                int tbTypeId = -1;
+                long tbTypeId = -1;
                 var tbInst = new FilteredElementCollector(Doc, sheet.Id)
-                    .OfCategory(BuiltInCategory.OST_TitleBlocks)
-                    .FirstOrDefault();
-                if (tbInst != null)
-                {
-                    tbName = tbInst.Name;
-                    tbTypeId = (int)tbInst.GetTypeId().Value;
-                }
+                    .OfCategory(BuiltInCategory.OST_TitleBlocks).FirstOrDefault();
+                if (tbInst != null) { tbName = tbInst.Name; tbTypeId = tbInst.GetTypeId().Value; }
 
-                string approvedBy = sheet.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY)?.AsString() ?? "";
-                string designedBy = sheet.get_Parameter(BuiltInParameter.SHEET_DESIGNED_BY)?.AsString() ?? "";
-                string issueDate = sheet.get_Parameter(BuiltInParameter.SHEET_ISSUE_DATE)?.AsString() ?? "";
+                string approvedBy = "";
+                var approvedParam = sheet.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
+                if (approvedParam != null) approvedBy = approvedParam.AsString() ?? "";
+
+                string designedBy = "";
+                var designedParam = sheet.get_Parameter(BuiltInParameter.SHEET_DESIGNED_BY);
+                if (designedParam != null) designedBy = designedParam.AsString() ?? "";
+
+                string issueDate = "";
+                var issueDateParam = sheet.get_Parameter(BuiltInParameter.SHEET_ISSUE_DATE);
+                if (issueDateParam != null) issueDate = issueDateParam.AsString() ?? "";
 
                 return new SheetInfo
                 {
@@ -64,36 +64,38 @@ public class RevitService : IRevitService
                     OriginalName = sheet.Name,
                     PreviewName = sheet.Name,
                     TitleBlockName = tbName,
-                    TitleBlockTypeId = tbTypeId,
+                    TitleBlockTypeId = (int)tbTypeId,
                     ApprovedBy = approvedBy,
                     DesignedBy = designedBy,
                     SheetIssueDate = issueDate
                 };
             })
-            .OrderBy(s => s.SheetNumber)
-            .ToList();
+            .OrderBy(s => s.SheetNumber).ToList();
     }
 
     public int RenameSheets(Dictionary<int, string> renames)
     {
         if (Doc == null) return 0;
         int count = 0;
-
         using var tx = new Transaction(Doc, "AllO - Rename Sheets");
         tx.Start();
         try
         {
             foreach (var kvp in renames)
             {
-                var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
-                if (sheet == null) continue;
-                var param = sheet.get_Parameter(BuiltInParameter.SHEET_NAME);
-                if (param != null && !param.IsReadOnly)
-                { param.Set(kvp.Value); count++; }
+                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+                var param = sheet?.get_Parameter(BuiltInParameter.SHEET_NAME);
+                if (param != null && !param.IsReadOnly) { param.Set(kvp.Value); count++; }
             }
             tx.Commit();
+            Logging.Debug($"Renamed {count} sheets");
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); throw; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to rename sheets", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            throw;
+        }
         return count;
     }
 
@@ -101,22 +103,25 @@ public class RevitService : IRevitService
     {
         if (Doc == null) return 0;
         int count = 0;
-
         using var tx = new Transaction(Doc, "AllO - Renumber Sheets");
         tx.Start();
         try
         {
             foreach (var kvp in renumbers)
             {
-                var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
-                if (sheet == null) continue;
-                var param = sheet.get_Parameter(BuiltInParameter.SHEET_NUMBER);
-                if (param != null && !param.IsReadOnly)
-                { param.Set(kvp.Value); count++; }
+                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+                var param = sheet?.get_Parameter(BuiltInParameter.SHEET_NUMBER);
+                if (param != null && !param.IsReadOnly) { param.Set(kvp.Value); count++; }
             }
             tx.Commit();
+            Logging.Debug($"Renumbered {count} sheets");
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); throw; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to renumber sheets", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            throw;
+        }
         return count;
     }
 
@@ -124,7 +129,6 @@ public class RevitService : IRevitService
     {
         if (Doc == null) return 0;
         int count = 0;
-
         using var tx = new Transaction(Doc, "AllO - Delete Sheets");
         tx.Start();
         try
@@ -132,12 +136,17 @@ public class RevitService : IRevitService
             foreach (var id in elementIds)
             {
                 var eid = new ElementId((long)id);
-                if (Doc.GetElement(eid) != null)
-                { Doc.Delete(eid); count++; }
+                if (Doc.GetElement(eid) != null) { Doc.Delete(eid); count++; }
             }
             tx.Commit();
+            Logging.Debug($"Deleted {count} sheets");
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); throw; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to delete sheets", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            throw;
+        }
         return count;
     }
 
@@ -145,7 +154,6 @@ public class RevitService : IRevitService
     {
         if (Doc == null) return new List<int>();
         var created = new List<int>();
-
         using var tx = new Transaction(Doc, "AllO - Create Sheets");
         tx.Start();
         try
@@ -159,8 +167,14 @@ public class RevitService : IRevitService
                 created.Add((int)sheet.Id.Value);
             }
             tx.Commit();
+            Logging.Debug($"Created {created.Count} sheets");
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); throw; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to create sheets", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            throw;
+        }
         return created;
     }
 
@@ -168,7 +182,6 @@ public class RevitService : IRevitService
     {
         if (Doc == null) return 0;
         int count = 0;
-
         using var tx = new Transaction(Doc, "AllO - Duplicate Sheets");
         tx.Start();
         try
@@ -177,23 +190,24 @@ public class RevitService : IRevitService
             {
                 var original = Doc.GetElement(new ElementId((long)id)) as ViewSheet;
                 if (original == null) continue;
-
-                // Buscar el TitleBlock del sheet original
                 var tbInstance = new FilteredElementCollector(Doc, original.Id)
-                    .OfCategory(BuiltInCategory.OST_TitleBlocks)
-                    .FirstOrDefault();
-
+                    .OfCategory(BuiltInCategory.OST_TitleBlocks).FirstOrDefault();
                 ElementId tbTypeId = tbInstance?.GetTypeId() ?? ElementId.InvalidElementId;
                 if (tbTypeId == ElementId.InvalidElementId) continue;
-
                 var newSheet = ViewSheet.Create(Doc, tbTypeId);
                 newSheet.SheetNumber = original.SheetNumber + " - Copy";
                 newSheet.Name = original.Name + " (Copy)";
                 count++;
             }
             tx.Commit();
+            Logging.Debug($"Duplicated {count} sheets");
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); throw; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to duplicate sheets", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            throw;
+        }
         return count;
     }
 
@@ -206,25 +220,25 @@ public class RevitService : IRevitService
         {
             var sheet = Doc.GetElement(new ElementId((long)sheetElementId)) as ViewSheet;
             if (sheet == null) { tx.RollBack(); return 0; }
-
             var tbInstance = new FilteredElementCollector(Doc, sheet.Id)
-                .OfCategory(BuiltInCategory.OST_TitleBlocks)
-                .FirstOrDefault();
+                .OfCategory(BuiltInCategory.OST_TitleBlocks).FirstOrDefault();
             if (tbInstance == null) { tx.RollBack(); return 0; }
-
             tbInstance.ChangeTypeId(new ElementId((long)newTitleBlockTypeId));
             tx.Commit();
+            Logging.Debug($"Changed title block for sheet {sheetElementId}");
             return 1;
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); return 0; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to change title block", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            return 0;
+        }
     }
-
-    // ── TitleBlocks ─────────────────────────────────────────────
 
     public List<TitleBlockInfo> GetTitleBlocks()
     {
         if (Doc == null) return new List<TitleBlockInfo>();
-
         return new FilteredElementCollector(Doc)
             .OfCategory(BuiltInCategory.OST_TitleBlocks)
             .WhereElementIsElementType()
@@ -235,8 +249,7 @@ public class RevitService : IRevitService
                 FamilyName = fs.FamilyName,
                 TypeName = fs.Name
             })
-            .OrderBy(t => t.FamilyName)
-            .ThenBy(t => t.TypeName)
+            .OrderBy(t => t.FamilyName).ThenBy(t => t.TypeName)
             .ToList();
     }
 
@@ -245,7 +258,6 @@ public class RevitService : IRevitService
     public List<ViewInfo> GetAllViews()
     {
         if (Doc == null) return new List<ViewInfo>();
-
         return new FilteredElementCollector(Doc)
             .OfClass(typeof(View))
             .Cast<View>()
@@ -260,15 +272,21 @@ public class RevitService : IRevitService
                 try { discipline = v.Discipline.ToString(); } catch { }
 
                 string scale = "";
-                try { scale = v.Scale > 0 ? "1:" + v.Scale.ToString() : ""; } catch { }
-
-                string templateName = "";
                 try
                 {
-                    if (v.ViewTemplateId != ElementId.InvalidElementId)
+                    var scaleParam = v.get_Parameter(BuiltInParameter.VIEW_SCALE);
+                    if (scaleParam != null) scale = "1 : " + scaleParam.AsInteger();
+                }
+                catch { }
+
+                string viewTemplateName = "";
+                try
+                {
+                    var templateId = v.ViewTemplateId;
+                    if (templateId != ElementId.InvalidElementId)
                     {
-                        var tmpl = Doc.GetElement(v.ViewTemplateId);
-                        if (tmpl != null) templateName = tmpl.Name;
+                        var template = Doc.GetElement(templateId) as View;
+                        if (template != null) viewTemplateName = template.Name;
                     }
                 }
                 catch { }
@@ -280,7 +298,7 @@ public class RevitService : IRevitService
                     ViewType = v.ViewType.ToString(),
                     Discipline = discipline,
                     Scale = scale,
-                    ViewTemplateName = templateName,
+                    ViewTemplateName = viewTemplateName,
                     SheetNumber = sheetNum
                 };
             })
@@ -302,8 +320,14 @@ public class RevitService : IRevitService
                 if (Doc.GetElement(eid) != null) { Doc.Delete(eid); count++; }
             }
             tx.Commit();
+            Logging.Debug($"Deleted {count} views");
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); throw; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to delete views", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            throw;
+        }
         return count;
     }
 
@@ -317,12 +341,18 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renames)
             {
-                var view = Doc.GetElement(new ElementId((long)kvp.Key)) as View;
+                var view = Doc.GetElement(new ElementId(kvp.Key)) as View;
                 if (view != null) { view.Name = kvp.Value; count++; }
             }
             tx.Commit();
+            Logging.Debug($"Renamed {count} views");
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); throw; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to rename views", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            throw;
+        }
         return count;
     }
 
@@ -331,7 +361,6 @@ public class RevitService : IRevitService
     public List<RevisionInfo> GetAllRevisions()
     {
         if (Doc == null) return new List<RevisionInfo>();
-
         return new FilteredElementCollector(Doc)
             .OfClass(typeof(Revision))
             .Cast<Revision>()
@@ -362,9 +391,15 @@ public class RevitService : IRevitService
             rev.IssuedBy = issuedBy;
             rev.IssuedTo = issuedTo;
             tx.Commit();
+            Logging.Debug($"Created revision: {description}");
             return (int)rev.Id.Value;
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); throw; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to create revision", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            throw;
+        }
     }
 
     public int DeleteRevisions(List<int> elementIds)
@@ -381,8 +416,14 @@ public class RevitService : IRevitService
                 if (Doc.GetElement(eid) != null) { Doc.Delete(eid); count++; }
             }
             tx.Commit();
+            Logging.Debug($"Deleted {count} revisions");
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); throw; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to delete revisions", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            throw;
+        }
         return count;
     }
 
@@ -395,15 +436,20 @@ public class RevitService : IRevitService
         {
             var rev = Doc.GetElement(new ElementId((long)elementId)) as Revision;
             if (rev == null) { tx.RollBack(); return 0; }
-
             rev.RevisionDate = date;
             rev.Description = description;
             rev.IssuedBy = issuedBy;
             rev.IssuedTo = issuedTo;
             tx.Commit();
+            Logging.Debug($"Updated revision {elementId}");
             return 1;
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); return 0; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to update revision", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            return 0;
+        }
     }
 
     public int ToggleRevisionIssued(int elementId)
@@ -415,12 +461,17 @@ public class RevitService : IRevitService
         {
             var rev = Doc.GetElement(new ElementId((long)elementId)) as Revision;
             if (rev == null) { tx.RollBack(); return 0; }
-
             rev.Issued = !rev.Issued;
             tx.Commit();
+            Logging.Debug($"Toggled revision {elementId} issued status to {rev.Issued}");
             return 1;
         }
-        catch { if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack(); return 0; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to toggle revision issued status", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            return 0;
+        }
     }
 
     // ── Publishing / Export ───────────────────────────────────
@@ -437,7 +488,8 @@ public class RevitService : IRevitService
                 SheetNumber = s.SheetNumber,
                 SheetName = s.Name,
                 IsSelected = true,
-                Status = "Pending"
+                Status = "Pending",
+                ParameterValues = ElementParameterHelper.CollectParameters(s)
             })
             .OrderBy(s => s.SheetNumber)
             .ToList();
@@ -466,9 +518,16 @@ public class RevitService : IRevitService
             options.FileName = fileName;
             options.Combine = false;
 
-            return Doc.Export(outputFolder, singleList, options);
+            var result = Doc.Export(outputFolder, singleList, options);
+            if (result) Logging.Debug($"Exported sheet {sheetElementId} to PDF");
+            else Logging.Warning($"Export to PDF failed for sheet {sheetElementId}");
+            return result;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            Logging.Error($"Export to PDF failed for sheet {sheetElementId}", ex);
+            return false;
+        }
     }
 
     public bool ExportSingleToDwg(int sheetElementId, string outputFolder, string namingPattern)
@@ -491,9 +550,16 @@ public class RevitService : IRevitService
                 fileName = fileName.Replace(c, '_');
 
             var dwgOptions = new DWGExportOptions();
-            return Doc.Export(outputFolder, fileName, singleList, dwgOptions);
+            var result = Doc.Export(outputFolder, fileName, singleList, dwgOptions);
+            if (result) Logging.Debug($"Exported sheet {sheetElementId} to DWG");
+            else Logging.Warning($"Export to DWG failed for sheet {sheetElementId}");
+            return result;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            Logging.Error($"Export to DWG failed for sheet {sheetElementId}", ex);
+            return false;
+        }
     }
 
     // ── CopyCrop ──────────────────────────────────────────────
@@ -520,109 +586,154 @@ public class RevitService : IRevitService
             .ToList();
     }
 
-    public int CopyCropRegion(int sourceViewId, List<int> targetViewIds)
+    public bool CopyCropToSingleView(int sourceViewId, int targetViewId)
     {
-        if (Doc == null) return 0;
+        if (Doc == null) return false;
         var sourceView = Doc.GetElement(new ElementId((long)sourceViewId)) as View;
-        if (sourceView == null || !sourceView.CropBoxActive) return 0;
+        if (sourceView == null || !sourceView.CropBoxActive) return false;
+
+        var target = Doc.GetElement(new ElementId((long)targetViewId)) as View;
+        if (target == null) return false;
 
         var sourceCrop = sourceView.CropBox;
-        int count = 0;
 
         using (var tx = new Transaction(Doc, "AllO: Copy Crop Region"))
         {
             tx.Start();
             try
             {
-                foreach (var id in targetViewIds)
-                {
-                    var target = Doc.GetElement(new ElementId((long)id)) as View;
-                    if (target == null) continue;
-                    try
-                    {
-                        target.CropBoxActive = true;
-                        target.CropBox = sourceCrop;
-                        target.CropBoxVisible = sourceView.CropBoxVisible;
-                        count++;
-                    }
-                    catch { }
-                }
+                target.CropBoxActive = true;
+                target.CropBox = sourceCrop;
+                target.CropBoxVisible = sourceView.CropBoxVisible;
                 tx.Commit();
+                Logging.Debug($"Copied crop region to view {targetViewId}");
+                return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Logging.Error("Failed to copy crop region", ex);
                 if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+                return false;
             }
         }
-        return count;
     }
 
-    // ── Families ──────────────────────────────────────────────
+    // ── Link family transfer (copy from link → host) ───────────
 
-    public List<FamilyInfo> GetAllFamilies()
+    public List<LinkDocumentInfo> GetLinkedDocuments()
     {
-        if (Doc == null) return new List<FamilyInfo>();
+        if (Doc == null) return new List<LinkDocumentInfo>();
         return new FilteredElementCollector(Doc)
-            .OfClass(typeof(Family))
-            .Cast<Family>()
-            .Select(f =>
+            .OfClass(typeof(RevitLinkInstance))
+            .Cast<RevitLinkInstance>()
+            .Select(li =>
             {
-                int instanceCount = 0;
-                try
+                Document? ld = li.GetLinkDocument();
+                return new LinkDocumentInfo
                 {
-                    foreach (var typeId in f.GetFamilySymbolIds())
-                    {
-                        instanceCount += new FilteredElementCollector(Doc)
-                            .WherePasses(new FamilyInstanceFilter(Doc, typeId))
-                            .GetElementCount();
-                    }
-                }
-                catch { }
-
-                return new FamilyInfo
-                {
-                    ElementId = (int)f.Id.Value,
-                    FamilyName = f.Name,
-                    Category = f.FamilyCategory?.Name ?? "Unknown",
-                    TypeCount = f.GetFamilySymbolIds().Count,
-                    InstanceCount = instanceCount,
-                    IsInPlace = f.IsInPlace
+                    LinkInstanceId = (int)li.Id.Value,
+                    Name = ld != null ? (string.IsNullOrEmpty(ld.Title) ? li.Name : ld.Title) : li.Name,
+                    Path = ld?.PathName ?? string.Empty,
+                    IsLoaded = ld != null
                 };
             })
-            .OrderBy(f => f.Category)
-            .ThenBy(f => f.FamilyName)
+            .OrderBy(x => x.Name)
             .ToList();
     }
 
-    public int DeleteFamilies(List<int> familyIds)
+    public List<LinkedCategoryInfo> GetCategoriesInLink(int linkInstanceId)
     {
-        if (Doc == null) return 0;
-        int count = 0;
-        using (var tx = new Transaction(Doc, "AllO: Delete Families"))
+        if (Doc == null) return new List<LinkedCategoryInfo>();
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return new List<LinkedCategoryInfo>();
+        Document? linkDoc = link.GetLinkDocument();
+        if (linkDoc == null) return new List<LinkedCategoryInfo>();
+
+        var map = new Dictionary<long, string>();
+        foreach (Family f in new FilteredElementCollector(linkDoc).OfClass(typeof(Family)).Cast<Family>())
         {
-            tx.Start();
-            try
-            {
-                foreach (var id in familyIds)
-                {
-                    try
-                    {
-                        Doc.Delete(new ElementId((long)id));
-                        count++;
-                    }
-                    catch { }
-                }
-                tx.Commit();
-            }
-            catch
-            {
-                if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
-            }
+            if (f.IsInPlace) continue;
+            Category? cat = f.FamilyCategory;
+            if (cat == null) continue;
+            long cid = cat.Id.Value;
+            if (!map.ContainsKey(cid))
+                map[cid] = cat.Name;
         }
-        return count;
+
+        return map.OrderBy(k => k.Value)
+            .Select(k => new LinkedCategoryInfo { CategoryId = k.Key, Name = k.Value })
+            .ToList();
     }
 
-    public int GetFamilyInstanceCount(int familyId) => 0;
+    public List<LinkFamilyTypeInfo> GetFamilyTypesInLinkCategory(int linkInstanceId, long categoryId)
+    {
+        if (Doc == null) return new List<LinkFamilyTypeInfo>();
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return new List<LinkFamilyTypeInfo>();
+        Document? linkDoc = link.GetLinkDocument();
+        if (linkDoc == null) return new List<LinkFamilyTypeInfo>();
+
+        var list = new List<LinkFamilyTypeInfo>();
+        foreach (Family f in new FilteredElementCollector(linkDoc).OfClass(typeof(Family)).Cast<Family>())
+        {
+            if (f.IsInPlace) continue;
+            if (f.FamilyCategory?.Id.Value != categoryId) continue;
+            foreach (ElementId fsId in f.GetFamilySymbolIds())
+            {
+                if (linkDoc.GetElement(fsId) is not FamilySymbol sym) continue;
+                list.Add(new LinkFamilyTypeInfo
+                {
+                    FamilySymbolId = sym.Id.Value,
+                    DisplayName = $"{f.Name} : {sym.Name}"
+                });
+            }
+        }
+
+        return list.OrderBy(x => x.DisplayName).ToList();
+    }
+
+    public int CopyFamilyInstancesFromLinkToHost(int linkInstanceId, long familySymbolId)
+    {
+        if (Doc == null) return 0;
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return 0;
+        Document? linkDoc = link.GetLinkDocument();
+        if (linkDoc == null) return 0;
+
+        if (linkDoc.GetElement(new ElementId(familySymbolId)) is not FamilySymbol sym) return 0;
+
+        var ids = new FilteredElementCollector(linkDoc)
+            .OfClass(typeof(FamilyInstance))
+            .Cast<FamilyInstance>()
+            .Where(fi => fi.GetTypeId() == sym.Id)
+            .Select(fi => fi.Id)
+            .ToList();
+
+        if (ids.Count == 0)
+        {
+            Logging.Warning("No instances of the selected type in the linked model.");
+            return 0;
+        }
+
+        using var tx = new Transaction(Doc, "AllO: Copy family instances from link");
+        tx.Start();
+        try
+        {
+            var opts = new CopyPasteOptions();
+            Transform t = link.GetTotalTransform();
+            ICollection<ElementId> copied = ElementTransformUtils.CopyElements(linkDoc, ids, Doc, t, opts);
+            tx.Commit();
+            int n = copied?.Count ?? 0;
+            Logging.Debug($"Copied {n} instance(s) from link to host");
+            return n;
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("CopyFamilyInstancesFromLinkToHost failed", ex);
+            if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+            throw;
+        }
+    }
 
     // ── Grids ─────────────────────────────────────────────────
 
@@ -649,7 +760,7 @@ public class RevitService : IRevitService
                     Name = g.Name,
                     NewName = g.Name,
                     Orientation = orientation,
-                    Length = Math.Round(length * 0.3048, 2) // feet to meters
+                    Length = UnitConverter.ToMeters(length)
                 };
             })
             .OrderBy(g => g.Name)
@@ -672,9 +783,11 @@ public class RevitService : IRevitService
                     try { grid.Name = kvp.Value; count++; } catch { }
                 }
                 tx.Commit();
+                Logging.Debug($"Renamed {count} grids");
             }
-            catch
+            catch (Exception ex)
             {
+                Logging.Error("Failed to rename grids", ex);
                 if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
             }
         }
@@ -695,10 +808,125 @@ public class RevitService : IRevitService
                     try { Doc.Delete(new ElementId((long)id)); count++; } catch { }
                 }
                 tx.Commit();
+                Logging.Debug($"Deleted {count} grids");
             }
-            catch
+            catch (Exception ex)
             {
+                Logging.Error("Failed to delete grids", ex);
                 if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+            }
+        }
+        return count;
+    }
+
+    public void PopulateGridSyncWarnings(int linkInstanceId, List<GridInfo> hostGrids)
+    {
+        if (Doc == null) return;
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return;
+        Document? linkDoc = link.GetLinkDocument();
+        if (linkDoc == null) return;
+        Transform t = link.GetTotalTransform();
+        var linkGrids = new FilteredElementCollector(linkDoc).OfClass(typeof(Grid)).Cast<Grid>()
+            .Where(g => g.Curve != null).GroupBy(g => g.Name).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+
+        const double tolFeet = 0.03;
+        foreach (var row in hostGrids)
+        {
+            row.SyncWarning = null;
+            row.HasSyncMismatch = false;
+            if (!linkGrids.TryGetValue(row.Name, out var lg) || lg.Curve == null) continue;
+            var hostEl = Doc.GetElement(new ElementId((long)row.ElementId)) as Grid;
+            if (hostEl?.Curve == null) continue;
+            Curve? cLink = lg.Curve.CreateTransformed(t);
+            if (!CurvesMatch(hostEl.Curve, cLink, tolFeet))
+            {
+                row.HasSyncMismatch = true;
+                row.SyncWarning = "Axis offset from reference link";
+            }
+        }
+    }
+
+    public int CopyGridsFromLink(int linkInstanceId, bool onlyNewNames)
+    {
+        if (Doc == null) return 0;
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return 0;
+        Document? linkDoc = link.GetLinkDocument();
+        if (linkDoc == null) return 0;
+
+        var linkGrids = new FilteredElementCollector(linkDoc).OfClass(typeof(Grid)).Cast<Grid>().ToList();
+        var hostNames = new HashSet<string>(
+            new FilteredElementCollector(Doc).OfClass(typeof(Grid)).Cast<Grid>().Select(g => g.Name),
+            StringComparer.Ordinal);
+
+        ICollection<ElementId> ids = onlyNewNames
+            ? linkGrids.Where(g => !hostNames.Contains(g.Name)).Select(g => g.Id).ToList()
+            : linkGrids.Select(g => g.Id).ToList();
+
+        if (ids.Count == 0) return 0;
+
+        using (var tx = new Transaction(Doc, "AllO: Copy grids from link"))
+        {
+            tx.Start();
+            try
+            {
+                var opts = new CopyPasteOptions();
+                var copied = ElementTransformUtils.CopyElements(linkDoc, ids, Doc, link.GetTotalTransform(), opts);
+                tx.Commit();
+                return copied?.Count ?? 0;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Copy grids from link failed", ex);
+                if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+                return 0;
+            }
+        }
+    }
+
+    public int SyncGridsFromLink(int linkInstanceId)
+    {
+        if (Doc == null) return 0;
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return 0;
+        Document? linkDoc = link.GetLinkDocument();
+        if (linkDoc == null) return 0;
+
+        Transform t = link.GetTotalTransform();
+        var linkGrids = new FilteredElementCollector(linkDoc).OfClass(typeof(Grid)).Cast<Grid>().ToList();
+        var hostByName = new FilteredElementCollector(Doc).OfClass(typeof(Grid)).Cast<Grid>()
+            .GroupBy(g => g.Name).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+
+        const double tolFeet = 0.03;
+        int count = 0;
+
+        using (var tx = new Transaction(Doc, "AllO: Sync grids from link"))
+        {
+            tx.Start();
+            try
+            {
+                var opts = new CopyPasteOptions();
+                foreach (var lg in linkGrids)
+                {
+                    if (lg.Curve == null) continue;
+                    if (!hostByName.TryGetValue(lg.Name, out var hg)) continue;
+                    if (hg.Curve == null) continue;
+                    Curve cLink = lg.Curve.CreateTransformed(t);
+                    if (CurvesMatch(hg.Curve, cLink, tolFeet)) continue;
+
+                    Doc.Delete(hg.Id);
+                    ElementTransformUtils.CopyElements(linkDoc, new List<ElementId> { lg.Id }, Doc, t, opts);
+                    count++;
+                }
+                tx.Commit();
+                Logging.Debug($"Synced {count} grid(s) from link");
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Sync grids from link failed", ex);
+                if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+                return 0;
             }
         }
         return count;
@@ -717,8 +945,8 @@ public class RevitService : IRevitService
                 ElementId = (int)l.Id.Value,
                 Name = l.Name,
                 NewName = l.Name,
-                Elevation = Math.Round(l.Elevation * 0.3048, 3),
-                NewElevation = Math.Round(l.Elevation * 0.3048, 3),
+                Elevation = UnitConverter.ToMeters(l.Elevation),
+                NewElevation = UnitConverter.ToMeters(l.Elevation),
                 IsStructural = l.get_Parameter(BuiltInParameter.LEVEL_IS_STRUCTURAL)?.AsInteger() == 1
             })
             .OrderBy(l => l.Elevation)
@@ -736,14 +964,16 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in renames)
                 {
-                    var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
+                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
                     if (level == null) continue;
                     try { level.Name = kvp.Value; count++; } catch { }
                 }
                 tx.Commit();
+                Logging.Debug($"Renamed {count} levels");
             }
-            catch
+            catch (Exception ex)
             {
+                Logging.Error("Failed to rename levels", ex);
                 if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
             }
         }
@@ -761,19 +991,19 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in newElevations)
                 {
-                    var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
+                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
                     if (level == null) continue;
-                    try
-                    {
-                        level.Elevation = kvp.Value / 0.3048; // meters to feet
-                        count++;
-                    }
-                    catch { }
+                    try { 
+                        level.Elevation = UnitConverter.ToFeet(kvp.Value);
+                        count++; 
+                    } catch { }
                 }
                 tx.Commit();
+                Logging.Debug($"Moved {count} levels");
             }
-            catch
+            catch (Exception ex)
             {
+                Logging.Error("Failed to move levels", ex);
                 if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
             }
         }
@@ -794,10 +1024,117 @@ public class RevitService : IRevitService
                     try { Doc.Delete(new ElementId((long)id)); count++; } catch { }
                 }
                 tx.Commit();
+                Logging.Debug($"Deleted {count} levels");
             }
-            catch
+            catch (Exception ex)
             {
+                Logging.Error("Failed to delete levels", ex);
                 if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+            }
+        }
+        return count;
+    }
+
+    public void PopulateLevelSyncWarnings(int linkInstanceId, List<LevelInfo> hostLevels)
+    {
+        if (Doc == null) return;
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return;
+        Document? linkDoc = link.GetLinkDocument();
+        if (linkDoc == null) return;
+        Transform t = link.GetTotalTransform();
+        var linkLevels = new FilteredElementCollector(linkDoc).OfClass(typeof(Level)).Cast<Level>()
+            .GroupBy(l => l.Name).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+
+        const double tolFeet = 0.01;
+        foreach (var row in hostLevels)
+        {
+            row.SyncWarning = null;
+            row.HasSyncMismatch = false;
+            if (!linkLevels.TryGetValue(row.Name, out var ll)) continue;
+            var hostEl = Doc.GetElement(new ElementId((long)row.ElementId)) as Level;
+            if (hostEl == null) continue;
+            double expectedZ = t.OfPoint(new XYZ(0, 0, ll.Elevation)).Z;
+            if (Math.Abs(hostEl.Elevation - expectedZ) > tolFeet)
+            {
+                row.HasSyncMismatch = true;
+                row.SyncWarning = "Elevation differs from reference link";
+            }
+        }
+    }
+
+    public int CopyLevelsFromLink(int linkInstanceId, bool onlyNewNames)
+    {
+        if (Doc == null) return 0;
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return 0;
+        Document? linkDoc = link.GetLinkDocument();
+        if (linkDoc == null) return 0;
+
+        var linkLevels = new FilteredElementCollector(linkDoc).OfClass(typeof(Level)).Cast<Level>().ToList();
+        var hostNames = new HashSet<string>(
+            new FilteredElementCollector(Doc).OfClass(typeof(Level)).Cast<Level>().Select(l => l.Name),
+            StringComparer.Ordinal);
+
+        ICollection<ElementId> ids = onlyNewNames
+            ? linkLevels.Where(l => !hostNames.Contains(l.Name)).Select(l => l.Id).ToList()
+            : linkLevels.Select(l => l.Id).ToList();
+
+        if (ids.Count == 0) return 0;
+
+        using (var tx = new Transaction(Doc, "AllO: Copy levels from link"))
+        {
+            tx.Start();
+            try
+            {
+                var opts = new CopyPasteOptions();
+                var copied = ElementTransformUtils.CopyElements(linkDoc, ids, Doc, link.GetTotalTransform(), opts);
+                tx.Commit();
+                return copied?.Count ?? 0;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Copy levels from link failed", ex);
+                if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+                return 0;
+            }
+        }
+    }
+
+    public int SyncLevelsFromLink(int linkInstanceId)
+    {
+        if (Doc == null) return 0;
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return 0;
+        Document? linkDoc = link.GetLinkDocument();
+        if (linkDoc == null) return 0;
+
+        Transform t = link.GetTotalTransform();
+        var linkLevels = new FilteredElementCollector(linkDoc).OfClass(typeof(Level)).Cast<Level>()
+            .GroupBy(l => l.Name).ToDictionary(g => g.Key, g => g.First(), StringComparer.Ordinal);
+
+        int count = 0;
+        using (var tx = new Transaction(Doc, "AllO: Sync levels from link"))
+        {
+            tx.Start();
+            try
+            {
+                foreach (var host in new FilteredElementCollector(Doc).OfClass(typeof(Level)).Cast<Level>())
+                {
+                    if (!linkLevels.TryGetValue(host.Name, out var ll)) continue;
+                    double expectedZ = t.OfPoint(new XYZ(0, 0, ll.Elevation)).Z;
+                    if (Math.Abs(host.Elevation - expectedZ) < 0.01) continue;
+                    host.Elevation = expectedZ;
+                    count++;
+                }
+                tx.Commit();
+                Logging.Debug($"Synced {count} level(s) from link");
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Sync levels from link failed", ex);
+                if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+                return 0;
             }
         }
         return count;
@@ -814,10 +1151,9 @@ public class RevitService : IRevitService
         {
             var el = Doc.GetElement(id);
             if (el == null) continue;
-            var loc = el.Location;
             double x = 0, y = 0, z = 0;
-            if (loc is LocationPoint lp) { x = lp.Point.X; y = lp.Point.Y; z = lp.Point.Z; }
-            else if (loc is LocationCurve lc) { var mid = lc.Curve.Evaluate(0.5, true); x = mid.X; y = mid.Y; z = mid.Z; }
+            if (el.Location is LocationPoint lp) { x = lp.Point.X; y = lp.Point.Y; z = lp.Point.Z; }
+            else if (el.Location is LocationCurve lc) { var mid = lc.Curve.Evaluate(0.5, true); x = mid.X; y = mid.Y; z = mid.Z; }
             result.Add(new AlignableElementInfo
             {
                 ElementId = (int)el.Id.Value,
@@ -840,45 +1176,42 @@ public class RevitService : IRevitService
             {
                 var elements = elementIds.Select(id => Doc.GetElement(new ElementId((long)id))).Where(e => e?.Location != null).ToList();
                 if (elements.Count < 2) { tx.RollBack(); return 0; }
-
                 var positions = new List<(Element el, XYZ pos)>();
                 foreach (var el in elements)
                 {
                     if (el.Location is LocationPoint lp) positions.Add((el, lp.Point));
                     else if (el.Location is LocationCurve lc) positions.Add((el, lc.Curve.Evaluate(0.5, true)));
                 }
-
                 if (positions.Count < 2) { tx.RollBack(); return 0; }
-
-                double targetX = 0, targetY = 0, targetZ = 0;
+                double targetX = 0, targetY = 0;
                 switch (alignmentMode)
                 {
-                    case "Left":   targetX = positions.Min(p => p.pos.X); break;
-                    case "Right":  targetX = positions.Max(p => p.pos.X); break;
+                    case "Left": targetX = positions.Min(p => p.pos.X); break;
+                    case "Right": targetX = positions.Max(p => p.pos.X); break;
                     case "Center": targetX = positions.Average(p => p.pos.X); break;
-                    case "Top":    targetY = positions.Max(p => p.pos.Y); break;
+                    case "Top": targetY = positions.Max(p => p.pos.Y); break;
                     case "Bottom": targetY = positions.Min(p => p.pos.Y); break;
                     case "Middle": targetY = positions.Average(p => p.pos.Y); break;
                 }
-
                 foreach (var (el, pos) in positions)
                 {
                     XYZ move = XYZ.Zero;
                     switch (alignmentMode)
                     {
-                        case "Left": case "Right": case "Center":
-                            move = new XYZ(targetX - pos.X, 0, 0); break;
-                        case "Top": case "Bottom": case "Middle":
-                            move = new XYZ(0, targetY - pos.Y, 0); break;
+                        case "Left": case "Right": case "Center": move = new XYZ(targetX - pos.X, 0, 0); break;
+                        case "Top": case "Bottom": case "Middle": move = new XYZ(0, targetY - pos.Y, 0); break;
                     }
                     if (move.GetLength() > 0.001)
-                    {
-                        try { ElementTransformUtils.MoveElement(Doc, el.Id, move); count++; } catch { }
-                    }
+                    { try { ElementTransformUtils.MoveElement(Doc, el.Id, move); count++; } catch { } }
                 }
                 tx.Commit();
+                Logging.Debug($"Aligned {count} elements using {alignmentMode} mode");
             }
-            catch { tx.RollBack(); }
+            catch (Exception ex)
+            {
+                Logging.Error("Failed to align elements", ex);
+                tx.RollBack();
+            }
         }
         return count;
     }
@@ -899,21 +1232,20 @@ public class RevitService : IRevitService
                 {
                     var el = Doc.GetElement(new ElementId((long)id));
                     if (el?.Location == null) continue;
-                    XYZ pos = XYZ.Zero;
-                    if (el.Location is LocationPoint lp) pos = lp.Point;
-                    else if (el.Location is LocationCurve lc) pos = lc.Curve.Evaluate(0.5, true);
-
+                    XYZ pos = el.Location is LocationPoint lp ? lp.Point : (el.Location is LocationCurve lc ? lc.Curve.Evaluate(0.5, true) : XYZ.Zero);
                     var closest = gridCurve.Project(pos).XYZPoint;
-                    var move = closest - pos;
-                    move = new XYZ(move.X, move.Y, 0); // Don't move Z
+                    var move = new XYZ(closest.X - pos.X, closest.Y - pos.Y, 0);
                     if (move.GetLength() > 0.001)
-                    {
-                        try { ElementTransformUtils.MoveElement(Doc, el.Id, move); count++; } catch { }
-                    }
+                    { try { ElementTransformUtils.MoveElement(Doc, el.Id, move); count++; } catch { } }
                 }
                 tx.Commit();
+                Logging.Debug($"Aligned {count} elements to grid {gridId}");
             }
-            catch { tx.RollBack(); }
+            catch (Exception ex)
+            {
+                Logging.Error("Failed to align elements to grid", ex);
+                tx.RollBack();
+            }
         }
         return count;
     }
@@ -933,19 +1265,21 @@ public class RevitService : IRevitService
                 foreach (var id in elementIds)
                 {
                     var el = Doc.GetElement(new ElementId((long)id));
-                    if (el?.Location == null) continue;
-                    if (el.Location is LocationPoint lp)
+                    if (el?.Location is LocationPoint lp)
                     {
                         var move = new XYZ(0, 0, targetZ - lp.Point.Z);
                         if (Math.Abs(move.Z) > 0.001)
-                        {
-                            try { ElementTransformUtils.MoveElement(Doc, el.Id, move); count++; } catch { }
-                        }
+                        { try { ElementTransformUtils.MoveElement(Doc, el.Id, move); count++; } catch { } }
                     }
                 }
                 tx.Commit();
+                Logging.Debug($"Aligned {count} elements to level {levelId}");
             }
-            catch { tx.RollBack(); }
+            catch (Exception ex)
+            {
+                Logging.Error("Failed to align elements to level", ex);
+                tx.RollBack();
+            }
         }
         return count;
     }
@@ -964,22 +1298,14 @@ public class RevitService : IRevitService
                 {
                     var el = Doc.GetElement(new ElementId((long)id));
                     if (el?.Location == null) continue;
-                    XYZ pos = XYZ.Zero;
-                    if (el.Location is LocationPoint lp) pos = lp.Point;
-                    else if (el.Location is LocationCurve lc) pos = lc.Curve.Evaluate(0.5, true);
+                    XYZ pos = el.Location is LocationPoint lp ? lp.Point : (el.Location is LocationCurve lc ? lc.Curve.Evaluate(0.5, true) : XYZ.Zero);
                     items.Add((el, pos));
                 }
                 if (items.Count < 3) { tx.RollBack(); return 0; }
-
-                if (direction == "Horizontal")
-                    items = items.OrderBy(i => i.pos.X).ToList();
-                else
-                    items = items.OrderBy(i => i.pos.Y).ToList();
-
+                items = direction == "Horizontal" ? items.OrderBy(i => i.pos.X).ToList() : items.OrderBy(i => i.pos.Y).ToList();
                 double start = direction == "Horizontal" ? items.First().pos.X : items.First().pos.Y;
                 double end = direction == "Horizontal" ? items.Last().pos.X : items.Last().pos.Y;
                 double step = (end - start) / (items.Count - 1);
-
                 for (int i = 1; i < items.Count - 1; i++)
                 {
                     double target = start + step * i;
@@ -992,8 +1318,13 @@ public class RevitService : IRevitService
                     }
                 }
                 tx.Commit();
+                Logging.Debug($"Distributed {count} elements {direction}");
             }
-            catch { tx.RollBack(); }
+            catch (Exception ex)
+            {
+                Logging.Error("Failed to distribute elements", ex);
+                tx.RollBack();
+            }
         }
         return count;
     }
@@ -1004,49 +1335,22 @@ public class RevitService : IRevitService
     {
         if (Doc == null) return new List<DisconnectedConnectorInfo>();
         var result = new List<DisconnectedConnectorInfo>();
-        var collector = new FilteredElementCollector(Doc)
-            .WhereElementIsNotElementType();
-
-        foreach (var el in collector)
+        foreach (var el in new FilteredElementCollector(Doc).WhereElementIsNotElementType())
         {
-            ConnectorManager? cm = null;
+            ConnectorManager cm = null;
             string category = "";
-
-            if (el is Autodesk.Revit.DB.MEPCurve mep)
-            {
-                cm = mep.ConnectorManager;
-                category = el.Category?.Name ?? "MEP";
-            }
-            else if (el is Autodesk.Revit.DB.FamilyInstance fi && fi.MEPModel?.ConnectorManager != null)
-            {
-                cm = fi.MEPModel.ConnectorManager;
-                category = el.Category?.Name ?? "MEP";
-            }
-
+            if (el is Autodesk.Revit.DB.MEPCurve mep) { cm = mep.ConnectorManager; category = el.Category?.Name ?? "MEP"; }
+            else if (el is Autodesk.Revit.DB.FamilyInstance fi && fi.MEPModel?.ConnectorManager != null) { cm = fi.MEPModel.ConnectorManager; category = el.Category?.Name ?? "MEP"; }
             if (cm == null) continue;
-
             int disconnected = 0;
-            foreach (Connector conn in cm.Connectors)
-            {
-                if (!conn.IsConnected) disconnected++;
-            }
-
+            foreach (Connector conn in cm.Connectors) { if (!conn.IsConnected) disconnected++; }
             if (disconnected > 0)
             {
                 XYZ pos = XYZ.Zero;
                 if (el.Location is LocationPoint lp) pos = lp.Point;
                 else if (el.Location is LocationCurve lc) pos = lc.Curve.Evaluate(0.5, true);
-
                 string systemType = "";
-                try
-                {
-                    foreach (Connector conn in cm.Connectors)
-                    {
-                        if (conn.MEPSystem != null) { systemType = conn.MEPSystem.Name; break; }
-                    }
-                }
-                catch { }
-
+                try { foreach (Connector conn in cm.Connectors) { if (conn.MEPSystem != null) { systemType = conn.MEPSystem.Name; break; } } } catch { }
                 result.Add(new DisconnectedConnectorInfo
                 {
                     ElementId = (int)el.Id.Value,
@@ -1072,22 +1376,15 @@ public class RevitService : IRevitService
             tx.Start();
             try
             {
-                // Collect all unconnected connectors
                 var openConnectors = new List<Autodesk.Revit.DB.Connector>();
-                var collector = new FilteredElementCollector(Doc).WhereElementIsNotElementType();
-                foreach (var el in collector)
+                foreach (var el in new FilteredElementCollector(Doc).WhereElementIsNotElementType())
                 {
-                    ConnectorManager? cm = null;
+                    ConnectorManager cm = null;
                     if (el is Autodesk.Revit.DB.MEPCurve mep) cm = mep.ConnectorManager;
                     else if (el is Autodesk.Revit.DB.FamilyInstance fi) cm = fi.MEPModel?.ConnectorManager;
                     if (cm == null) continue;
-                    foreach (Connector conn in cm.Connectors)
-                    {
-                        if (!conn.IsConnected) openConnectors.Add(conn);
-                    }
+                    foreach (Connector conn in cm.Connectors) { if (!conn.IsConnected) openConnectors.Add(conn); }
                 }
-
-                // Try to connect pairs within tolerance
                 var used = new HashSet<int>();
                 for (int i = 0; i < openConnectors.Count; i++)
                 {
@@ -1096,25 +1393,18 @@ public class RevitService : IRevitService
                     {
                         if (used.Contains(j)) continue;
                         if (openConnectors[i].Owner.Id == openConnectors[j].Owner.Id) continue;
-
-                        double dist = openConnectors[i].Origin.DistanceTo(openConnectors[j].Origin);
-                        if (dist <= toleranceFeet)
-                        {
-                            try
-                            {
-                                openConnectors[i].ConnectTo(openConnectors[j]);
-                                used.Add(i);
-                                used.Add(j);
-                                count++;
-                                break;
-                            }
-                            catch { }
-                        }
+                        if (openConnectors[i].Origin.DistanceTo(openConnectors[j].Origin) <= toleranceFeet)
+                        { try { openConnectors[i].ConnectTo(openConnectors[j]); used.Add(i); used.Add(j); count++; break; } catch { } }
                     }
                 }
                 tx.Commit();
+                Logging.Debug($"Auto-connected {count} MEP connectors");
             }
-            catch { tx.RollBack(); }
+            catch (Exception ex)
+            {
+                Logging.Error("Failed to auto-connect MEP elements", ex);
+                tx.RollBack();
+            }
         }
         return count;
     }
@@ -1130,38 +1420,23 @@ public class RevitService : IRevitService
                 var el1 = Doc.GetElement(new ElementId((long)elementId1));
                 var el2 = Doc.GetElement(new ElementId((long)elementId2));
                 if (el1 == null || el2 == null) { tx.RollBack(); return 0; }
-
-                ConnectorManager? cm1 = null, cm2 = null;
+                ConnectorManager cm1 = null, cm2 = null;
                 if (el1 is Autodesk.Revit.DB.MEPCurve m1) cm1 = m1.ConnectorManager;
                 else if (el1 is Autodesk.Revit.DB.FamilyInstance f1) cm1 = f1.MEPModel?.ConnectorManager;
                 if (el2 is Autodesk.Revit.DB.MEPCurve m2) cm2 = m2.ConnectorManager;
                 else if (el2 is Autodesk.Revit.DB.FamilyInstance f2) cm2 = f2.MEPModel?.ConnectorManager;
-
                 if (cm1 == null || cm2 == null) { tx.RollBack(); return 0; }
-
-                // Find closest unconnected pair
-                Autodesk.Revit.DB.Connector? best1 = null, best2 = null;
+                Connector best1 = null, best2 = null;
                 double bestDist = double.MaxValue;
-                foreach (Connector c1 in cm1.Connectors)
-                {
-                    if (c1.IsConnected) continue;
-                    foreach (Connector c2 in cm2.Connectors)
-                    {
-                        if (c2.IsConnected) continue;
-                        double d = c1.Origin.DistanceTo(c2.Origin);
-                        if (d < bestDist) { bestDist = d; best1 = c1; best2 = c2; }
-                    }
-                }
-
-                if (best1 != null && best2 != null)
-                {
-                    best1.ConnectTo(best2);
-                    tx.Commit();
-                    return 1;
-                }
+                foreach (Connector c1 in cm1.Connectors) { if (c1.IsConnected) continue; foreach (Connector c2 in cm2.Connectors) { if (c2.IsConnected) continue; double d = c1.Origin.DistanceTo(c2.Origin); if (d < bestDist) { bestDist = d; best1 = c1; best2 = c2; } } }
+                if (best1 != null && best2 != null) { best1.ConnectTo(best2); tx.Commit(); Logging.Debug("Connected 2 MEP elements"); return 1; }
                 tx.RollBack();
             }
-            catch { tx.RollBack(); }
+            catch (Exception ex)
+            {
+                Logging.Error("Failed to connect MEP elements", ex);
+                tx.RollBack();
+            }
         }
         return 0;
     }
@@ -1174,116 +1449,14 @@ public class RevitService : IRevitService
             var id = new ElementId((long)elementId);
             _uiApp.ActiveUIDocument.Selection.SetElementIds(new List<ElementId> { id });
             _uiApp.ActiveUIDocument.ShowElements(id);
+            Logging.Debug($"Highlighted element {elementId}");
             return 1;
         }
-        catch { return 0; }
-    }
-
-    // ── QuickSearch ───────────────────────────────────────────
-
-    public List<SearchResultInfo> SearchElements(string query, bool byName, bool byId, bool byCategory, bool byFamily, bool byParameter)
-    {
-        if (Doc == null || string.IsNullOrWhiteSpace(query)) return new List<SearchResultInfo>();
-        var results = new List<SearchResultInfo>();
-        var collector = new FilteredElementCollector(Doc)
-            .WhereElementIsNotElementType()
-            .WhereElementIsViewIndependent();
-
-        foreach (var el in collector)
+        catch (Exception ex)
         {
-            if (el.Category == null) continue;
-            string name = el.Name ?? "";
-            string catName = el.Category.Name ?? "";
-            string familyType = "";
-            string levelName = "";
-            string matchedOn = "";
-
-            if (el is FamilyInstance fi)
-            {
-                var symbol = fi.Symbol;
-                familyType = symbol != null ? $"{symbol.FamilyName}: {symbol.Name}" : "";
-            }
-
-            // Get level
-            try
-            {
-                var levelParam = el.get_Parameter(BuiltInParameter.INSTANCE_SCHEDULE_ONLY_LEVEL_PARAM);
-                if (levelParam == null) levelParam = el.get_Parameter(BuiltInParameter.FAMILY_LEVEL_PARAM);
-                if (levelParam != null) levelName = levelParam.AsValueString() ?? "";
-            }
-            catch { }
-
-            // Check matches
-            bool matched = false;
-            if (byName && name.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
-            { matched = true; matchedOn = "Name"; }
-            else if (byId && ((int)el.Id.Value).ToString().Contains(query))
-            { matched = true; matchedOn = "ID"; }
-            else if (byCategory && catName.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
-            { matched = true; matchedOn = "Category"; }
-            else if (byFamily && familyType.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
-            { matched = true; matchedOn = "Family"; }
-            else if (byParameter)
-            {
-                foreach (Parameter p in el.Parameters)
-                {
-                    try
-                    {
-                        string val = p.AsValueString() ?? p.AsString() ?? "";
-                        if (!string.IsNullOrEmpty(val) && val.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
-                        { matched = true; matchedOn = $"Param:{p.Definition.Name}"; break; }
-                    }
-                    catch { }
-                }
-            }
-
-            if (matched)
-            {
-                results.Add(new SearchResultInfo
-                {
-                    ElementId = (int)el.Id.Value,
-                    Name = name,
-                    Category = catName,
-                    FamilyType = familyType,
-                    LevelName = levelName,
-                    MatchedOn = matchedOn
-                });
-            }
-
-            if (results.Count >= 500) break; // Limit results
+            Logging.Error("Failed to highlight element", ex);
+            return 0;
         }
-        return results;
-    }
-
-    public int SelectElements(List<int> elementIds)
-    {
-        if (_uiApp.ActiveUIDocument == null) return 0;
-        try
-        {
-            var ids = elementIds.Select(id => new ElementId((long)id)).ToList();
-            _uiApp.ActiveUIDocument.Selection.SetElementIds(ids);
-            return ids.Count;
-        }
-        catch { return 0; }
-    }
-
-    public int IsolateElements(List<int> elementIds)
-    {
-        if (Doc == null || _uiApp.ActiveUIDocument == null) return 0;
-        try
-        {
-            var view = Doc.ActiveView;
-            if (view == null) return 0;
-            var ids = elementIds.Select(id => new ElementId((long)id)).ToList();
-            using (var tx = new Transaction(Doc, "AllO Isolate"))
-            {
-                tx.Start();
-                view.IsolateElementsTemporary(ids);
-                tx.Commit();
-            }
-            return ids.Count;
-        }
-        catch { return 0; }
     }
 
     // ── TableGen (Excel → Revit) ──────────────────────────────────
@@ -1308,7 +1481,8 @@ public class RevitService : IRevitService
                         Name = v.Name,
                         ExcelPath = parts.Length > 1 ? parts[1] : "",
                         SheetName = parts.Length > 2 ? parts[2] : "",
-                        Range = parts.Length > 3 ? parts[3] : ""
+                        Range = parts.Length > 3 ? parts[3] : "",
+                        ViewKind = v is ViewSchedule ? "Schedule" : "Drawing"
                     });
                 }
             }
@@ -1320,6 +1494,8 @@ public class RevitService : IRevitService
     public int ImportExcelAsTable(ExcelTableData data, string viewName, string viewType)
     {
         if (Doc == null) return 0;
+        if (string.Equals(viewType, TableGenConstants.OutputKeySchedule, StringComparison.OrdinalIgnoreCase))
+            return ImportExcelAsKeySchedule(data, viewName);
         try
         {
             using (var tx = new Transaction(Doc, "AllO Import Excel Table"))
@@ -1327,7 +1503,7 @@ public class RevitService : IRevitService
                 tx.Start();
 
                 View? newView = null;
-                if (viewType == "Legend")
+                if (string.Equals(viewType, TableGenConstants.OutputLegend, StringComparison.OrdinalIgnoreCase))
                     newView = CreateLegendView();
                 if (newView == null)
                     newView = CreateDraftingView();
@@ -1335,7 +1511,6 @@ public class RevitService : IRevitService
 
                 try { newView.Scale = 1; } catch { }
 
-                // viewName format: "filepath|sheet|range"
                 var metaParts = viewName.Split('|');
                 string filePath = metaParts.Length > 0 ? metaParts[0] : viewName;
                 string sheetName = metaParts.Length > 1 ? metaParts[1] : "";
@@ -1353,7 +1528,6 @@ public class RevitService : IRevitService
 
                 DrawTableOnView(newView, data);
 
-                // Store metadata for reload
                 try
                 {
                     var param = newView.get_Parameter(BuiltInParameter.VIEW_DESCRIPTION);
@@ -1364,10 +1538,15 @@ public class RevitService : IRevitService
                 tx.Commit();
 
                 try { _uiApp.ActiveUIDocument.ActiveView = newView; } catch { }
+                Logging.Debug($"Imported Excel table as view: {newView.Name}");
                 return (int)newView.Id.Value;
             }
         }
-        catch { return 0; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to import Excel table", ex);
+            return 0;
+        }
     }
 
     public int ReloadTableView(int viewId, ExcelTableData data)
@@ -1380,19 +1559,30 @@ public class RevitService : IRevitService
             using (var tx = new Transaction(Doc, "AllO Reload Table"))
             {
                 tx.Start();
-                // Clear existing content
-                var collector = new FilteredElementCollector(Doc, view.Id);
-                var idsToDelete = collector
-                    .Where(el => el is CurveElement || el is TextNote)
-                    .Select(el => el.Id).ToList();
-                foreach (var id in idsToDelete) { try { Doc.Delete(id); } catch { } }
-
-                DrawTableOnView(view, data);
+                if (view is ViewSchedule vs)
+                {
+                    var grid = TableGenGridConverter.BuildGrid(data);
+                    FillKeyScheduleBody(vs, grid);
+                }
+                else
+                {
+                    var collector = new FilteredElementCollector(Doc, view.Id);
+                    var idsToDelete = collector
+                        .Where(el => el is CurveElement || el is TextNote)
+                        .Select(el => el.Id).ToList();
+                    foreach (var id in idsToDelete) { try { Doc.Delete(id); } catch { } }
+                    DrawTableOnView(view, data);
+                }
                 tx.Commit();
+                Logging.Debug($"Reloaded table view {viewId}");
             }
             return 1;
         }
-        catch { return 0; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to reload table view", ex);
+            return 0;
+        }
     }
 
     public int DeleteTableViews(List<int> viewIds)
@@ -1412,13 +1602,136 @@ public class RevitService : IRevitService
                     try { Doc.Delete(eid); count++; } catch { }
                 }
                 tx.Commit();
+                Logging.Debug($"Deleted {count} table views");
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to delete table views", ex);
+        }
         return count;
     }
 
-    // ── TableGen drawing helpers ──────────────────────────────────
+    private int ImportExcelAsKeySchedule(ExcelTableData data, string viewName)
+    {
+        if (Doc == null) return 0;
+        try
+        {
+            using (var tx = new Transaction(Doc, "AllO Import Excel Key Schedule"))
+            {
+                tx.Start();
+                var catId = new ElementId((long)BuiltInCategory.OST_GenericModel);
+                ViewSchedule? schedule = ViewSchedule.CreateKeySchedule(Doc, catId);
+                if (schedule == null) { tx.RollBack(); return 0; }
+
+                var metaParts = viewName.Split('|');
+                string filePath = metaParts.Length > 0 ? metaParts[0] : viewName;
+                string sheetName = metaParts.Length > 1 ? metaParts[1] : "";
+                string baseName = $"{System.IO.Path.GetFileNameWithoutExtension(filePath)} - {sheetName} (Schedule)";
+                int counter = 1;
+                while (true)
+                {
+                    try
+                    {
+                        schedule.Name = counter == 1 ? baseName : $"{baseName} ({counter})";
+                        break;
+                    }
+                    catch { if (++counter > 20) break; }
+                }
+
+                ConfigureKeyScheduleFields(schedule);
+                Doc.Regenerate();
+                var grid = TableGenGridConverter.BuildGrid(data);
+                FillKeyScheduleBody(schedule, grid);
+
+                try
+                {
+                    var param = schedule.get_Parameter(BuiltInParameter.VIEW_DESCRIPTION);
+                    if (param != null) param.Set($"EXCEL_DATA|{viewName}");
+                }
+                catch { }
+
+                tx.Commit();
+                try { _uiApp.ActiveUIDocument.ActiveView = schedule; } catch { }
+                Logging.Debug($"Imported Excel as key schedule: {schedule.Name}");
+                return (int)schedule.Id.Value;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to import Excel key schedule", ex);
+            return 0;
+        }
+    }
+
+    private static void ConfigureKeyScheduleFields(ViewSchedule schedule)
+    {
+        ScheduleDefinition def = schedule.Definition;
+        while (def.GetFieldCount() > 0)
+        {
+            ScheduleField f = def.GetField(0);
+            def.RemoveField(f.FieldId);
+        }
+
+        BuiltInParameter[] order =
+        {
+            BuiltInParameter.ALL_MODEL_MARK,
+            BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS,
+            BuiltInParameter.ALL_MODEL_TYPE_COMMENTS,
+            BuiltInParameter.ALL_MODEL_MANUFACTURER,
+            BuiltInParameter.ALL_MODEL_MODEL
+        };
+
+        IList<SchedulableField> schedulable = def.GetSchedulableFields();
+        foreach (var bp in order)
+        {
+            ElementId pid = new ElementId((long)bp);
+            foreach (SchedulableField sf in schedulable)
+            {
+                if (sf.ParameterId.Equals(pid))
+                {
+                    try { def.AddField(sf); } catch { }
+                    break;
+                }
+            }
+        }
+    }
+
+    private static void ClearBodyRows(TableSectionData body)
+    {
+        while (body.NumberOfRows > 0)
+        {
+            try { body.RemoveRow(body.FirstRowNumber); }
+            catch { break; }
+        }
+    }
+
+    private static void FillKeyScheduleBody(ViewSchedule schedule, string[,] grid)
+    {
+        int fieldCount = schedule.Definition.GetFieldCount();
+        if (fieldCount == 0 || grid.GetLength(0) == 0) return;
+
+        TableData td = schedule.GetTableData();
+        TableSectionData body = td.GetSectionData(SectionType.Body);
+        ClearBodyRows(body);
+
+        int rows = grid.GetLength(0);
+        for (int r = 0; r < rows; r++)
+            body.InsertRow(body.FirstRowNumber + body.NumberOfRows);
+
+        for (int r = 0; r < rows; r++)
+        {
+            string[] rowVals = TableGenGridConverter.GetRowForSchedule(grid, r, fieldCount);
+            for (int c = 0; c < rowVals.Length && c < fieldCount; c++)
+            {
+                try
+                {
+                    body.SetCellText(body.FirstRowNumber + r, body.FirstColumnNumber + c, rowVals[c]);
+                }
+                catch { }
+            }
+        }
+    }
 
     private View? CreateDraftingView()
     {
@@ -1433,7 +1746,11 @@ public class RevitService : IRevitService
             if (vTypeId == null || vTypeId == ElementId.InvalidElementId) return null;
             return ViewDrafting.Create(Doc, vTypeId);
         }
-        catch { return null; }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to create drafting view", ex);
+            return null;
+        }
     }
 
     private View? CreateLegendView()
@@ -1454,7 +1771,10 @@ public class RevitService : IRevitService
                     return createMethod.Invoke(null, new object[] { Doc, legendTypeId }) as View;
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to create legend view", ex);
+        }
 
         // Fallback: duplicate existing legend
         try
@@ -1468,7 +1788,10 @@ public class RevitService : IRevitService
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to duplicate legend view", ex);
+        }
         return null;
     }
 
@@ -1490,8 +1813,6 @@ public class RevitService : IRevitService
             }
             catch { }
         }
-
-        // Create new type
         try
         {
             var baseId = Doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
@@ -1511,7 +1832,10 @@ public class RevitService : IRevitService
                 }
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to get/create text note type", ex);
+        }
         return Doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
     }
 
@@ -1521,19 +1845,15 @@ public class RevitService : IRevitService
         double PtsToFt(double pts) => (pts / 864.0) * ScaleFactor;
 
         var txtTypeId = GetTextNoteType();
-        var colWidths = data.ColWidths;
-        var rowHeights = data.RowHeights;
 
-        // Build coordinate arrays
         var xCoords = new List<double> { 0.0 };
         double cx = 0;
-        foreach (var w in colWidths) { cx += PtsToFt(w); xCoords.Add(cx); }
+        foreach (var w in data.ColWidths) { cx += PtsToFt(w); xCoords.Add(cx); }
 
         var yCoords = new List<double> { 0.0 };
         double cy = 0;
-        foreach (var h in rowHeights) { cy -= PtsToFt(h); yCoords.Add(cy); }
+        foreach (var h in data.RowHeights) { cy -= PtsToFt(h); yCoords.Add(cy); }
 
-        // Collect border segments for optimized drawing
         var hLines = new Dictionary<int, List<(int start, int end)>>();
         var vLines = new Dictionary<int, List<(int start, int end)>>();
 
@@ -1542,96 +1862,65 @@ public class RevitService : IRevitService
             int r = cell.Row, c = cell.Col;
             int rSpan = cell.RowSpan, cSpan = cell.ColSpan;
 
-            if (cell.BorderTop)
-            {
-                if (!hLines.ContainsKey(r)) hLines[r] = new List<(int, int)>();
-                hLines[r].Add((c, c + cSpan));
-            }
-            if (cell.BorderBottom)
-            {
-                int key = r + rSpan;
-                if (!hLines.ContainsKey(key)) hLines[key] = new List<(int, int)>();
-                hLines[key].Add((c, c + cSpan));
-            }
-            if (cell.BorderLeft)
-            {
-                if (!vLines.ContainsKey(c)) vLines[c] = new List<(int, int)>();
-                vLines[c].Add((r, r + rSpan));
-            }
-            if (cell.BorderRight)
-            {
-                int key = c + cSpan;
-                if (!vLines.ContainsKey(key)) vLines[key] = new List<(int, int)>();
-                vLines[key].Add((r, r + rSpan));
-            }
+            if (cell.BorderTop) { if (!hLines.ContainsKey(r)) hLines[r] = new(); hLines[r].Add((c, c + cSpan)); }
+            if (cell.BorderBottom) { int k = r + rSpan; if (!hLines.ContainsKey(k)) hLines[k] = new(); hLines[k].Add((c, c + cSpan)); }
+            if (cell.BorderLeft) { if (!vLines.ContainsKey(c)) vLines[c] = new(); vLines[c].Add((r, r + rSpan)); }
+            if (cell.BorderRight) { int k = c + cSpan; if (!vLines.ContainsKey(k)) vLines[k] = new(); vLines[k].Add((r, r + rSpan)); }
 
-            // Draw text
             if (!string.IsNullOrWhiteSpace(cell.Text))
             {
                 double x1 = xCoords[c], x2 = xCoords[c + cSpan];
                 double y1 = yCoords[r], y2 = yCoords[r + rSpan];
                 double boxW = x2 - x1, boxH = y1 - y2;
-
-                double xIns = x1 + boxW * 0.02;
-                double yIns = y1 - boxH * 0.05;
+                double xIns = x1 + boxW * 0.02, yIns = y1 - boxH * 0.05;
                 var hAlignRevit = HorizontalTextAlignment.Left;
-
-                if (cell.HAlign == -4108) { xIns = x1 + boxW / 2.0; hAlignRevit = HorizontalTextAlignment.Center; }
-                else if (cell.HAlign == -4152) { xIns = x2 - boxW * 0.02; hAlignRevit = HorizontalTextAlignment.Right; }
-
-                if (cell.VAlign == -4108) yIns = y1 - boxH / 2.0;
-                else if (cell.VAlign == -4107) yIns = y2 + boxH * 0.05;
-
+                
+                // Use ExcelConstants for alignment
+                if (cell.HAlign == (int)ExcelHAlign.Center) { xIns = x1 + boxW / 2.0; hAlignRevit = HorizontalTextAlignment.Center; }
+                else if (cell.HAlign == (int)ExcelHAlign.Right) { xIns = x2 - boxW * 0.02; hAlignRevit = HorizontalTextAlignment.Right; }
+                
+                if (cell.VAlign == (int)ExcelVAlign.Center) yIns = y1 - boxH / 2.0;
+                else if (cell.VAlign == (int)ExcelVAlign.Bottom) yIns = y2 + boxH * 0.05;
+                
                 try
                 {
                     var tn = TextNote.Create(Doc!, view.Id, new XYZ(xIns, yIns, 0), cell.Text, txtTypeId);
                     tn.HorizontalAlignment = hAlignRevit;
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    Logging.Warning($"Failed to create text note: {ex.Message}");
+                }
             }
         }
 
-        // Draw merged horizontal lines
         foreach (var kvp in hLines)
         {
             double y = yCoords[kvp.Key];
             foreach (var seg in MergeIntervals(kvp.Value))
             {
-                try
-                {
-                    var line = Line.CreateBound(
-                        new XYZ(xCoords[seg.start], y, 0),
-                        new XYZ(xCoords[seg.end], y, 0));
-                    Doc!.Create.NewDetailCurve(view, line);
-                }
-                catch { }
+                try { Doc!.Create.NewDetailCurve(view, Line.CreateBound(new XYZ(xCoords[seg.start], y, 0), new XYZ(xCoords[seg.end], y, 0))); } catch { }
             }
         }
-
-        // Draw merged vertical lines
         foreach (var kvp in vLines)
         {
             double x = xCoords[kvp.Key];
             foreach (var seg in MergeIntervals(kvp.Value))
             {
-                try
-                {
-                    var line = Line.CreateBound(
-                        new XYZ(x, yCoords[seg.start], 0),
-                        new XYZ(x, yCoords[seg.end], 0));
-                    Doc!.Create.NewDetailCurve(view, line);
-                }
-                catch { }
+                try { Doc!.Create.NewDetailCurve(view, Line.CreateBound(new XYZ(x, yCoords[seg.start], 0), new XYZ(x, yCoords[seg.end], 0))); } catch { }
             }
         }
+    }
 
-        // Store metadata for reload
-        try
-        {
-            var param = view.get_Parameter(BuiltInParameter.VIEW_DESCRIPTION);
-            // Metadata is set by caller if needed
-        }
-        catch { }
+    private static bool CurvesMatch(Curve a, Curve b, double tolFeet)
+    {
+        var p0a = a.GetEndPoint(0);
+        var p1a = a.GetEndPoint(1);
+        var p0b = b.GetEndPoint(0);
+        var p1b = b.GetEndPoint(1);
+        double d1 = p0a.DistanceTo(p0b) + p1a.DistanceTo(p1b);
+        double d2 = p0a.DistanceTo(p1b) + p1a.DistanceTo(p0b);
+        return Math.Min(d1, d2) < tolFeet * 2;
     }
 
     private static List<(int start, int end)> MergeIntervals(List<(int start, int end)> intervals)
@@ -1644,13 +1933,10 @@ public class RevitService : IRevitService
         {
             if (sorted[i].start <= current.end)
                 current = (current.start, Math.Max(current.end, sorted[i].end));
-            else
-            {
-                merged.Add(current);
-                current = sorted[i];
-            }
+            else { merged.Add(current); current = sorted[i]; }
         }
         merged.Add(current);
         return merged;
     }
 }
+

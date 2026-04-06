@@ -95,11 +95,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Revit2025\\AllO.csproj",
+      "projectUniqueName": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Revit2025\\AllO.csproj",
       "projectName": "AllO",
-      "projectPath": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Revit2025\\AllO.csproj",
+      "projectPath": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Revit2025\\AllO.csproj",
       "packagesPath": "C:\\Users\\Engelllop\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Revit2025\\obj\\",
+      "outputPath": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Revit2025\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Engelllop\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -116,8 +116,8 @@
         "net8.0-windows7.0": {
           "targetAlias": "net8.0-windows",
           "projectReferences": {
-            "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Shared\\AllO.Shared.csproj": {
-              "projectPath": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Shared\\AllO.Shared.csproj"
+            "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Shared\\AllO.Shared.csproj": {
+              "projectPath": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Shared\\AllO.Shared.csproj"
             }
           }
         }

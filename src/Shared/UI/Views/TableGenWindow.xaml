@@ -6,20 +6,20 @@
         MinHeight="550" MinWidth="750"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#15151E">
+        Background="#1E1E1E">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="Bg"   Color="#15151E"/>
-        <SolidColorBrush x:Key="Sf"   Color="#1B1B28"/>
-        <SolidColorBrush x:Key="Cd"   Color="#1E1E32"/>
-        <SolidColorBrush x:Key="CdH"  Color="#252542"/>
-        <SolidColorBrush x:Key="Bdr"  Color="#2A2A42"/>
-        <SolidColorBrush x:Key="Txt"  Color="#E8E8F0"/>
-        <SolidColorBrush x:Key="Tx2"  Color="#9999B3"/>
-        <SolidColorBrush x:Key="TxM"  Color="#666680"/>
-        <SolidColorBrush x:Key="TxA"  Color="#9B93FF"/>
-        <SolidColorBrush x:Key="Acc"  Color="#6C63FF"/>
-        <SolidColorBrush x:Key="AcH"  Color="#5B53E8"/>
+        <SolidColorBrush x:Key="Bg"   Color="#1E1E1E"/>
+        <SolidColorBrush x:Key="Sf"   Color="#252525"/>
+        <SolidColorBrush x:Key="Cd"   Color="#2C2C2C"/>
+        <SolidColorBrush x:Key="CdH"  Color="#383838"/>
+        <SolidColorBrush x:Key="Bdr"  Color="#383838"/>
+        <SolidColorBrush x:Key="Txt"  Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="Tx2"  Color="#999999"/>
+        <SolidColorBrush x:Key="TxM"  Color="#787878"/>
+        <SolidColorBrush x:Key="TxA"  Color="#CCCCCC"/>
+        <SolidColorBrush x:Key="Acc"  Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="AcH"  Color="#FFFFFF"/>
         <SolidColorBrush x:Key="Suc"  Color="#34D399"/>
         <SolidColorBrush x:Key="Err"  Color="#FB7185"/>
         <SolidColorBrush x:Key="Teal" Color="#4BC0BE"/>
@@ -44,7 +44,7 @@
                                 <Setter Property="FontWeight" Value="SemiBold"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#1E1E30"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#2C2C2C"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -55,7 +55,7 @@
         <!-- Primary button -->
         <Style x:Key="BtnP" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource Acc}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="#111111"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="22,10"/>
@@ -109,15 +109,15 @@
         <!-- Danger button -->
         <Style x:Key="BtnDanger" TargetType="Button" BasedOn="{StaticResource BtnS}">
             <Setter Property="Foreground" Value="{StaticResource Err}"/>
-            <Setter Property="BorderBrush" Value="#3D1F2A"/>
+            <Setter Property="BorderBrush" Value="#3D2020"/>
         </Style>
 
         <!-- Dark ComboBox -->
         <ControlTemplate x:Key="CbTgl" TargetType="ToggleButton">
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="28"/></Grid.ColumnDefinitions>
-                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#1A1A2C" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
-                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#8080A0" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#272727" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
+                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#909090" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
         </ControlTemplate>
         <Style x:Key="DkCb" TargetType="ComboBox">
@@ -132,7 +132,7 @@
                             <ToggleButton Template="{StaticResource CbTgl}" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False" ClickMode="Press"/>
                             <TextBlock Text="{TemplateBinding SelectionBoxItem}" Margin="10,7,28,7" VerticalAlignment="Center" IsHitTestVisible="False"/>
                             <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" Focusable="False" AllowsTransparency="True">
-                                <Border Background="#1E1E32" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4" Margin="0,2,0,0" MinWidth="{TemplateBinding ActualWidth}">
+                                <Border Background="#2C2C2C" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4" Margin="0,2,0,0" MinWidth="{TemplateBinding ActualWidth}">
                                     <ScrollViewer MaxHeight="250"><StackPanel IsItemsHost="True"/></ScrollViewer>
                                 </Border>
                             </Popup>
@@ -144,13 +144,13 @@
         <Style x:Key="DkCbI" TargetType="ComboBoxItem">
             <Setter Property="Foreground" Value="{StaticResource Txt}"/><Setter Property="FontSize" Value="12"/><Setter Property="Padding" Value="10,7"/><Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
-                <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#2D2D48"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="#33335A"/></Trigger></ControlTemplate.Triggers>
+                <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#3B3B3B"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="#414141"/></Trigger></ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
 
         <!-- ListBox -->
         <Style x:Key="DkLb" TargetType="ListBox">
-            <Setter Property="Background" Value="#1A1A2C"/>
+            <Setter Property="Background" Value="#272727"/>
             <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="{StaticResource Txt}"/>
@@ -168,8 +168,8 @@
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#252542"/></Trigger>
-                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="#2D2D50"/><Setter Property="Foreground" Value="White"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#383838"/></Trigger>
+                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="#3B3B3B"/><Setter Property="Foreground" Value="White"/></Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -191,7 +191,7 @@
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                     <TextBlock Text="AllO" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Acc}"/>
                     <TextBlock Text="Table Gen" FontSize="20" FontWeight="Light" Foreground="{StaticResource Txt}" Margin="10,0,0,0"/>
-                    <TextBlock Text="Excel → Revit" FontSize="11" Foreground="{StaticResource TxM}" VerticalAlignment="Bottom" Margin="12,0,0,4"/>
+                    <TextBlock Text="Excel → drafting, legend, or key schedule" FontSize="11" Foreground="{StaticResource TxM}" VerticalAlignment="Bottom" Margin="12,0,0,4"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <RadioButton Style="{StaticResource TabBtn}" GroupName="Tab" Content="Import New"
@@ -310,8 +310,11 @@
                         <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <StackPanel>
-                                <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="#E8E8F0"/>
-                                <TextBlock FontSize="11" Foreground="#666680">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="#E0E0E0"/>
+                                    <TextBlock Text="{Binding ViewKind}" FontSize="10" Foreground="#6B9E8E" Margin="8,2,0,0"/>
+                                </StackPanel>
+                                <TextBlock FontSize="11" Foreground="#787878">
                                     <Run Text="{Binding ExcelPath, Mode=OneWay}"/>
                                     <Run Text=" ["/><Run Text="{Binding SheetName, Mode=OneWay}"/><Run Text="]"/>
                                 </TextBlock>
@@ -334,18 +337,18 @@
         <Border Grid.Row="2" Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVis}}"
                 Margin="20,8,20,0">
             <ProgressBar Height="6" Minimum="0" Maximum="{Binding ProgressMax}" Value="{Binding ProgressValue}"
-                         Background="#1A1A2C" BorderThickness="0">
+                         Background="#272727" BorderThickness="0">
                 <ProgressBar.Foreground>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                        <GradientStop Color="#6C63FF" Offset="0"/>
-                        <GradientStop Color="#4BC0BE" Offset="1"/>
+                        <GradientStop Color="#E0E0E0" Offset="0"/>
+                        <GradientStop Color="#FFFFFF" Offset="1"/>
                     </LinearGradientBrush>
                 </ProgressBar.Foreground>
             </ProgressBar>
         </Border>
 
         <!-- ═══ STATUS BAR ═══ -->
-        <Border Grid.Row="3" Background="#111119" BorderBrush="#1A1A2E" BorderThickness="0,1,0,0" Padding="20,10">
+        <Border Grid.Row="3" Background="#1A1A1A" BorderBrush="#272727" BorderThickness="0,1,0,0" Padding="20,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

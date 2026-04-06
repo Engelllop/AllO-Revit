@@ -10,3 +10,4 @@ C:\Users\Engelllop\Documents\AllO\src\Revit2024\bin\Debug\net48\AllO.Shared.pdb
 C:\Users\Engelllop\Documents\AllO\src\Revit2024\obj\Debug\net48\AllO.csproj.Up2Date
 C:\Users\Engelllop\Documents\AllO\src\Revit2024\obj\Debug\net48\AllO.dll
 C:\Users\Engelllop\Documents\AllO\src\Revit2024\obj\Debug\net48\AllO.pdb
+C:\Users\Engelllop\Documents\AllO\src\Revit2024\obj\Debug\net48\AllO.sourcelink.json

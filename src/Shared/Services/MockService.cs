@@ -85,13 +85,20 @@ public class MockService : IRevitService
 
     public List<PublishSheetItem> GetSheetsForPublish()
     {
+        string[] disciplines = { "0GENERAL", "ELECTRICAL", "MECHANICAL" };
+        int i = 0;
         return GetAllSheets().Select(s => new PublishSheetItem
         {
             ElementId = s.ElementId,
             SheetNumber = s.SheetNumber,
             SheetName = s.OriginalName,
             IsSelected = true,
-            Status = "Pending"
+            Status = "Pending",
+            ParameterValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["View Discipline"] = disciplines[i++ % disciplines.Length],
+                ["SISTEMA"] = "0GENERAL"
+            }
         }).ToList();
     }
 
@@ -107,20 +114,52 @@ public class MockService : IRevitService
         new() { ElementId = 204, Name = "Section A-A",           ViewType = "Section",   HasCropRegion = false, IsCropActive = false },
         new() { ElementId = 206, Name = "Structural Level 1",    ViewType = "FloorPlan", HasCropRegion = true,  IsCropActive = true },
     };
-    public int CopyCropRegion(int sourceViewId, List<int> targetViewIds) => targetViewIds.Count;
+    public bool CopyCropToSingleView(int sourceViewId, int targetViewId) => true;
 
-    // -- Families ---
-    public List<FamilyInfo> GetAllFamilies() => new()
+    public void PopulateGridSyncWarnings(int linkInstanceId, List<GridInfo> hostGrids)
     {
-        new() { ElementId = 401, FamilyName = "M_Single-Flush",    Category = "Doors",     TypeCount = 3, InstanceCount = 24, IsInPlace = false },
-        new() { ElementId = 402, FamilyName = "M_Fixed",           Category = "Windows",   TypeCount = 5, InstanceCount = 18, IsInPlace = false },
-        new() { ElementId = 403, FamilyName = "Basic Wall Chair",  Category = "Furniture", TypeCount = 1, InstanceCount = 0,  IsInPlace = false },
-        new() { ElementId = 404, FamilyName = "Custom Reception",  Category = "Furniture", TypeCount = 1, InstanceCount = 2,  IsInPlace = true },
-        new() { ElementId = 405, FamilyName = "Round Column",      Category = "Columns",   TypeCount = 2, InstanceCount = 12, IsInPlace = false },
-        new() { ElementId = 406, FamilyName = "Old Fixture",       Category = "Plumbing",  TypeCount = 1, InstanceCount = 0,  IsInPlace = false },
+        foreach (var g in hostGrids)
+        {
+            g.SyncWarning = g.Name.Contains('2') ? "Axis offset from reference link" : null;
+            g.HasSyncMismatch = g.Name.Contains('2');
+        }
+    }
+
+    public void PopulateLevelSyncWarnings(int linkInstanceId, List<LevelInfo> hostLevels)
+    {
+        foreach (var l in hostLevels)
+        {
+            l.SyncWarning = l.Name.Contains('1') ? "Elevation differs from reference link" : null;
+            l.HasSyncMismatch = l.Name.Contains('1');
+        }
+    }
+
+    public int CopyGridsFromLink(int linkInstanceId, bool onlyNewNames) => onlyNewNames ? 2 : 6;
+    public int SyncGridsFromLink(int linkInstanceId) => 3;
+    public int CopyLevelsFromLink(int linkInstanceId, bool onlyNewNames) => onlyNewNames ? 1 : 5;
+    public int SyncLevelsFromLink(int linkInstanceId) => 2;
+
+    // -- Link family transfer ---
+    public List<LinkDocumentInfo> GetLinkedDocuments() => new()
+    {
+        new() { LinkInstanceId = 9001, Name = "Arch_Link.rvt", Path = @"C:\Projects\Arch_Link.rvt", IsLoaded = true },
+        new() { LinkInstanceId = 9002, Name = "MEP_Link.rvt", Path = @"C:\Projects\MEP_Link.rvt", IsLoaded = true },
     };
-    public int DeleteFamilies(List<int> familyIds) => familyIds.Count;
-    public int GetFamilyInstanceCount(int familyId) => 0;
+
+    public List<LinkedCategoryInfo> GetCategoriesInLink(int linkInstanceId) => new()
+    {
+        new() { CategoryId = -2000011, Name = "Doors" },
+        new() { CategoryId = -2000023, Name = "Generic Models" },
+        new() { CategoryId = -2000080, Name = "Specialty Equipment" },
+    };
+
+    public List<LinkFamilyTypeInfo> GetFamilyTypesInLinkCategory(int linkInstanceId, long categoryId) => new()
+    {
+        new() { FamilySymbolId = 9101, DisplayName = "M_Door : 900 x 2100" },
+        new() { FamilySymbolId = 9102, DisplayName = "M_Door : Single Flush" },
+    };
+
+    public int CopyFamilyInstancesFromLinkToHost(int linkInstanceId, long familySymbolId) => 12;
 
     // -- Grids ---
     public List<GridInfo> GetAllGrids() => new()
@@ -174,36 +213,11 @@ public class MockService : IRevitService
     public int ConnectElements(int elementId1, int elementId2) => 1;
     public int HighlightElement(int elementId) => 1;
 
-    // -- QuickSearch ---
-    public List<SearchResultInfo> SearchElements(string query, bool byName, bool byId, bool byCategory, bool byFamily, bool byParameter)
-    {
-        var all = new List<SearchResultInfo>
-        {
-            new() { ElementId = 101, Name = "Basic Wall",       Category = "Walls",    FamilyType = "Generic - 200mm", LevelName = "Level 1" },
-            new() { ElementId = 102, Name = "Floor Standard",   Category = "Floors",   FamilyType = "Generic 150mm",   LevelName = "Level 1" },
-            new() { ElementId = 201, Name = "M_Single-Flush",   Category = "Doors",    FamilyType = "0915 x 2134mm",   LevelName = "Level 1" },
-            new() { ElementId = 202, Name = "M_Fixed",          Category = "Windows",  FamilyType = "0610 x 1220mm",   LevelName = "Level 2" },
-            new() { ElementId = 301, Name = "Desk",             Category = "Furniture", FamilyType = "1525 x 762mm",   LevelName = "Level 1" },
-            new() { ElementId = 302, Name = "Chair-Task",       Category = "Furniture", FamilyType = "Standard",       LevelName = "Level 1" },
-            new() { ElementId = 401, Name = "Round Column",     Category = "Columns",  FamilyType = "450mm",           LevelName = "Level 0" },
-            new() { ElementId = 501, Name = "Pipe 1",           Category = "Pipes",    FamilyType = "Standard",        LevelName = "Level 1" },
-        };
-        if (string.IsNullOrWhiteSpace(query)) return all;
-        return all.Where(r =>
-            (byName && r.Name.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0) ||
-            (byId && r.ElementId.ToString().Contains(query)) ||
-            (byCategory && r.Category.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0) ||
-            (byFamily && r.FamilyType.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0)
-        ).Select(r => { r.MatchedOn = byName ? "Name" : byId ? "ID" : byCategory ? "Category" : "Family"; return r; }).ToList();
-    }
-    public int SelectElements(List<int> elementIds) => elementIds.Count;
-    public int IsolateElements(List<int> elementIds) => elementIds.Count;
-
     // -- TableGen (Excel → Revit) ---
     public List<ExistingTableViewInfo> GetExistingTableViews() => new()
     {
-        new() { ElementId = 901, Name = "Cuadro Cargas - Sheet1", ExcelPath = @"C:\Data\CuadroCargas.xlsx", SheetName = "Sheet1", Range = "A1:G20" },
-        new() { ElementId = 902, Name = "Tabla Ductos - Cálculos", ExcelPath = @"C:\Data\Ductos.xlsx", SheetName = "Cálculos", Range = "A1:E15" },
+        new() { ElementId = 901, Name = "Cuadro Cargas - Sheet1", ExcelPath = @"C:\Data\CuadroCargas.xlsx", SheetName = "Sheet1", Range = "A1:G20", ViewKind = "Drawing" },
+        new() { ElementId = 902, Name = "Loads - Schedule", ExcelPath = @"C:\Data\CuadroCargas.xlsx", SheetName = "Sheet1", Range = "A1:G20", ViewKind = "Schedule" },
     };
     public int ImportExcelAsTable(ExcelTableData data, string viewName, string viewType) => 1;
     public int ReloadTableView(int viewId, ExcelTableData data) => 1;

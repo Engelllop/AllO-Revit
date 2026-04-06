@@ -137,11 +137,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Shared\\AllO.Shared.csproj",
+      "projectUniqueName": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Shared\\AllO.Shared.csproj",
       "projectName": "AllO.Shared",
-      "projectPath": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Shared\\AllO.Shared.csproj",
+      "projectPath": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Shared\\AllO.Shared.csproj",
       "packagesPath": "C:\\Users\\Engelllop\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Engelllop\\Documents\\AllO\\src\\Shared\\obj\\",
+      "outputPath": "C:\\Users\\Engelllop\\Documents\\Nex\\AllO\\src\\Shared\\obj\\",
       "projectStyle": "PackageReference",
       "crossTargeting": true,
       "configFilePaths": [

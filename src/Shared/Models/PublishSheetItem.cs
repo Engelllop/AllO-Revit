@@ -38,4 +38,10 @@ public class PublishSheetItem : ViewModelBase
     }
 
     public string FileName => $"{SheetNumber} - {SheetName}";
+
+    /// <summary>
+    /// Instance parameter names and display values (e.g. shared / project params on the sheet).
+    /// Used by Publish filter.
+    /// </summary>
+    public Dictionary<string, string> ParameterValues { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 }

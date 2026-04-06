@@ -42,12 +42,26 @@ public interface IRevitService
 
     // -- CopyCrop ---------------------------------------------
     List<CropViewInfo> GetCroppableViews();
-    int CopyCropRegion(int sourceViewId, List<int> targetViewIds);
+    /// <summary>Apply source view crop box to one target view.</summary>
+    bool CopyCropToSingleView(int sourceViewId, int targetViewId);
 
-    // -- Families ---------------------------------------------
-    List<FamilyInfo> GetAllFamilies();
-    int DeleteFamilies(List<int> familyIds);
-    int GetFamilyInstanceCount(int familyId);
+    // -- Grids / Levels vs linked model ------------------------
+    void PopulateGridSyncWarnings(int linkInstanceId, List<GridInfo> hostGrids);
+    void PopulateLevelSyncWarnings(int linkInstanceId, List<LevelInfo> hostLevels);
+    /// <summary>Copy grid elements from link into host (optionally only names that do not exist in host).</summary>
+    int CopyGridsFromLink(int linkInstanceId, bool onlyNewNames);
+    /// <summary>Re-align host grids with the link when geometry differs (delete + copy).</summary>
+    int SyncGridsFromLink(int linkInstanceId);
+    int CopyLevelsFromLink(int linkInstanceId, bool onlyNewNames);
+    /// <summary>Move host levels to match linked model when elevation differs.</summary>
+    int SyncLevelsFromLink(int linkInstanceId);
+
+    // -- Link family transfer (copy instances from link → host) ---
+    List<LinkDocumentInfo> GetLinkedDocuments();
+    List<LinkedCategoryInfo> GetCategoriesInLink(int linkInstanceId);
+    List<LinkFamilyTypeInfo> GetFamilyTypesInLinkCategory(int linkInstanceId, long categoryId);
+    /// <summary>Copies all instances of the given family type from the link into the host at matching positions.</summary>
+    int CopyFamilyInstancesFromLinkToHost(int linkInstanceId, long familySymbolId);
 
     // -- Grids ------------------------------------------------
     List<GridInfo> GetAllGrids();
@@ -72,11 +86,6 @@ public interface IRevitService
     int AutoConnectNearby(double toleranceFeet);
     int ConnectElements(int elementId1, int elementId2);
     int HighlightElement(int elementId);
-
-    // -- QuickSearch --------------------------------------------
-    List<SearchResultInfo> SearchElements(string query, bool byName, bool byId, bool byCategory, bool byFamily, bool byParameter);
-    int SelectElements(List<int> elementIds);
-    int IsolateElements(List<int> elementIds);
 
     // -- TableGen (Excel → Revit) --------------------------------
     List<ExistingTableViewInfo> GetExistingTableViews();

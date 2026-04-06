@@ -9,23 +9,23 @@
         MinHeight="650" MinWidth="900"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#15151E">
+        Background="#1E1E1E">
 
     <Window.Resources>
         <!-- ═══════ COLOR PALETTE ═══════ -->
-        <SolidColorBrush x:Key="DeepBg"       Color="#15151E"/>
-        <SolidColorBrush x:Key="SurfaceBg"    Color="#1B1B28"/>
-        <SolidColorBrush x:Key="PanelBg"      Color="#1E1E30"/>
-        <SolidColorBrush x:Key="CardBg"       Color="#262640"/>
-        <SolidColorBrush x:Key="OverlayBg"    Color="#2D2D44"/>
-        <SolidColorBrush x:Key="Bdr"          Color="#2A2A42"/>
-        <SolidColorBrush x:Key="BdrLight"     Color="#3A3A55"/>
-        <SolidColorBrush x:Key="Txt"          Color="#E8E8F0"/>
-        <SolidColorBrush x:Key="Txt2"         Color="#9999B3"/>
-        <SolidColorBrush x:Key="TxtM"         Color="#666680"/>
-        <SolidColorBrush x:Key="TxtAcc"       Color="#9B93FF"/>
-        <SolidColorBrush x:Key="Acc"          Color="#6C63FF"/>
-        <SolidColorBrush x:Key="AccH"         Color="#5B53E8"/>
+        <SolidColorBrush x:Key="DeepBg"       Color="#1E1E1E"/>
+        <SolidColorBrush x:Key="SurfaceBg"    Color="#252525"/>
+        <SolidColorBrush x:Key="PanelBg"      Color="#2C2C2C"/>
+        <SolidColorBrush x:Key="CardBg"       Color="#303030"/>
+        <SolidColorBrush x:Key="OverlayBg"    Color="#3B3B3B"/>
+        <SolidColorBrush x:Key="Bdr"          Color="#383838"/>
+        <SolidColorBrush x:Key="BdrLight"     Color="#494949"/>
+        <SolidColorBrush x:Key="Txt"          Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="Txt2"         Color="#999999"/>
+        <SolidColorBrush x:Key="TxtM"         Color="#787878"/>
+        <SolidColorBrush x:Key="TxtAcc"       Color="#CCCCCC"/>
+        <SolidColorBrush x:Key="Acc"          Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="AccH"         Color="#FFFFFF"/>
         <SolidColorBrush x:Key="Suc"          Color="#34D399"/>
         <SolidColorBrush x:Key="Err"          Color="#FB7185"/>
         <SolidColorBrush x:Key="Wrn"          Color="#FBBF24"/>
@@ -35,7 +35,7 @@
         <!-- ═══════ BUTTON: PRIMARY ═══════ -->
         <Style x:Key="BtnP" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource Acc}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="#111111"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="26,11"/>
@@ -95,7 +95,7 @@
 
         <!-- ═══════ TEXTBOX ═══════ -->
         <Style x:Key="TBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#1A1A2C"/>
+            <Setter Property="Background" Value="#272727"/>
             <Setter Property="Foreground" Value="{StaticResource Txt}"/>
             <Setter Property="CaretBrush" Value="{StaticResource Txt}"/>
             <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
@@ -128,9 +128,9 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="28"/>
                 </Grid.ColumnDefinitions>
-                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#1A1A2C"
+                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#272727"
                         BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
-                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#8080A0" StrokeThickness="1.5"
+                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#909090" StrokeThickness="1.5"
                       HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,1,0,0"/>
             </Grid>
             <ControlTemplate.Triggers>
@@ -161,7 +161,7 @@
                                        TextTrimming="CharacterEllipsis"/>
                             <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
                                    Focusable="False" AllowsTransparency="True" PopupAnimation="Slide">
-                                <Border Background="#1E1E32" BorderBrush="{StaticResource Bdr}"
+                                <Border Background="#2C2C2C" BorderBrush="{StaticResource Bdr}"
                                         BorderThickness="1" CornerRadius="4" Margin="0,2,0,0"
                                         MinWidth="{TemplateBinding ActualWidth}"
                                         MaxWidth="300">
@@ -189,10 +189,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2D2D48"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#3B3B3B"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#33335A"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#414141"/>
                                 <Setter Property="Foreground" Value="{StaticResource TxtAcc}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -213,18 +213,18 @@
         <Style x:Key="Lbl" TargetType="TextBlock">
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#555570"/>
+            <Setter Property="Foreground" Value="#686868"/>
             <Setter Property="Margin" Value="0,0,0,5"/>
         </Style>
 
         <!-- ═══════ DATAGRID ═══════ -->
         <Style x:Key="DgHdr" TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#1A1A2C"/>
-            <Setter Property="Foreground" Value="#7070A0"/>
+            <Setter Property="Background" Value="#272727"/>
+            <Setter Property="Foreground" Value="#828282"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="BorderBrush" Value="#222240"/>
+            <Setter Property="BorderBrush" Value="#323232"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -254,7 +254,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#25254A"/>
+                    <Setter Property="Background" Value="#383838"/>
                     <Setter Property="Foreground" Value="White"/>
                 </Trigger>
             </Style.Triggers>
@@ -263,7 +263,7 @@
         <Style x:Key="DgR" TargetType="DataGridRow">
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1F1F38"/>
+                    <Setter Property="Background" Value="#2E2E2E"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -310,8 +310,55 @@
                 <Button Grid.Column="6" Content="Select None" Style="{StaticResource BtnS}" FontSize="11" Padding="10,5"
                         Command="{Binding SelectNoneCommand}"/>
 
-                <TextBox Grid.Column="8" Style="{StaticResource TBox}" Width="200"
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
+                <Grid Grid.Column="8" MinWidth="240">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Style="{StaticResource TBox}" MinWidth="160" Margin="0,0,6,0"
+                             Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                             ToolTip="Search by sheet number or name"/>
+                    <Grid Grid.Column="1">
+                        <Button x:Name="FilterSheetBtn" Style="{StaticResource BtnS}" Width="36" Padding="0"
+                                Command="{Binding ToggleFilterPopupCommand}"
+                                ToolTip="Filter by any sheet parameter (shared parameters, discipline, etc.)">
+                            <Grid Width="18" Height="18">
+                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71C;" FontSize="15"
+                                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                                           Foreground="{StaticResource Txt2}"/>
+                                <Ellipse Width="6" Height="6" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                         Margin="0,-3,-2,0" Fill="{StaticResource Acc}"
+                                         Visibility="{Binding HasParameterFilter, Converter={StaticResource BoolToVis}}"/>
+                            </Grid>
+                        </Button>
+                        <Popup PlacementTarget="{Binding ElementName=FilterSheetBtn}" Placement="Bottom"
+                               IsOpen="{Binding IsFilterPopupOpen, Mode=TwoWay}" StaysOpen="False"
+                               AllowsTransparency="True">
+                            <Border Background="#2C2C2C" BorderBrush="{StaticResource Bdr}" BorderThickness="1"
+                                    CornerRadius="6" Padding="12,10" MinWidth="280"
+                                    SnapsToDevicePixels="True">
+                                <StackPanel>
+                                    <TextBlock Text="FILTER BY PARAMETER" Style="{StaticResource Lbl}" Margin="0,0,0,8"/>
+                                    <TextBlock Text="Parameter" Style="{StaticResource Lbl}" Margin="0,0,0,4"/>
+                                    <ComboBox Style="{StaticResource DkCombo}"
+                                              ItemsSource="{Binding FilterParameterNames}"
+                                              SelectedItem="{Binding SelectedFilterParameter}"
+                                              ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                    <TextBlock Text="Value" Style="{StaticResource Lbl}" Margin="0,10,0,4"/>
+                                    <ComboBox Style="{StaticResource DkCombo}"
+                                              ItemsSource="{Binding FilterValueOptions}"
+                                              SelectedItem="{Binding SelectedFilterValue}"
+                                              ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                    <TextBlock Text="&quot;Any value&quot; keeps all sheets that have the parameter."
+                                               Foreground="{StaticResource TxtM}" FontSize="10" TextWrapping="Wrap"
+                                               Margin="0,8,0,10"/>
+                                    <Button Content="Clear filter" Style="{StaticResource BtnS}" HorizontalAlignment="Left"
+                                            Command="{Binding ClearSheetFilterCommand}" FontSize="11" Padding="12,6"/>
+                                </StackPanel>
+                            </Border>
+                        </Popup>
+                    </Grid>
+                </Grid>
             </Grid>
         </Border>
 
@@ -322,9 +369,9 @@
                   ItemsSource="{Binding SheetsView}"
                   AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                   SelectionMode="Extended" HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#1A1A30"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#272727"
                   Background="{StaticResource DeepBg}" BorderThickness="0"
-                  RowBackground="#1B1B28" AlternatingRowBackground="#1D1D2E"
+                  RowBackground="#252525" AlternatingRowBackground="#2B2B2B"
                   Foreground="{StaticResource Txt}" FontSize="12.5"
                   RowHeight="36" ColumnHeaderHeight="32"
                   ColumnHeaderStyle="{StaticResource DgHdr}"
@@ -379,13 +426,13 @@
                             <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Center">
                                 <Border.Style>
                                     <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#25253A"/>
+                                        <Setter Property="Background" Value="#333333"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Status}" Value="Done">
-                                                <Setter Property="Background" Value="#152E22"/>
+                                                <Setter Property="Background" Value="#1A2E1A"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Status}" Value="Failed">
-                                                <Setter Property="Background" Value="#351520"/>
+                                                <Setter Property="Background" Value="#2E1A1A"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -422,7 +469,7 @@
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- SETTINGS PANEL (cards layout)                             -->
         <!-- ══════════════════════════════════════════════════════════ -->
-        <Border Grid.Row="2" Background="#191928"
+        <Border Grid.Row="2" Background="#161616"
                 BorderBrush="{StaticResource Bdr}" BorderThickness="0,1,0,0"
                 Padding="16,14,16,12">
 
@@ -436,8 +483,8 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- ── Card 1: PDF Settings ── -->
-                <Border Grid.Column="0" Background="#1E1E32" CornerRadius="8"
-                        BorderBrush="#28284A" BorderThickness="1" Padding="14,12">
+                <Border Grid.Column="0" Background="#2C2C2C" CornerRadius="8"
+                        BorderBrush="#353535" BorderThickness="1" Padding="14,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <CheckBox IsChecked="{Binding ExportPdf}"
@@ -488,14 +535,14 @@
                 </Border>
 
                 <!-- ── Card 2: DWG Settings + Output ── -->
-                <Border Grid.Column="2" Background="#1E1E32" CornerRadius="8"
-                        BorderBrush="#28284A" BorderThickness="1" Padding="14,12">
+                <Border Grid.Column="2" Background="#2C2C2C" CornerRadius="8"
+                        BorderBrush="#353535" BorderThickness="1" Padding="14,12">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <CheckBox IsChecked="{Binding ExportDwg}"
                                       Style="{StaticResource DkCheck}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="DWG" FontSize="14" FontWeight="Bold"
-                                       Foreground="{StaticResource Wrn}" VerticalAlignment="Center"/>
+                                       Foreground="{StaticResource Acc}" VerticalAlignment="Center"/>
                             <TextBlock Text="Settings" FontSize="13" FontWeight="SemiBold"
                                        Foreground="{StaticResource Txt}" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -525,7 +572,7 @@
                         </Grid>
 
                         <!-- Output settings in same card -->
-                        <Border Height="1" Background="#28284A" Margin="0,12,0,10"/>
+                        <Border Height="1" Background="#353535" Margin="0,12,0,10"/>
 
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -550,8 +597,8 @@
                 </Border>
 
                 <!-- ── Card 3: Output + Publish ── -->
-                <Border Grid.Column="4" Background="#1E1E32" CornerRadius="8"
-                        BorderBrush="#28284A" BorderThickness="1" Padding="14,12"
+                <Border Grid.Column="4" Background="#2C2C2C" CornerRadius="8"
+                        BorderBrush="#353535" BorderThickness="1" Padding="14,12"
                         MinWidth="200">
                     <StackPanel>
                         <TextBlock Text="OUTPUT FOLDER" Style="{StaticResource Lbl}" Margin="0,0,0,5"/>
@@ -563,7 +610,7 @@
                                 Command="{Binding BrowseFolderCommand}" Margin="0,8,0,0"
                                 HorizontalAlignment="Stretch" FontSize="11" Padding="8,7"/>
 
-                        <Border Height="1" Background="#28284A" Margin="0,12,0,12"/>
+                        <Border Height="1" Background="#353535" Margin="0,12,0,12"/>
 
                         <!-- PUBLISH BUTTON -->
                         <Button Style="{StaticResource BtnP}" Command="{Binding PublishCommand}"
@@ -589,12 +636,12 @@
                      Maximum="{Binding ProgressMax}"
                      Value="{Binding ProgressValue}"
                      Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVis}}"
-                     Background="#12121E" BorderThickness="0">
+                     Background="#1A1A1A" BorderThickness="0">
             <ProgressBar.Foreground>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                    <GradientStop Color="#6C63FF" Offset="0"/>
-                    <GradientStop Color="#9B93FF" Offset="0.5"/>
-                    <GradientStop Color="#6C63FF" Offset="1"/>
+                    <GradientStop Color="#E0E0E0" Offset="0"/>
+                    <GradientStop Color="#FFFFFF" Offset="0.5"/>
+                    <GradientStop Color="#E0E0E0" Offset="1"/>
                 </LinearGradientBrush>
             </ProgressBar.Foreground>
         </ProgressBar>
@@ -602,8 +649,8 @@
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- STATUS BAR                                                -->
         <!-- ══════════════════════════════════════════════════════════ -->
-        <Border Grid.Row="4" Background="#111119"
-                BorderBrush="#1A1A2E" BorderThickness="0,1,0,0"
+        <Border Grid.Row="4" Background="#1A1A1A"
+                BorderBrush="#272727" BorderThickness="0,1,0,0"
                 Padding="20,8">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -619,12 +666,18 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock Text="{Binding TotalCount}" FontWeight="SemiBold" FontSize="12"
-                               Foreground="{StaticResource Txt2}"/>
+                    <TextBlock FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource Txt2}">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}{0} / {1}">
+                                <Binding Path="VisibleSheetCount"/>
+                                <Binding Path="TotalInDocument"/>
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
                     <TextBlock Text=" sheets" FontSize="12" Foreground="{StaticResource TxtM}"/>
                 </StackPanel>
 
-                <Rectangle Grid.Column="1" Width="1" Fill="#222240" Margin="8,2"/>
+                <Rectangle Grid.Column="1" Width="1" Fill="#323232" Margin="8,2"/>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <TextBlock Text="{Binding SelectedCount}" FontWeight="SemiBold" FontSize="12"

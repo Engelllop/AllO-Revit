@@ -4,7 +4,7 @@
     <Name>AllO</Name>
     <Assembly>AllO.dll</Assembly>
     <FullClassName>AllO.Revit2025.App</FullClassName>
-    <ClientId>7f3e2a91-b4c8-4d6e-9a1f-5c7d8e0b3f62</ClientId>
+    <ClientId>c3d4e5f6-a7b8-4c9d-0e4f-334455667703</ClientId>
     <VendorId>AllO</VendorId>
     <VendorDescription>AllO Revit Add-in</VendorDescription>
   </AddIn>

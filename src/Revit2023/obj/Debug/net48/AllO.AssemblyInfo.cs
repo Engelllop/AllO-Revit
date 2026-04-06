@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("AllO Add-in for Revit 2023")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cd093e605c00e8874e006a0cc2a56f43a103962b")]
 [assembly: System.Reflection.AssemblyProductAttribute("AllO")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AllO")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

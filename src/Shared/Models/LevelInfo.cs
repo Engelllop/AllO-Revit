@@ -50,4 +50,18 @@ public class LevelInfo : ViewModelBase
 
     public bool WillRename => !string.Equals(Name, NewName, StringComparison.Ordinal) && !string.IsNullOrEmpty(NewName);
     public bool WillMove => Math.Abs(Elevation - NewElevation) > 0.0001;
+
+    private string? _syncWarning;
+    public string? SyncWarning
+    {
+        get => _syncWarning;
+        set => SetProperty(ref _syncWarning, value);
+    }
+
+    private bool _hasSyncMismatch;
+    public bool HasSyncMismatch
+    {
+        get => _hasSyncMismatch;
+        set => SetProperty(ref _hasSyncMismatch, value);
+    }
 }

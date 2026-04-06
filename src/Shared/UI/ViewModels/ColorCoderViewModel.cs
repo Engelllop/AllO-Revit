@@ -1,9 +1,7 @@
-using System.Collections.ObjectModel;
 using System.Windows.Input;
-using System.Windows.Media;
-using AllO.Core;
-using AllO.Models;
 using Autodesk.Revit.UI;
+using AllO.Core;
+using AllO.Services;
 
 namespace AllO.UI.ViewModels;
 
@@ -11,40 +9,21 @@ public class ColorCoderViewModel : ViewModelBase
 {
     private readonly UIApplication _uiApp;
 
-    // Predefined color palette (vibrant, distinguishable)
-    private static readonly Color[] Palette = new[]
-    {
-        Color.FromRgb(0x6C, 0x63, 0xFF), // Purple (AllO accent)
-        Color.FromRgb(0x34, 0xD3, 0x99), // Green
-        Color.FromRgb(0xFB, 0x71, 0x85), // Pink/Red
-        Color.FromRgb(0xFB, 0xBF, 0x24), // Amber
-        Color.FromRgb(0x38, 0xBD, 0xF8), // Sky Blue
-        Color.FromRgb(0xF4, 0x72, 0xB6), // Magenta
-        Color.FromRgb(0xA7, 0x8B, 0xFA), // Lavender
-        Color.FromRgb(0x2D, 0xD4, 0xBF), // Teal
-        Color.FromRgb(0xFF, 0x84, 0x4B), // Orange
-        Color.FromRgb(0x22, 0xD3, 0xEE), // Cyan
-    };
-
-    // Available preset colors for the color picker
-    public ObservableCollection<Color> PresetColors { get; } = new();
-
-    public ObservableCollection<DocumentColorInfo> Documents { get; } = new();
-
-    // ── Display Mode ──────────────────────────────────────────
-
     private bool _modeFill = true;
     public bool ModeFill
     {
         get => _modeFill;
         set
         {
-            if (SetProperty(ref _modeFill, value) && value)
-            {
-                ModeBorder = false;
-                ModeLine = false;
-                OnPropertyChanged(nameof(DisplayModeDescription));
-            }
+            if (!SetProperty(ref _modeFill, value)) return;
+            if (!value) return;
+            _modeBorder = false;
+            _modeLine = false;
+            OnPropertyChanged(nameof(ModeBorder));
+            OnPropertyChanged(nameof(ModeLine));
+            ColorCoderState.DisplayMode = ColorCoderDisplayMode.FillBar;
+            OnPropertyChanged(nameof(DisplayModeDescription));
+            ColorCoderOverlayHost.RefreshIfActive();
         }
     }
 
@@ -54,12 +33,15 @@ public class ColorCoderViewModel : ViewModelBase
         get => _modeBorder;
         set
         {
-            if (SetProperty(ref _modeBorder, value) && value)
-            {
-                ModeFill = false;
-                ModeLine = false;
-                OnPropertyChanged(nameof(DisplayModeDescription));
-            }
+            if (!SetProperty(ref _modeBorder, value)) return;
+            if (!value) return;
+            _modeFill = false;
+            _modeLine = false;
+            OnPropertyChanged(nameof(ModeFill));
+            OnPropertyChanged(nameof(ModeLine));
+            ColorCoderState.DisplayMode = ColorCoderDisplayMode.Border;
+            OnPropertyChanged(nameof(DisplayModeDescription));
+            ColorCoderOverlayHost.RefreshIfActive();
         }
     }
 
@@ -69,12 +51,15 @@ public class ColorCoderViewModel : ViewModelBase
         get => _modeLine;
         set
         {
-            if (SetProperty(ref _modeLine, value) && value)
-            {
-                ModeFill = false;
-                ModeBorder = false;
-                OnPropertyChanged(nameof(DisplayModeDescription));
-            }
+            if (!SetProperty(ref _modeLine, value)) return;
+            if (!value) return;
+            _modeFill = false;
+            _modeBorder = false;
+            OnPropertyChanged(nameof(ModeFill));
+            OnPropertyChanged(nameof(ModeBorder));
+            ColorCoderState.DisplayMode = ColorCoderDisplayMode.BottomLine;
+            OnPropertyChanged(nameof(DisplayModeDescription));
+            ColorCoderOverlayHost.RefreshIfActive();
         }
     }
 
@@ -82,51 +67,40 @@ public class ColorCoderViewModel : ViewModelBase
     {
         get
         {
-            if (ModeFill) return "Full colored bar across the top of each view window";
-            if (ModeBorder) return "Thin colored border around the view window edges";
-            return "Subtle colored line at the bottom of each view";
+            if (ModeFill) return "Colored strip along the top of each view window.";
+            if (ModeBorder) return "Colored frame around each view window.";
+            return "Colored strip along the bottom of each view window.";
         }
     }
 
-    // ── Opacity ───────────────────────────────────────────────
-
-    private double _opacity = 0.85;
+    private double _opacity;
     public double Opacity
     {
         get => _opacity;
-        set => SetProperty(ref _opacity, value);
+        set
+        {
+            if (!SetProperty(ref _opacity, value)) return;
+            ColorCoderState.Opacity = value;
+            ColorCoderOverlayHost.RefreshIfActive();
+        }
     }
 
-    // ── Bar Thickness ─────────────────────────────────────────
-
-    private double _barThickness = 4.0;
+    private double _barThickness;
     public double BarThickness
     {
         get => _barThickness;
-        set => SetProperty(ref _barThickness, value);
+        set
+        {
+            if (!SetProperty(ref _barThickness, value)) return;
+            ColorCoderState.BarThicknessDip = value;
+            ColorCoderOverlayHost.RefreshIfActive();
+        }
     }
 
-    // ── Status ────────────────────────────────────────────────
+    public string StatusMessage { get; private set; } = string.Empty;
 
-    private string _statusMessage = "Ready";
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        set => SetProperty(ref _statusMessage, value);
-    }
-
-    private bool _isActive;
-    public bool IsActive
-    {
-        get => _isActive;
-        set => SetProperty(ref _isActive, value);
-    }
-
-    // ── Commands ──────────────────────────────────────────────
-
-    public ICommand RefreshCommand { get; }
-    public ICommand RandomizeColorsCommand { get; }
     public ICommand CloseCommand { get; }
+    public ICommand ResetCommand { get; }
 
     public Action? CloseAction { get; set; }
 
@@ -134,75 +108,42 @@ public class ColorCoderViewModel : ViewModelBase
     {
         _uiApp = uiApp;
 
-        // Fill preset colors
-        foreach (var c in Palette)
-            PresetColors.Add(c);
-
-        RefreshCommand = new RelayCommand(_ => LoadDocuments());
-        RandomizeColorsCommand = new RelayCommand(_ => RandomizeColors());
-        CloseCommand = new RelayCommand(_ => CloseAction?.Invoke());
-
-        LoadDocuments();
-    }
-
-    private void LoadDocuments()
-    {
-        Documents.Clear();
-        int colorIdx = 0;
-
-        try
+        switch (ColorCoderState.DisplayMode)
         {
-            var app = _uiApp.Application;
-
-            foreach (Autodesk.Revit.DB.Document doc in app.Documents)
-            {
-                if (doc.IsFamilyDocument) continue;
-
-                string name = string.IsNullOrEmpty(doc.Title) ? "Untitled" : doc.Title;
-                string path = string.IsNullOrEmpty(doc.PathName) ? "(not saved)" : doc.PathName;
-                bool isActive = _uiApp.ActiveUIDocument?.Document?.Title == doc.Title;
-
-                // Count open views for this document
-                int viewCount = 0;
-                try
-                {
-                    var uiDoc = new UIDocument(doc);
-                    var openViews = uiDoc.GetOpenUIViews();
-                    viewCount = openViews?.Count ?? 0;
-                }
-                catch { viewCount = 0; }
-
-                Documents.Add(new DocumentColorInfo
-                {
-                    DocumentName = name,
-                    FilePath = path,
-                    AssignedColor = Palette[colorIdx % Palette.Length],
-                    IsActive = isActive,
-                    IsEnabled = true,
-                    ViewCount = viewCount
-                });
-
-                colorIdx++;
-            }
-
-            StatusMessage = $"{Documents.Count} document(s) found";
+            case ColorCoderDisplayMode.FillBar:
+                _modeFill = true;
+                _modeBorder = false;
+                _modeLine = false;
+                break;
+            case ColorCoderDisplayMode.Border:
+                _modeFill = false;
+                _modeBorder = true;
+                _modeLine = false;
+                break;
+            case ColorCoderDisplayMode.BottomLine:
+                _modeFill = false;
+                _modeBorder = false;
+                _modeLine = true;
+                break;
         }
-        catch (Exception ex)
+
+        _opacity = ColorCoderState.Opacity;
+        _barThickness = ColorCoderState.BarThicknessDip;
+
+        StatusMessage = "Adjust how each open document is highlighted, then Close. Reset turns Color Coder off and removes all tints.";
+
+        CloseCommand = new RelayCommand(_ =>
         {
-            StatusMessage = $"Error: {ex.Message}";
-        }
-    }
+            ColorCoderOverlayHost.Refresh(_uiApp);
+            CloseAction?.Invoke();
+        });
 
-    private void RandomizeColors()
-    {
-        var rng = new Random();
-        var shuffled = Palette.OrderBy(_ => rng.Next()).ToArray();
-        int i = 0;
-        foreach (var doc in Documents)
+        ResetCommand = new RelayCommand(_ =>
         {
-            doc.AssignedColor = shuffled[i % shuffled.Length];
-            i++;
-        }
-        StatusMessage = "Colors randomized";
+            ColorCoderState.DeactivateAndClear();
+            ColorCoderOverlayHost.SetTimerEnabled(false);
+            ColorCoderOverlayHost.ClearOverlays();
+            CloseAction?.Invoke();
+        });
     }
 }

@@ -18,6 +18,18 @@ public class ColorCoderCommand : IExternalCommand
         try
         {
             UIApplication uiApp = commandData.Application;
+            ColorCoderOverlayHost.LastUiApp = uiApp;
+
+            if (!ColorCoderState.IsActive)
+            {
+                ColorCoderState.IsActive = true;
+                ColorCoderState.AssignDefaultColors(uiApp.Application);
+                ColorCoderOverlayHost.Refresh(uiApp);
+                // Periodic refresh recreates WPF windows and causes visible flicker on the canvas;
+                // ViewActivated / document events already reposition strips when needed.
+                ColorCoderOverlayHost.SetTimerEnabled(false);
+                return Result.Succeeded;
+            }
 
             var window = new ColorCoderWindow(uiApp);
             window.ShowDialog();

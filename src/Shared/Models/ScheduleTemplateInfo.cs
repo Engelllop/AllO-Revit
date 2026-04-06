@@ -55,7 +55,7 @@ public class ExcelImportTaskInfo : ViewModelBase
         set => SetProperty(ref _selectedRange, value);
     }
 
-    private string _selectedViewType = "Drafting View";
+    private string _selectedViewType = TableGenConstants.OutputDrafting;
     public string SelectedViewType
     {
         get => _selectedViewType;
@@ -113,4 +113,7 @@ public class ExistingTableViewInfo : ViewModelBase
     public string DisplayInfo => string.IsNullOrEmpty(ExcelPath)
         ? Name
         : $"{Name}  →  {System.IO.Path.GetFileName(ExcelPath)} [{SheetName}]";
+
+    /// <summary>Drawing (drafting/legend) vs Schedule (key schedule).</summary>
+    public string ViewKind { get; set; } = "Drawing";
 }

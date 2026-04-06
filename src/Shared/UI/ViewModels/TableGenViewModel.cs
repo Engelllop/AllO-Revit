@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using AllO.Core;
+using AllO.Helpers;
 using AllO.Models;
 using AllO.Services;
 
@@ -36,7 +37,12 @@ public class TableGenViewModel : ViewModelBase
     public List<string> AvailableSheets => SelectedTask?.AvailableSheets ?? new();
     public List<string> AvailableRanges => SelectedTask?.AvailableRanges ?? new();
 
-    public List<string> ViewTypeOptions { get; } = new() { "Drafting View", "Legend" };
+    public List<string> ViewTypeOptions { get; } = new()
+    {
+        TableGenConstants.OutputDrafting,
+        TableGenConstants.OutputLegend,
+        TableGenConstants.OutputKeySchedule
+    };
 
     // ── Manage tab ─────────────────────────────────────────────
 

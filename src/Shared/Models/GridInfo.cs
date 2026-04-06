@@ -42,4 +42,19 @@ public class GridInfo : ViewModelBase
     }
 
     public bool WillChange => !string.Equals(Name, NewName, StringComparison.Ordinal) && !string.IsNullOrEmpty(NewName);
+
+    /// <summary>English hint when host grid differs from the reference linked model.</summary>
+    private string? _syncWarning;
+    public string? SyncWarning
+    {
+        get => _syncWarning;
+        set => SetProperty(ref _syncWarning, value);
+    }
+
+    private bool _hasSyncMismatch;
+    public bool HasSyncMismatch
+    {
+        get => _hasSyncMismatch;
+        set => SetProperty(ref _hasSyncMismatch, value);
+    }
 }

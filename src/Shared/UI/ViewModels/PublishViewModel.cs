@@ -11,9 +11,15 @@ namespace AllO.UI.ViewModels;
 
 public class PublishViewModel : ViewModelBase
 {
+    public const string FilterParamNoneLabel = "— Parameter —";
+    public const string FilterValueAnyLabel = "— Any value —";
+
     private readonly IRevitService _service;
 
     public ObservableCollection<PublishSheetItem> Sheets { get; } = new();
+
+    public ObservableCollection<string> FilterParameterNames { get; } = new();
+    public ObservableCollection<string> FilterValueOptions { get; } = new();
 
     private ICollectionView? _sheetsView;
     public ICollectionView? SheetsView
@@ -29,9 +35,46 @@ public class PublishViewModel : ViewModelBase
         set
         {
             if (SetProperty(ref _searchText, value))
-                SheetsView?.Refresh();
+                RefreshSheetView();
         }
     }
+
+    private string? _selectedFilterParameter = FilterParamNoneLabel;
+    /// <summary>Parameter definition name to filter by, or <see cref="FilterParamNoneLabel"/> for no filter.</summary>
+    public string? SelectedFilterParameter
+    {
+        get => _selectedFilterParameter;
+        set
+        {
+            if (!SetProperty(ref _selectedFilterParameter, value))
+                return;
+            OnPropertyChanged(nameof(HasParameterFilter));
+            RebuildFilterValueOptions();
+            RefreshSheetView();
+        }
+    }
+
+    private string? _selectedFilterValue = FilterValueAnyLabel;
+    public string? SelectedFilterValue
+    {
+        get => _selectedFilterValue;
+        set
+        {
+            if (SetProperty(ref _selectedFilterValue, value))
+                RefreshSheetView();
+        }
+    }
+
+    private bool _isFilterPopupOpen;
+    public bool IsFilterPopupOpen
+    {
+        get => _isFilterPopupOpen;
+        set => SetProperty(ref _isFilterPopupOpen, value);
+    }
+
+    public bool HasParameterFilter =>
+        !string.IsNullOrEmpty(SelectedFilterParameter)
+        && !string.Equals(SelectedFilterParameter, FilterParamNoneLabel, StringComparison.Ordinal);
 
     private string _documentName = string.Empty;
     public string DocumentName
@@ -139,11 +182,20 @@ public class PublishViewModel : ViewModelBase
         set => SetProperty(ref _statusMessage, value);
     }
 
-    private int _totalCount;
-    public int TotalCount
+    private int _totalInDocument;
+    /// <summary>Sheets in the document (unfiltered).</summary>
+    public int TotalInDocument
     {
-        get => _totalCount;
-        set => SetProperty(ref _totalCount, value);
+        get => _totalInDocument;
+        set => SetProperty(ref _totalInDocument, value);
+    }
+
+    private int _visibleSheetCount;
+    /// <summary>Sheets visible in the grid after search + parameter filter.</summary>
+    public int VisibleSheetCount
+    {
+        get => _visibleSheetCount;
+        set => SetProperty(ref _visibleSheetCount, value);
     }
 
     private int _selectedCount;
@@ -203,6 +255,8 @@ public class PublishViewModel : ViewModelBase
     public ICommand PublishCommand { get; }
     public ICommand OpenFolderCommand { get; }
     public ICommand CloseCommand { get; }
+    public ICommand ToggleFilterPopupCommand { get; }
+    public ICommand ClearSheetFilterCommand { get; }
 
     public Action? CloseAction { get; set; }
 
@@ -232,6 +286,22 @@ public class PublishViewModel : ViewModelBase
 
         CloseCommand = new RelayCommand(_ => CloseAction?.Invoke());
 
+        ToggleFilterPopupCommand = new RelayCommand(_ =>
+        {
+            IsFilterPopupOpen = !IsFilterPopupOpen;
+            if (IsFilterPopupOpen)
+                RefreshFilterParameterNames();
+        });
+
+        ClearSheetFilterCommand = new RelayCommand(_ =>
+        {
+            SelectedFilterParameter = FilterParamNoneLabel;
+            _selectedFilterValue = FilterValueAnyLabel;
+            OnPropertyChanged(nameof(SelectedFilterValue));
+            IsFilterPopupOpen = false;
+            RefreshSheetView();
+        });
+
         LoadSheets();
     }
 
@@ -247,18 +317,111 @@ public class PublishViewModel : ViewModelBase
         SheetsView = CollectionViewSource.GetDefaultView(Sheets);
         SheetsView.Filter = FilterSheet;
 
-        TotalCount = Sheets.Count;
+        TotalInDocument = Sheets.Count;
+        RefreshFilterParameterNames();
+        _selectedFilterParameter = FilterParamNoneLabel;
+        _selectedFilterValue = FilterValueAnyLabel;
+        OnPropertyChanged(nameof(SelectedFilterParameter));
+        OnPropertyChanged(nameof(SelectedFilterValue));
+        OnPropertyChanged(nameof(HasParameterFilter));
+        RebuildFilterValueOptions();
+        RefreshSheetView();
+
         SelectedCount = Sheets.Count(s => s.IsSelected);
         StatusMessage = $"{Sheets.Count} sheet(s) loaded";
+    }
+
+    private void RefreshFilterParameterNames()
+    {
+        FilterParameterNames.Clear();
+        FilterParameterNames.Add(FilterParamNoneLabel);
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var s in Sheets)
+        {
+            foreach (var key in s.ParameterValues.Keys)
+                names.Add(key);
+        }
+        foreach (var n in names.OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+            FilterParameterNames.Add(n);
+    }
+
+    private void RebuildFilterValueOptions()
+    {
+        FilterValueOptions.Clear();
+        FilterValueOptions.Add(FilterValueAnyLabel);
+
+        if (string.IsNullOrEmpty(SelectedFilterParameter)
+            || string.Equals(SelectedFilterParameter, FilterParamNoneLabel, StringComparison.Ordinal))
+        {
+            if (!string.Equals(_selectedFilterValue, FilterValueAnyLabel, StringComparison.Ordinal))
+            {
+                _selectedFilterValue = FilterValueAnyLabel;
+                OnPropertyChanged(nameof(SelectedFilterValue));
+            }
+            return;
+        }
+
+        var vals = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var s in Sheets)
+        {
+            if (s.ParameterValues.TryGetValue(SelectedFilterParameter!, out var pv))
+                vals.Add(pv);
+        }
+        foreach (var v in vals.OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+            FilterValueOptions.Add(v);
+
+        _selectedFilterValue = FilterValueAnyLabel;
+        OnPropertyChanged(nameof(SelectedFilterValue));
+    }
+
+    private void RefreshSheetView()
+    {
+        SheetsView?.Refresh();
+        UpdateVisibleCount();
+    }
+
+    private void UpdateVisibleCount()
+    {
+        if (SheetsView == null)
+        {
+            VisibleSheetCount = 0;
+            return;
+        }
+        int n = 0;
+        foreach (var _ in SheetsView)
+            n++;
+        VisibleSheetCount = n;
     }
 
     private bool FilterSheet(object obj)
     {
         if (obj is not PublishSheetItem sheet) return false;
-        if (string.IsNullOrWhiteSpace(SearchText)) return true;
-        var search = SearchText.Trim();
-        return sheet.SheetNumber.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0
-            || sheet.SheetName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
+
+        if (!string.IsNullOrWhiteSpace(SearchText))
+        {
+            var search = SearchText.Trim();
+            bool textMatch = sheet.SheetNumber.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0
+                || sheet.SheetName.IndexOf(search, StringComparison.OrdinalIgnoreCase) >= 0;
+            if (!textMatch) return false;
+        }
+
+        string? filterParam = SelectedFilterParameter;
+        if (!string.IsNullOrEmpty(filterParam)
+            && !string.Equals(filterParam, FilterParamNoneLabel, StringComparison.Ordinal))
+        {
+            string key = filterParam!; // non-null: guarded by IsNullOrEmpty above
+            if (!sheet.ParameterValues.TryGetValue(key, out var pv))
+                return false;
+
+            if (!string.IsNullOrEmpty(SelectedFilterValue)
+                && !string.Equals(SelectedFilterValue, FilterValueAnyLabel, StringComparison.Ordinal))
+            {
+                if (!string.Equals(pv.Trim(), SelectedFilterValue?.Trim(), StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     private void Sheet_PropertyChanged(object? sender, PropertyChangedEventArgs e)

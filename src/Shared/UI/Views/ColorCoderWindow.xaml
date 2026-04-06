@@ -5,89 +5,27 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="AllO — Color Coder"
-        Height="620" Width="520"
-        MinHeight="500" MinWidth="420"
+        Height="560" Width="440"
+        MinHeight="480" MinWidth="380"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#15151E">
+        Background="#1A1A1A">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="Bg"      Color="#15151E"/>
-        <SolidColorBrush x:Key="Surface"  Color="#1B1B28"/>
-        <SolidColorBrush x:Key="Card"     Color="#1E1E32"/>
-        <SolidColorBrush x:Key="CardH"    Color="#252542"/>
-        <SolidColorBrush x:Key="Bdr"      Color="#2A2A42"/>
-        <SolidColorBrush x:Key="Txt"      Color="#E8E8F0"/>
-        <SolidColorBrush x:Key="Txt2"     Color="#9999B3"/>
-        <SolidColorBrush x:Key="TxtM"     Color="#666680"/>
-        <SolidColorBrush x:Key="Acc"      Color="#6C63FF"/>
-        <SolidColorBrush x:Key="AccH"     Color="#5B53E8"/>
+        <SolidColorBrush x:Key="Surface"  Color="#252525"/>
+        <SolidColorBrush x:Key="Card"     Color="#2C2C2C"/>
+        <SolidColorBrush x:Key="CardH"    Color="#383838"/>
+        <SolidColorBrush x:Key="Bdr"      Color="#3A3A3A"/>
+        <SolidColorBrush x:Key="Txt"      Color="#E8E8E8"/>
+        <SolidColorBrush x:Key="Txt2"     Color="#9A9A9A"/>
+        <SolidColorBrush x:Key="TxtM"     Color="#6E6E6E"/>
+        <SolidColorBrush x:Key="Acc"      Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="AccH"     Color="#FFFFFF"/>
         <SolidColorBrush x:Key="Suc"      Color="#34D399"/>
 
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
-        <!-- Toggle Button Style (Radio-like) -->
-        <Style x:Key="ToggleMode" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd" Background="{StaticResource Card}"
-                                BorderBrush="{StaticResource Bdr}" BorderThickness="1"
-                                CornerRadius="8" Padding="16,14" Margin="0,0,0,6">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="12"/>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Icon area -->
-                                <Border Grid.Column="0" Width="36" Height="36" CornerRadius="8">
-                                    <Border.Background>
-                                        <SolidColorBrush Color="#252545"/>
-                                    </Border.Background>
-                                    <ContentPresenter Content="{TemplateBinding Tag}"
-                                                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                </Border>
-
-                                <!-- Text -->
-                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                    <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                </StackPanel>
-
-                                <!-- Check indicator -->
-                                <Border x:Name="Check" Grid.Column="3" Width="20" Height="20"
-                                        CornerRadius="10" Background="#252545"
-                                        VerticalAlignment="Center">
-                                    <Ellipse x:Name="Dot" Width="10" Height="10" Fill="Transparent"/>
-                                </Border>
-                            </Grid>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Acc}"/>
-                                <Setter TargetName="Bd" Property="Background" Value="#1C1C38"/>
-                                <Setter TargetName="Check" Property="Background" Value="{StaticResource Acc}"/>
-                                <Setter TargetName="Dot" Property="Fill" Value="White"/>
-                                <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardH}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Button Styles -->
         <Style x:Key="BtnP" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource Acc}"/>
-            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Foreground" Value="#111111"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="20,10"/>
@@ -103,9 +41,6 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccH}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.3"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -140,191 +75,109 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="Lbl" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="#5A5A5A"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
+        </Style>
+
+        <!-- Compact mode toggle -->
+        <Style x:Key="ModeToggle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="0,0,0,5"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="0,0,0,5"/>
+        </Style>
     </Window.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>   <!-- Header -->
-            <RowDefinition Height="*"/>      <!-- Content -->
-            <RowDefinition Height="Auto"/>   <!-- Status -->
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- ═══════ HEADER ═══════ -->
+        <!-- Header -->
         <Border Grid.Row="0" Background="{StaticResource Surface}"
                 BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1"
-                Padding="20,14">
-            <Grid>
-                <StackPanel>
-                    <TextBlock Text="AllO" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Acc}"/>
-                    <TextBlock Text="Color Coder" FontSize="10" Foreground="{StaticResource TxtM}" Margin="1,0,0,0"/>
+                Padding="22,16">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="AllO" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Acc}"/>
+                    <Border Background="#1A2E1A" CornerRadius="6" Padding="8,3" Margin="12,4,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="ON" FontSize="10" Foreground="{StaticResource Suc}" FontWeight="Bold"/>
+                    </Border>
                 </StackPanel>
-                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="Shuffle Colors" Style="{StaticResource BtnS}" FontSize="11" Padding="10,6"
-                            Command="{Binding RandomizeColorsCommand}" Margin="0,0,8,0"/>
-                    <Button Content="Refresh" Style="{StaticResource BtnS}" FontSize="11" Padding="10,6"
-                            Command="{Binding RefreshCommand}"/>
-                </StackPanel>
-            </Grid>
+                <TextBlock Text="Color Coder — settings" FontSize="11" Foreground="{StaticResource TxtM}" Margin="1,0,0,0"/>
+                <TextBlock Text="First ribbon click turns colors on. Second click opens this panel."
+                           FontSize="12" Foreground="{StaticResource Txt2}" Margin="0,12,0,0" TextWrapping="Wrap"/>
+            </StackPanel>
         </Border>
 
-        <!-- ═══════ CONTENT ═══════ -->
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,16,20,12">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="22,18">
             <StackPanel>
 
-                <!-- ── DOCUMENTS LIST ── -->
-                <TextBlock Text="OPEN DOCUMENTS" FontSize="10" FontWeight="Bold"
-                           Foreground="{StaticResource TxtM}" Margin="0,0,0,10"/>
-
-                <ItemsControl ItemsSource="{Binding Documents}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="{StaticResource Card}" CornerRadius="8"
-                                    BorderBrush="{StaticResource Bdr}" BorderThickness="1"
-                                    Padding="14,12" Margin="0,0,0,6">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="12"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <!-- Color swatch (clickable to cycle) -->
-                                    <Border Grid.Column="0" Width="40" Height="40" CornerRadius="8"
-                                            Background="{Binding ColorBrush}" Opacity="0.9">
-                                        <TextBlock Text="{Binding DocumentName[0]}" FontSize="16" FontWeight="Bold"
-                                                   Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Border>
-
-                                    <!-- Doc info -->
-                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding DocumentName}" FontSize="13" FontWeight="SemiBold"
-                                                       Foreground="#E8E8F0"/>
-                                            <Border Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}"
-                                                    Background="#1A3A2A" CornerRadius="8" Padding="8,2" Margin="8,0,0,0"
-                                                    VerticalAlignment="Center">
-                                                <TextBlock Text="Active" FontSize="9" Foreground="#34D399" FontWeight="SemiBold"/>
-                                            </Border>
-                                        </StackPanel>
-                                        <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
-                                            <TextBlock Text="{Binding ViewCount, StringFormat='{}{0} open views'}"
-                                                       FontSize="11" Foreground="#666680"/>
-                                            <TextBlock Text="  ·  " FontSize="11" Foreground="#444460"/>
-                                            <TextBlock Text="{Binding ColorHex}" FontSize="11" Foreground="#666680" FontFamily="Consolas"/>
-                                        </StackPanel>
-                                    </StackPanel>
-
-                                    <!-- Color swatches for quick pick -->
-                                    <ItemsControl Grid.Column="3" ItemsSource="{Binding DataContext.PresetColors, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  VerticalAlignment="Center">
-                                        <ItemsControl.ItemsPanel>
-                                            <ItemsPanelTemplate>
-                                                <WrapPanel Orientation="Horizontal" MaxWidth="140"/>
-                                            </ItemsPanelTemplate>
-                                        </ItemsControl.ItemsPanel>
-                                        <ItemsControl.ItemTemplate>
-                                            <DataTemplate>
-                                                <Border Width="16" Height="16" CornerRadius="4" Margin="1" Cursor="Hand"
-                                                        MouseLeftButtonDown="ColorSwatch_Click">
-                                                    <Border.Background>
-                                                        <SolidColorBrush Color="{Binding}"/>
-                                                    </Border.Background>
-                                                </Border>
-                                            </DataTemplate>
-                                        </ItemsControl.ItemTemplate>
-                                    </ItemsControl>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-
-                <!-- ── DISPLAY MODE (Toggle Stack) ── -->
-                <TextBlock Text="DISPLAY MODE" FontSize="10" FontWeight="Bold"
-                           Foreground="{StaticResource TxtM}" Margin="0,20,0,10"/>
-
-                <StackPanel>
-                    <RadioButton Style="{StaticResource ToggleMode}" GroupName="DisplayMode"
-                                 IsChecked="{Binding ModeFill}">
-                        <RadioButton.Tag>
-                            <TextBlock Text="&#xE790;" FontFamily="Segoe MDL2 Assets" FontSize="16"
-                                       Foreground="#9B93FF"/>
-                        </RadioButton.Tag>
-                        <StackPanel>
-                            <TextBlock Text="Fill Bar" FontSize="13" FontWeight="SemiBold"/>
-                            <TextBlock Text="Full colored bar across the top of each view" FontSize="11"
-                                       Foreground="#666680" Margin="0,2,0,0"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton Style="{StaticResource ToggleMode}" GroupName="DisplayMode"
-                                 IsChecked="{Binding ModeBorder}">
-                        <RadioButton.Tag>
-                            <TextBlock Text="&#xE8A3;" FontFamily="Segoe MDL2 Assets" FontSize="16"
-                                       Foreground="#38BDF8"/>
-                        </RadioButton.Tag>
-                        <StackPanel>
-                            <TextBlock Text="Border" FontSize="13" FontWeight="SemiBold"/>
-                            <TextBlock Text="Colored border around each view window" FontSize="11"
-                                       Foreground="#666680" Margin="0,2,0,0"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton Style="{StaticResource ToggleMode}" GroupName="DisplayMode"
-                                 IsChecked="{Binding ModeLine}">
-                        <RadioButton.Tag>
-                            <TextBlock Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="16"
-                                       Foreground="#34D399"/>
-                        </RadioButton.Tag>
-                        <StackPanel>
-                            <TextBlock Text="Bottom Line" FontSize="13" FontWeight="SemiBold"/>
-                            <TextBlock Text="Subtle colored line at the bottom of each view" FontSize="11"
-                                       Foreground="#666680" Margin="0,2,0,0"/>
-                        </StackPanel>
-                    </RadioButton>
-                </StackPanel>
-
-                <!-- ── SETTINGS ── -->
-                <TextBlock Text="SETTINGS" FontSize="10" FontWeight="Bold"
-                           Foreground="{StaticResource TxtM}" Margin="0,20,0,10"/>
-
-                <Border Background="{StaticResource Card}" CornerRadius="8"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="1"
-                        Padding="16,14">
+                <TextBlock Text="HIGHLIGHT STYLE" Style="{StaticResource Lbl}"/>
+                <Border Background="{StaticResource Card}" CornerRadius="8" BorderBrush="{StaticResource Bdr}"
+                        BorderThickness="1" Padding="14,12">
                     <StackPanel>
-                        <!-- Opacity -->
-                        <Grid Margin="0,0,0,14">
+                        <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
+                                     IsChecked="{Binding ModeFill}">
+                            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Txt}">
+                                <Run FontWeight="SemiBold" Text="Top bar"/><Run Text=" — "/>
+                                <Run Text="Strong strip along the top of the view (best for a single host model)."/>
+                            </TextBlock>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
+                                     IsChecked="{Binding ModeBorder}">
+                            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Txt}">
+                                <Run FontWeight="SemiBold" Text="Border"/><Run Text=" — "/>
+                                <Run Text="Outline around the whole view area."/>
+                            </TextBlock>
+                        </RadioButton>
+                        <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
+                                     IsChecked="{Binding ModeLine}">
+                            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Txt}">
+                                <Run FontWeight="SemiBold" Text="Bottom line"/><Run Text=" — "/>
+                                <Run Text="Thin strip along the bottom."/>
+                            </TextBlock>
+                        </RadioButton>
+                        <TextBlock Text="{Binding DisplayModeDescription}" FontSize="11" Foreground="{StaticResource TxtM}"
+                                   Margin="0,8,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="INTENSITY" Style="{StaticResource Lbl}" Margin="0,18,0,0"/>
+                <Border Background="{StaticResource Card}" CornerRadius="8" BorderBrush="{StaticResource Bdr}"
+                        BorderThickness="1" Padding="14,12">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Opacity" FontSize="12" Foreground="#9999B3"
-                                       VerticalAlignment="Center"/>
-                            <Slider Grid.Column="1" Minimum="0.1" Maximum="1.0"
-                                    Value="{Binding Opacity}" Margin="16,0"
-                                    VerticalAlignment="Center"/>
+                            <TextBlock Grid.Column="0" Text="Opacity" FontSize="12" Foreground="{StaticResource Txt2}" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1" Minimum="0.15" Maximum="1.0"
+                                    Value="{Binding Opacity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="14,0"/>
                             <TextBlock Grid.Column="2" Text="{Binding Opacity, StringFormat='{}{0:P0}'}"
-                                       FontSize="12" Foreground="#9999B3" FontFamily="Consolas"
-                                       VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
+                                       FontSize="12" Foreground="{StaticResource Txt2}" Width="40" TextAlignment="Right"/>
                         </Grid>
-
-                        <!-- Thickness -->
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="Thickness" FontSize="12" Foreground="#9999B3"
-                                       VerticalAlignment="Center"/>
-                            <Slider Grid.Column="1" Minimum="2" Maximum="12"
-                                    Value="{Binding BarThickness}" Margin="16,0"
-                                    VerticalAlignment="Center" IsSnapToTickEnabled="True" TickFrequency="1"/>
+                            <TextBlock Grid.Column="0" Text="Thickness" FontSize="12" Foreground="{StaticResource Txt2}" VerticalAlignment="Center"/>
+                            <Slider Grid.Column="1" Minimum="2" Maximum="14"
+                                    Value="{Binding BarThickness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                    IsSnapToTickEnabled="True" TickFrequency="1" Margin="14,0"/>
                             <TextBlock Grid.Column="2" Text="{Binding BarThickness, StringFormat='{}{0:0}px'}"
-                                       FontSize="12" Foreground="#9999B3" FontFamily="Consolas"
-                                       VerticalAlignment="Center" Width="40" TextAlignment="Right"/>
+                                       FontSize="12" Foreground="{StaticResource Txt2}" Width="40" TextAlignment="Right"/>
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -332,21 +185,22 @@
             </StackPanel>
         </ScrollViewer>
 
-        <!-- ═══════ STATUS BAR ═══════ -->
-        <Border Grid.Row="2" Background="#111119"
-                BorderBrush="#1A1A2E" BorderThickness="0,1,0,0"
-                Padding="20,9">
+        <!-- Footer -->
+        <Border Grid.Row="2" Background="#161616" BorderBrush="#2A2A2A" BorderThickness="0,1,0,0" Padding="22,12">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" FontSize="11.5"
-                           Foreground="{StaticResource TxtM}" VerticalAlignment="Center"/>
-
-                <Button Grid.Column="1" Content="Close" Style="{StaticResource BtnS}"
-                        Command="{Binding CloseCommand}" FontSize="11" Padding="12,5"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="10"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Text="{Binding StatusMessage}" FontSize="11" Foreground="{StaticResource TxtM}"
+                           TextWrapping="Wrap"/>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Content="Reset (off)" Style="{StaticResource BtnS}" FontSize="12" Padding="16,8"
+                            Command="{Binding ResetCommand}" Margin="0,0,10,0"
+                            ToolTip="Turn Color Coder off and remove all tint overlays"/>
+                    <Button Content="Close" Style="{StaticResource BtnP}" Command="{Binding CloseCommand}" FontSize="12" Padding="16,8"/>
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>
