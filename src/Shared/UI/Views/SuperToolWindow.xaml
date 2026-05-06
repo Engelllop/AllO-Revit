@@ -12,297 +12,50 @@
         Background="#1E1E1E">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="Deep"     Color="#1E1E1E"/>
-        <SolidColorBrush x:Key="Surface"  Color="#252525"/>
-        <SolidColorBrush x:Key="Panel"    Color="#2C2C2C"/>
-        <SolidColorBrush x:Key="Card"     Color="#303030"/>
-        <SolidColorBrush x:Key="Overlay"  Color="#3B3B3B"/>
-        <SolidColorBrush x:Key="Bdr"      Color="#383838"/>
-        <SolidColorBrush x:Key="BdrL"     Color="#494949"/>
-        <SolidColorBrush x:Key="Txt"      Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="Txt2"     Color="#999999"/>
-        <SolidColorBrush x:Key="TxtM"     Color="#787878"/>
-        <SolidColorBrush x:Key="TxtA"     Color="#CCCCCC"/>
-        <SolidColorBrush x:Key="Acc"      Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="AccH"     Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="Suc"      Color="#34D399"/>
-        <SolidColorBrush x:Key="Err"      Color="#FB7185"/>
-        <SolidColorBrush x:Key="Wrn"      Color="#FBBF24"/>
-        <SolidColorBrush x:Key="Orange"   Color="#F97316"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/AllO.Shared;component/UI/Styles/AllOTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <!-- Window-specific row style for sync mismatch -->
+            <Style x:Key="DgRSync" TargetType="DataGridRow" BasedOn="{StaticResource DgRow}">
+                <Setter Property="MinHeight" Value="44"/>
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding HasSyncMismatch}" Value="True">
+                        <Setter Property="Background" Value="#2D2418"/>
+                        <Setter Property="BorderBrush" Value="{StaticResource Orange}"/>
+                        <Setter Property="BorderThickness" Value="0,0,0,2"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
 
-        <!-- ═══ BUTTONS ═══ -->
-        <Style x:Key="BtnP" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource Acc}"/>
-            <Setter Property="Foreground" Value="#111111"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="18,8"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccH}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="BtnS" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource Card}"/>
-            <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
-            <Setter Property="FontSize" Value="11.5"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Overlay}"/>
-                                <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="BtnDanger" TargetType="Button" BasedOn="{StaticResource BtnS}">
-            <Setter Property="Foreground" Value="{StaticResource Err}"/>
-            <Setter Property="BorderBrush" Value="#3D2020"/>
-        </Style>
-
-        <!-- ═══ TEXTBOX ═══ -->
-        <Style x:Key="TBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#272727"/>
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-            <Setter Property="CaretBrush" Value="{StaticResource Txt}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,7"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ScrollViewer x:Name="PART_ContentHost"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Acc}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="DkCheck" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-
-        <!-- ═══ COMBOBOX ═══ -->
-        <ControlTemplate x:Key="CbToggle" TargetType="ToggleButton">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="28"/>
-                </Grid.ColumnDefinitions>
-                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#272727"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
-                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#909090" StrokeThickness="1.5"
-                      HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            </Grid>
-            <ControlTemplate.Triggers>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource Acc}"/>
-                </Trigger>
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
-
-        <Style x:Key="DkCombo" TargetType="ComboBox">
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,7"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton Template="{StaticResource CbToggle}"
-                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                          Focusable="False" ClickMode="Press"/>
-                            <TextBlock Text="{TemplateBinding SelectionBoxItem}"
-                                       Margin="10,7,28,7" VerticalAlignment="Center"
-                                       IsHitTestVisible="False" TextTrimming="CharacterEllipsis"/>
-                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   Placement="Bottom"
-                                   PlacementTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
-                                   Focusable="False" AllowsTransparency="True" PopupAnimation="Slide">
-                                <Border Background="#2C2C2C" BorderBrush="{StaticResource Bdr}"
-                                        BorderThickness="1" CornerRadius="4" Margin="0,2,0,0"
-                                        MinWidth="{TemplateBinding ActualWidth}">
-                                    <ScrollViewer MaxHeight="200">
-                                        <ItemsPresenter/>
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="DkComboItem" TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,7"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#3B3B3B"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#414141"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ═══ DATAGRID ═══ -->
-        <Style x:Key="DgH" TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#272727"/>
-            <Setter Property="Foreground" Value="#828282"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="BorderBrush" Value="#323232"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DataGridColumnHeader">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="DgC" TargetType="DataGridCell">
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DataGridCell">
-                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#323232"/>
-                    <Setter Property="Foreground" Value="White"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="DgR" TargetType="DataGridRow">
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2E2E2E"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="DgRSync" TargetType="DataGridRow" BasedOn="{StaticResource DgR}">
-            <Setter Property="MinHeight" Value="44"/>
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding HasSyncMismatch}" Value="True">
-                    <Setter Property="Background" Value="#2D2418"/>
-                    <Setter Property="BorderBrush" Value="{StaticResource Orange}"/>
-                    <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- ═══ SIDEBAR NAV ═══ -->
-        <Style x:Key="NavBtn" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Padding" Value="14,10"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd" Background="Transparent"
-                                Padding="{TemplateBinding Padding}" CornerRadius="6" Margin="4,1">
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2E2E2E"/>
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Acc}"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Section label -->
-        <Style x:Key="Lbl" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#686868"/>
-            <Setter Property="Margin" Value="0,0,0,5"/>
-        </Style>
+            <!-- Window-specific RadioButton sidebar nav -->
+            <Style x:Key="NavBtn" TargetType="RadioButton">
+                <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Padding" Value="14,10"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Border x:Name="Bd" Background="Transparent"
+                                    Padding="{TemplateBinding Padding}" CornerRadius="6" Margin="4,1">
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#2E2E2E"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource Accent}"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid>
@@ -315,12 +68,12 @@
         <!-- SIDEBAR                                     -->
         <!-- ═══════════════════════════════════════════ -->
         <Border Grid.Column="0" Background="{StaticResource Surface}"
-                BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,1,0">
+                BorderBrush="{StaticResource Border}" BorderThickness="0,0,1,0">
             <DockPanel>
                 <!-- Logo -->
                 <StackPanel DockPanel.Dock="Top" Margin="16,16,16,20">
-                    <TextBlock Text="AllO" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Acc}"/>
-                    <TextBlock Text="Toolkit" FontSize="11" Foreground="{StaticResource TxtM}" Margin="1,0,0,0"/>
+                    <TextBlock Text="AllO" FontSize="22" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
+                    <TextBlock Text="Toolkit" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="1,0,0,0"/>
                 </StackPanel>
 
                 <!-- Nav -->
@@ -375,44 +128,44 @@
 
                 <!-- Toolbar -->
                 <Border Grid.Row="0" Background="{StaticResource Surface}" Padding="16,10"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1">
+                        BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="Copy Crop" Style="{StaticResource BtnP}" Command="{Binding CopyCropCommand}" Margin="0,0,8,0"/>
-                        <Button Content="Select All" Style="{StaticResource BtnS}" Command="{Binding CropSelectAllCommand}" Margin="0,0,4,0"/>
-                        <Button Content="Select None" Style="{StaticResource BtnS}" Command="{Binding CropSelectNoneCommand}" Margin="0,0,16,0"/>
-                        <TextBox Style="{StaticResource TBox}" Width="200"
+                        <Button Content="Copy Crop" Style="{StaticResource BtnPrimary}" Command="{Binding CopyCropCommand}" Margin="0,0,8,0" ToolTip="Copy crop region from source view to selected targets"/>
+                        <Button Content="Select All" Style="{StaticResource BtnSecondary}" Command="{Binding CropSelectAllCommand}" Margin="0,0,4,0" ToolTip="Select all views"/>
+                        <Button Content="Select None" Style="{StaticResource BtnSecondary}" Command="{Binding CropSelectNoneCommand}" Margin="0,0,16,0" ToolTip="Deselect all views"/>
+                        <TextBox Style="{StaticResource SearchBox}" Width="200"
                                  Text="{Binding CropSearch, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Source selection -->
                 <Border Grid.Row="1" Background="#262626" Padding="16,10"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1">
+                        BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="BASE SOURCE VIEW" FontSize="11" FontWeight="Bold"
-                                   Foreground="{StaticResource TxtM}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox Style="{StaticResource DkCombo}" Width="350"
+                                   Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox Style="{StaticResource DarkCombo}" Width="350"
                                   ItemsSource="{Binding CropViews}"
                                   SelectedItem="{Binding CropSourceView}"
                                   DisplayMemberPath="Name"
-                                  ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                  ItemContainerStyle="{StaticResource DarkComboItem}"/>
                         <TextBlock Text="→  Select targets below" FontSize="11"
-                                   Foreground="{StaticResource Txt2}" VerticalAlignment="Center" Margin="16,0,0,0"/>
+                                   Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center" Margin="16,0,0,0"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Target views list -->
-                <DataGrid Grid.Row="2"
+                <DataGrid Grid.Row="2" x:Name="CropDataGrid"
                           ItemsSource="{Binding CropViewsView}"
                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           SelectionMode="Extended" HeadersVisibility="Column"
                           GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#272727"
                           Background="{StaticResource Deep}" BorderThickness="0"
                           RowBackground="#282828" AlternatingRowBackground="#2B2B2B"
-                          Foreground="{StaticResource Txt}" FontSize="12.5"
+                          Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                           RowHeight="36" ColumnHeaderHeight="32"
-                          ColumnHeaderStyle="{StaticResource DgH}"
-                          CellStyle="{StaticResource DgC}" RowStyle="{StaticResource DgR}">
+                          ColumnHeaderStyle="{StaticResource DgColumnHeader}"
+                          CellStyle="{StaticResource DgCell}" RowStyle="{StaticResource DgRow}">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="" Width="40" CanUserResize="False">
                             <DataGridTemplateColumn.CellTemplate>
@@ -426,7 +179,7 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Txt}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
@@ -434,7 +187,7 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
@@ -445,11 +198,11 @@
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Text" Value="No"/>
-                                                <Setter Property="Foreground" Value="{StaticResource TxtM}"/>
+                                                <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsCropActive}" Value="True">
                                                         <Setter Property="Text" Value="Yes"/>
-                                                        <Setter Property="Foreground" Value="{StaticResource Suc}"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Success}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -464,16 +217,16 @@
                                     <TextBlock Text="{Binding Status}" VerticalAlignment="Center" FontWeight="SemiBold">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{StaticResource TxtM}"/>
+                                                <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding Status}" Value="Done">
-                                                        <Setter Property="Foreground" Value="{StaticResource Suc}"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Success}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Status}" Value="Failed">
-                                                        <Setter Property="Foreground" Value="{StaticResource Err}"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Danger}"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Status}" Value="Applying...">
-                                                        <Setter Property="Foreground" Value="{StaticResource Wrn}"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Warning}"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -484,6 +237,22 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+                <Border Grid.Row="2" Background="{StaticResource Deep}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=CropDataGrid, Path=Items.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE8C6;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No views available" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
             </Grid>
 
             <!-- ═══ TAB 1: GRIDS ═══ -->
@@ -496,57 +265,57 @@
                 </Grid.RowDefinitions>
 
                 <Border Grid.Row="0" Background="{StaticResource Surface}" Padding="16,10"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1">
+                        BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="Rename" Style="{StaticResource BtnP}" Command="{Binding RenameGridsCommand}" Margin="0,0,8,0"/>
-                        <Button Content="Delete Selected" Style="{StaticResource BtnDanger}" Command="{Binding DeleteGridsCommand}" Margin="0,0,8,0"/>
-                        <Button Content="Select All" Style="{StaticResource BtnS}" Command="{Binding GridSelectAllCommand}" Margin="0,0,4,0"/>
-                        <Button Content="Select None" Style="{StaticResource BtnS}" Command="{Binding GridSelectNoneCommand}" Margin="0,0,16,0"/>
-                        <TextBox Style="{StaticResource TBox}" Width="200"
+                        <Button Content="Rename" Style="{StaticResource BtnPrimary}" Command="{Binding RenameGridsCommand}" Margin="0,0,8,0" ToolTip="Apply new names to selected grids"/>
+                        <Button Content="Delete Selected" Style="{StaticResource BtnDanger}" Command="{Binding DeleteGridsCommand}" Margin="0,0,8,0" ToolTip="Delete selected grids from the document"/>
+                        <Button Content="Select All" Style="{StaticResource BtnSecondary}" Command="{Binding GridSelectAllCommand}" Margin="0,0,4,0" ToolTip="Select all grids"/>
+                        <Button Content="Select None" Style="{StaticResource BtnSecondary}" Command="{Binding GridSelectNoneCommand}" Margin="0,0,16,0" ToolTip="Deselect all grids"/>
+                        <TextBox Style="{StaticResource SearchBox}" Width="200"
                                  Text="{Binding GridSearch, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Reference link + copy -->
                 <Border Grid.Row="1" Background="#262626" Padding="16,10"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1">
+                        BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="REFERENCE LINK" FontSize="11" FontWeight="Bold"
-                                   Foreground="{StaticResource TxtM}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox Style="{StaticResource DkCombo}" Width="280"
+                                   Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox Style="{StaticResource DarkCombo}" Width="280"
                                   ItemsSource="{Binding ReferenceLinks}"
                                   SelectedItem="{Binding SelectedReferenceLink}"
                                   DisplayMemberPath="Name"
-                                  ItemContainerStyle="{StaticResource DkComboItem}"/>
-                        <Button Content="Copy from link" Style="{StaticResource BtnP}" Command="{Binding CopyGridsFromLinkCommand}" Margin="12,0,6,0"/>
-                        <Button Content="Copy new only" Style="{StaticResource BtnS}" Command="{Binding CopyNewGridsOnlyCommand}" Margin="0,0,6,0"/>
-                        <Button Content="Sync from link" Style="{StaticResource BtnS}" Command="{Binding SyncGridsFromLinkCommand}" ToolTip="Replace host grid geometry when it differs from the link"/>
+                                  ItemContainerStyle="{StaticResource DarkComboItem}"/>
+                        <Button Content="Copy from link" Style="{StaticResource BtnPrimary}" Command="{Binding CopyGridsFromLinkCommand}" Margin="12,0,6,0" ToolTip="Copy all grids from the linked model into the host document"/>
+                        <Button Content="Copy new only" Style="{StaticResource BtnSecondary}" Command="{Binding CopyNewGridsOnlyCommand}" Margin="0,0,6,0" ToolTip="Copy only grids that don't already exist in the host"/>
+                        <Button Content="Sync from link" Style="{StaticResource BtnSecondary}" Command="{Binding SyncGridsFromLinkCommand}" ToolTip="Replace host grid geometry when it differs from the link"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Prefix/Suffix -->
                 <Border Grid.Row="2" Background="#262626" Padding="16,10"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1">
+                        BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="PREFIX:" Style="{StaticResource Lbl}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBox Style="{StaticResource TBox}" Width="100" Text="{Binding GridPrefix, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,16,0"/>
+                        <TextBox Style="{StaticResource SearchBox}" Width="100" Text="{Binding GridPrefix, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,16,0"/>
                         <TextBlock Text="SUFFIX:" Style="{StaticResource Lbl}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBox Style="{StaticResource TBox}" Width="100" Text="{Binding GridSuffix, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0"/>
-                        <Button Content="Apply to Selected" Style="{StaticResource BtnS}" Command="{Binding ApplyGridPrefixSuffixCommand}"/>
+                        <TextBox Style="{StaticResource SearchBox}" Width="100" Text="{Binding GridSuffix, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0"/>
+                        <Button Content="Apply to Selected" Style="{StaticResource BtnSecondary}" Command="{Binding ApplyGridPrefixSuffixCommand}" ToolTip="Apply prefix and suffix to selected grids"/>
                     </StackPanel>
                 </Border>
 
-                <DataGrid Grid.Row="3"
+                <DataGrid Grid.Row="3" x:Name="GridsDataGrid"
                           ItemsSource="{Binding GridsView}"
                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           SelectionMode="Extended" HeadersVisibility="Column"
                           GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#272727"
                           Background="{StaticResource Deep}" BorderThickness="0"
                           RowBackground="#282828" AlternatingRowBackground="#2B2B2B"
-                          Foreground="{StaticResource Txt}" FontSize="12.5"
+                          Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                           ColumnHeaderHeight="32"
-                          ColumnHeaderStyle="{StaticResource DgH}"
-                          CellStyle="{StaticResource DgC}" RowStyle="{StaticResource DgRSync}">
+                          ColumnHeaderStyle="{StaticResource DgColumnHeader}"
+                          CellStyle="{StaticResource DgCell}" RowStyle="{StaticResource DgRSync}">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="" Width="40" CanUserResize="False">
                             <DataGridTemplateColumn.CellTemplate>
@@ -560,7 +329,7 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" Margin="0,4">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TxtA}"/>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TextAccent}"/>
                                         <TextBlock Text="{Binding SyncWarning}" FontSize="10" Foreground="{StaticResource Orange}"
                                                    TextWrapping="Wrap"
                                                    Visibility="{Binding HasSyncMismatch, Converter={StaticResource BoolToVis}}"/>
@@ -572,14 +341,14 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Suc}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Success}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                             <DataGridTextColumn.EditingElementStyle>
                                 <Style TargetType="TextBox">
                                     <Setter Property="Background" Value="#272727"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-                                    <Setter Property="CaretBrush" Value="{StaticResource Txt}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                    <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
                                     <Setter Property="Padding" Value="4,2"/>
                                 </Style>
                             </DataGridTextColumn.EditingElementStyle>
@@ -588,7 +357,7 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
@@ -596,13 +365,29 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+                <Border Grid.Row="3" Background="{StaticResource Deep}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=GridsDataGrid, Path=Items.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No grids found in the document" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
             </Grid>
 
             <!-- ═══ TAB 2: LEVELS ═══ -->
@@ -615,56 +400,56 @@
                 </Grid.RowDefinitions>
 
                 <Border Grid.Row="0" Background="{StaticResource Surface}" Padding="16,10"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1">
+                        BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
-                        <Button Content="Rename" Style="{StaticResource BtnP}" Command="{Binding RenameLevelsCommand}" Margin="0,0,6,0"/>
-                        <Button Content="Move" Style="{StaticResource BtnP}" Command="{Binding MoveLevelsCommand}" Margin="0,0,6,0"/>
-                        <Button Content="Delete Selected" Style="{StaticResource BtnDanger}" Command="{Binding DeleteLevelsCommand}" Margin="0,0,8,0"/>
-                        <Button Content="Select All" Style="{StaticResource BtnS}" Command="{Binding LevelSelectAllCommand}" Margin="0,0,4,0"/>
-                        <Button Content="Select None" Style="{StaticResource BtnS}" Command="{Binding LevelSelectNoneCommand}" Margin="0,0,16,0"/>
-                        <TextBox Style="{StaticResource TBox}" Width="200"
+                        <Button Content="Rename" Style="{StaticResource BtnPrimary}" Command="{Binding RenameLevelsCommand}" Margin="0,0,6,0" ToolTip="Apply new names to selected levels"/>
+                        <Button Content="Move" Style="{StaticResource BtnPrimary}" Command="{Binding MoveLevelsCommand}" Margin="0,0,6,0" ToolTip="Move selected levels by the elevation offset"/>
+                        <Button Content="Delete Selected" Style="{StaticResource BtnDanger}" Command="{Binding DeleteLevelsCommand}" Margin="0,0,8,0" ToolTip="Delete selected levels from the document"/>
+                        <Button Content="Select All" Style="{StaticResource BtnSecondary}" Command="{Binding LevelSelectAllCommand}" Margin="0,0,4,0" ToolTip="Select all levels"/>
+                        <Button Content="Select None" Style="{StaticResource BtnSecondary}" Command="{Binding LevelSelectNoneCommand}" Margin="0,0,16,0" ToolTip="Deselect all levels"/>
+                        <TextBox Style="{StaticResource SearchBox}" Width="200"
                                  Text="{Binding LevelSearch, UpdateSourceTrigger=PropertyChanged}"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Reference link + copy -->
                 <Border Grid.Row="1" Background="#262626" Padding="16,10"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1">
+                        BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="REFERENCE LINK" FontSize="11" FontWeight="Bold"
-                                   Foreground="{StaticResource TxtM}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <ComboBox Style="{StaticResource DkCombo}" Width="280"
+                                   Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <ComboBox Style="{StaticResource DarkCombo}" Width="280"
                                   ItemsSource="{Binding ReferenceLinks}"
                                   SelectedItem="{Binding SelectedReferenceLink}"
                                   DisplayMemberPath="Name"
-                                  ItemContainerStyle="{StaticResource DkComboItem}"/>
-                        <Button Content="Copy from link" Style="{StaticResource BtnP}" Command="{Binding CopyLevelsFromLinkCommand}" Margin="12,0,6,0"/>
-                        <Button Content="Copy new only" Style="{StaticResource BtnS}" Command="{Binding CopyNewLevelsOnlyCommand}" Margin="0,0,6,0"/>
-                        <Button Content="Sync from link" Style="{StaticResource BtnS}" Command="{Binding SyncLevelsFromLinkCommand}" ToolTip="Move host levels to match linked elevations when they differ"/>
+                                  ItemContainerStyle="{StaticResource DarkComboItem}"/>
+                        <Button Content="Copy from link" Style="{StaticResource BtnPrimary}" Command="{Binding CopyLevelsFromLinkCommand}" Margin="12,0,6,0" ToolTip="Copy all levels from the linked model into the host document"/>
+                        <Button Content="Copy new only" Style="{StaticResource BtnSecondary}" Command="{Binding CopyNewLevelsOnlyCommand}" Margin="0,0,6,0" ToolTip="Copy only levels that don't already exist in the host"/>
+                        <Button Content="Sync from link" Style="{StaticResource BtnSecondary}" Command="{Binding SyncLevelsFromLinkCommand}" ToolTip="Move host levels to match linked elevations when they differ"/>
                     </StackPanel>
                 </Border>
 
                 <!-- Offset -->
                 <Border Grid.Row="2" Background="#262626" Padding="16,10"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1">
+                        BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="ELEVATION OFFSET (m):" Style="{StaticResource Lbl}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBox Style="{StaticResource TBox}" Width="100" Text="{Binding ElevationOffset, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0"/>
-                        <Button Content="Apply to Selected" Style="{StaticResource BtnS}" Command="{Binding ApplyElevationOffsetCommand}"/>
+                        <TextBox Style="{StaticResource SearchBox}" Width="100" Text="{Binding ElevationOffset, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,12,0"/>
+                        <Button Content="Apply to Selected" Style="{StaticResource BtnSecondary}" Command="{Binding ApplyElevationOffsetCommand}" ToolTip="Apply elevation offset to selected levels"/>
                     </StackPanel>
                 </Border>
 
-                <DataGrid Grid.Row="3"
+                <DataGrid Grid.Row="3" x:Name="LevelsDataGrid"
                           ItemsSource="{Binding LevelsView}"
                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           SelectionMode="Extended" HeadersVisibility="Column"
                           GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#272727"
                           Background="{StaticResource Deep}" BorderThickness="0"
                           RowBackground="#282828" AlternatingRowBackground="#2B2B2B"
-                          Foreground="{StaticResource Txt}" FontSize="12.5"
+                          Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                           ColumnHeaderHeight="32"
-                          ColumnHeaderStyle="{StaticResource DgH}"
-                          CellStyle="{StaticResource DgC}" RowStyle="{StaticResource DgRSync}">
+                          ColumnHeaderStyle="{StaticResource DgColumnHeader}"
+                          CellStyle="{StaticResource DgCell}" RowStyle="{StaticResource DgRSync}">
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Header="" Width="40" CanUserResize="False">
                             <DataGridTemplateColumn.CellTemplate>
@@ -678,7 +463,7 @@
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Vertical" Margin="0,4">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TxtA}"/>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TextAccent}"/>
                                         <TextBlock Text="{Binding SyncWarning}" FontSize="10" Foreground="{StaticResource Orange}"
                                                    TextWrapping="Wrap"
                                                    Visibility="{Binding HasSyncMismatch, Converter={StaticResource BoolToVis}}"/>
@@ -690,14 +475,14 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Suc}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Success}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                             <DataGridTextColumn.EditingElementStyle>
                                 <Style TargetType="TextBox">
                                     <Setter Property="Background" Value="#272727"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-                                    <Setter Property="CaretBrush" Value="{StaticResource Txt}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                    <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
                                     <Setter Property="Padding" Value="4,2"/>
                                 </Style>
                             </DataGridTextColumn.EditingElementStyle>
@@ -706,7 +491,7 @@
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
@@ -716,14 +501,14 @@
                                 <Style TargetType="TextBlock">
                                     <Setter Property="VerticalAlignment" Value="Center"/>
                                     <Setter Property="HorizontalAlignment" Value="Right"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Suc}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource Success}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                             <DataGridTextColumn.EditingElementStyle>
                                 <Style TargetType="TextBox">
                                     <Setter Property="Background" Value="#272727"/>
-                                    <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-                                    <Setter Property="CaretBrush" Value="{StaticResource Txt}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+                                    <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
                                     <Setter Property="Padding" Value="4,2"/>
                                 </Style>
                             </DataGridTextColumn.EditingElementStyle>
@@ -738,7 +523,7 @@
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsStructural}" Value="True">
                                                         <Setter Property="Text" Value="Structural"/>
-                                                        <Setter Property="Foreground" Value="{StaticResource Wrn}"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Warning}"/>
                                                         <Setter Property="FontSize" Value="11"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -750,6 +535,22 @@
                         </DataGridTemplateColumn>
                     </DataGrid.Columns>
                 </DataGrid>
+                <Border Grid.Row="3" Background="{StaticResource Deep}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ElementName=LevelsDataGrid, Path=Items.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE81E;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No levels found in the document" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    </StackPanel>
+                </Border>
             </Grid>
 
             <!-- ═══ PROGRESS ═══ -->
@@ -771,12 +572,12 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" FontSize="11.5"
-                               Foreground="{StaticResource TxtM}" VerticalAlignment="Center"/>
+                               Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"/>
 
-                    <Button Grid.Column="1" Content="Refresh" Style="{StaticResource BtnS}"
-                            Command="{Binding RefreshCommand}" FontSize="11" Padding="10,5"/>
-                    <Button Grid.Column="3" Content="Close" Style="{StaticResource BtnS}"
-                            Command="{Binding CloseCommand}" FontSize="11" Padding="12,5"/>
+                    <Button Grid.Column="1" Content="Refresh" Style="{StaticResource BtnSecondary}"
+                            Command="{Binding RefreshCommand}" FontSize="11" Padding="10,5" ToolTip="Reload data from the current document"/>
+                    <Button Grid.Column="3" Content="Close" Style="{StaticResource BtnSecondary}"
+                            Command="{Binding CloseCommand}" FontSize="11" Padding="12,5" ToolTip="Close the toolkit"/>
                 </Grid>
             </Border>
         </Grid>

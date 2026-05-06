@@ -14,7 +14,7 @@
         <SolidColorBrush x:Key="Bdr" Color="#383838"/>
         <SolidColorBrush x:Key="Txt" Color="#E0E0E0"/>
         <SolidColorBrush x:Key="Txt2" Color="#999999"/>
-        <SolidColorBrush x:Key="TxtM" Color="#787878"/>
+        <SolidColorBrush x:Key="TxtM" Color="#909090"/>
         <SolidColorBrush x:Key="Acc" Color="#E0E0E0"/>
         <SolidColorBrush x:Key="AccH" Color="#FFFFFF"/>
 
@@ -106,10 +106,11 @@
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20,16">
             <StackPanel>
                 <TextBlock Text="LINKED MODEL" Style="{StaticResource Lbl}"/>
-                <ComboBox Style="{StaticResource DkCombo}"
+                <ComboBox x:Name="LinksCombo" Style="{StaticResource DkCombo}"
                           ItemsSource="{Binding Links}"
                           SelectedItem="{Binding SelectedLink}"
                           DisplayMemberPath="Name"
+                          ToolTip="Select a linked Revit model"
                           Margin="0,0,0,14"/>
 
                 <TextBlock Text="CATEGORY (in link)" Style="{StaticResource Lbl}"/>
@@ -117,6 +118,7 @@
                           ItemsSource="{Binding Categories}"
                           SelectedItem="{Binding SelectedCategory}"
                           IsEnabled="{Binding CategoriesEnabled}"
+                          ToolTip="Select a category from the linked model"
                           Margin="0,0,0,14"/>
 
                 <TextBlock Text="FAMILY TYPE" Style="{StaticResource Lbl}"/>
@@ -124,10 +126,23 @@
                           ItemsSource="{Binding FamilyTypes}"
                           SelectedItem="{Binding SelectedFamilyType}"
                           IsEnabled="{Binding FamilyTypesEnabled}"
+                          ToolTip="Select the family type to copy into the host model"
                           Margin="0,0,0,14"/>
 
                 <TextBlock TextWrapping="Wrap" FontSize="11" Foreground="{StaticResource TxtM}"
                            Text="Copies every instance of the selected type from the link into the host, using the link transform so positions match. In-place families are excluded from categories."/>
+                <TextBlock Text="No linked models available" Foreground="{StaticResource TxtM}" FontSize="12" Margin="0,10,0,0">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ItemsSource.Count, ElementName=LinksCombo}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </StackPanel>
         </ScrollViewer>
 
@@ -142,8 +157,10 @@
                 <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" FontSize="11" Foreground="{StaticResource TxtM}"
                            VerticalAlignment="Center" TextWrapping="Wrap"/>
                 <Button Grid.Column="1" Content="Copy to host" Style="{StaticResource BtnP}"
-                        Command="{Binding CopyCommand}" IsEnabled="{Binding CanCopy}"/>
-                <Button Grid.Column="3" Content="Close" Style="{StaticResource BtnS}" Command="{Binding CloseCommand}"/>
+                        Command="{Binding CopyCommand}" IsEnabled="{Binding CanCopy}"
+                        ToolTip="Copy all instances of the selected type into the current document"/>
+                <Button Grid.Column="3" Content="Close" Style="{StaticResource BtnS}" Command="{Binding CloseCommand}"
+                        ToolTip="Close"/>
             </Grid>
         </Border>
     </Grid>

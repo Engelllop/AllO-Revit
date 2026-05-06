@@ -10,6 +10,24 @@ public static class Logging
 {
     private const string Prefix = "[AllO]";
     private static readonly bool EnableDebug = true;
+    private static readonly object FileLock = new();
+    private static readonly string LogDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AllO", "logs");
+
+    private static void WriteFile(string level, string message)
+    {
+        try
+        {
+            Directory.CreateDirectory(LogDir);
+            var path = Path.Combine(LogDir, $"allo-{DateTime.Now:yyyy-MM-dd}.log");
+            lock (FileLock)
+            {
+                File.AppendAllText(path,
+                    $"{DateTime.Now:HH:mm:ss.fff} [{level}] {message}{Environment.NewLine}");
+            }
+        }
+        catch { /* logging nunca debe romper la app */ }
+    }
 
     /// <summary>
     /// Logs a debug message (only in debug builds or when enabled).
@@ -42,6 +60,7 @@ public static class Logging
 
         System.Diagnostics.Debug.WriteLine(fullMessage);
         Trace.WriteLine(fullMessage);
+        WriteFile("ERROR", fullMessage);
     }
 
     /// <summary>
@@ -55,6 +74,7 @@ public static class Logging
 
         System.Diagnostics.Debug.WriteLine(fullMessage);
         Trace.WriteLine(fullMessage);
+        WriteFile("WARN", fullMessage);
     }
 
     /// <summary>

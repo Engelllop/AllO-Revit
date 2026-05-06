@@ -1992,4 +1992,34 @@ public class RevitService : IRevitService
         merged.Add(current);
         return merged;
     }
+
+    // ═══ Link Display Manager ═══
+
+    public List<LinkDisplayViewItem> GetViewsForLinkDisplay()
+    {
+        if (Doc == null) return new List<LinkDisplayViewItem>();
+        return new FilteredElementCollector(Doc)
+            .OfClass(typeof(View))
+            .Cast<View>()
+            .Where(v => !v.IsTemplate)
+            .Select(v => new LinkDisplayViewItem
+            {
+                ViewId = v.Id.IntegerValue,
+                Name = v.Name,
+                ViewType = v.ViewType.ToString()
+            })
+            .OrderBy(v => v.ViewType)
+            .ThenBy(v => v.Name)
+            .ToList();
+    }
+
+    public LinkDisplayState GetLinkDisplayState(int linkInstanceId, int viewId)
+    {
+        return new LinkDisplayState { LinkInstanceId = linkInstanceId, DisplayMode = "ByHostView" };
+    }
+
+    public int ApplyLinkDisplaySettings(int linkInstanceId, List<int> viewIds, LinkDisplayState state)
+    {
+        throw new NotSupportedException("Link Display Manager requires Revit 2024 or newer.");
+    }
 }

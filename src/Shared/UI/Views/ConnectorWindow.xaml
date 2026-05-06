@@ -248,7 +248,8 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Scan -->
-                <Button Grid.Column="0" Style="{StaticResource BtnP}" Command="{Binding ScanCommand}" Padding="18,10">
+                <Button Grid.Column="0" Style="{StaticResource BtnP}" Command="{Binding ScanCommand}" Padding="18,10"
+                        ToolTip="Scan the model for disconnected elements">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE773;" FontFamily="Segoe MDL2 Assets" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Scan for Disconnected" FontSize="12"/>
@@ -259,24 +260,27 @@
                 <TextBlock Grid.Column="2" Text="Filter:" FontSize="12" Foreground="{StaticResource Tx2}" VerticalAlignment="Center"/>
                 <ComboBox Grid.Column="4" Style="{StaticResource DkCb}" Width="130"
                           ItemsSource="{Binding CategoryFilters}" SelectedItem="{Binding SelectedCategory}"
-                          ItemContainerStyle="{StaticResource DkCbI}"/>
+                          ItemContainerStyle="{StaticResource DkCbI}"
+                          ToolTip="Filter elements by category"/>
 
                 <!-- Tolerance -->
                 <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="Tolerance:" FontSize="12" Foreground="{StaticResource Tx2}" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                    <TextBox Style="{StaticResource TBox}" Width="60" Text="{Binding Tolerance, StringFormat=F1}" FontFamily="Consolas"/>
+                    <TextBox Style="{StaticResource TBox}" Width="60" Text="{Binding Tolerance, StringFormat=F1}" FontFamily="Consolas"
+                             ToolTip="Maximum distance in feet to consider connectors as matching"/>
                     <TextBlock Text="ft" FontSize="11" Foreground="{StaticResource TxM}" Margin="4,0,0,0" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <!-- Select All / None -->
-                <Button Grid.Column="10" Content="Select All" Style="{StaticResource BtnS}" Command="{Binding SelectAllCommand}" FontSize="11" Padding="10,5"/>
-                <Button Grid.Column="12" Content="Select None" Style="{StaticResource BtnS}" Command="{Binding SelectNoneCommand}" FontSize="11" Padding="10,5"/>
+                <Button Grid.Column="10" Content="Select All" Style="{StaticResource BtnS}" Command="{Binding SelectAllCommand}" FontSize="11" Padding="10,5" ToolTip="Select all elements in the list"/>
+                <Button Grid.Column="12" Content="Select None" Style="{StaticResource BtnS}" Command="{Binding SelectNoneCommand}" FontSize="11" Padding="10,5" ToolTip="Deselect all elements in the list"/>
             </Grid>
         </Border>
 
         <!-- DISCONNECTED LIST -->
-        <DataGrid Grid.Row="2"
-                  ItemsSource="{Binding DisconnectedView}"
+        <Grid Grid.Row="2">
+            <DataGrid x:Name="DisconnectedGrid"
+                      ItemsSource="{Binding DisconnectedView}"
                   AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                   SelectionMode="Extended" HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#1A1A30"
@@ -346,7 +350,23 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
-        </DataGrid>
+            </DataGrid>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Items.Count, ElementName=DisconnectedGrid}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Text="&#xE836;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
+                <TextBlock Text="No disconnected elements found" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                <TextBlock Text="Click 'Scan for Disconnected' to analyze the model" Foreground="#686868" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Grid>
 
         <!-- STATUS BAR -->
         <Border Grid.Row="3" Background="#111119" BorderBrush="#1A1A2E" BorderThickness="0,1,0,0" Padding="20,8">
@@ -379,7 +399,8 @@
 
                 <TextBlock Grid.Column="4" Text="{Binding StatusMessage}" FontSize="11.5" Foreground="{StaticResource TxM}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 
-                <Button Grid.Column="6" Style="{StaticResource BtnWarn}" Command="{Binding AutoConnectCommand}" Padding="16,8">
+                <Button Grid.Column="6" Style="{StaticResource BtnWarn}" Command="{Binding AutoConnectCommand}" Padding="16,8"
+                        ToolTip="Automatically connect selected elements using nearest compatible connectors">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE836;" FontFamily="Segoe MDL2 Assets" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <TextBlock Text="Auto Connect" FontSize="12"/>
@@ -387,7 +408,7 @@
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Column="8" Content="Close" Style="{StaticResource BtnS}" Command="{Binding CloseCommand}" FontSize="11" Padding="12,5"/>
+                <Button Grid.Column="8" Content="Close" Style="{StaticResource BtnS}" Command="{Binding CloseCommand}" FontSize="11" Padding="12,5" ToolTip="Close"/>
             </Grid>
         </Border>
     </Grid>

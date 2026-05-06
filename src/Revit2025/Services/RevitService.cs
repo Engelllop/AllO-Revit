@@ -2004,5 +2004,93 @@ public class RevitService : IRevitService
         merged.Add(current);
         return merged;
     }
+
+    // ═══ Link Display Manager ═══
+
+    public List<LinkDisplayViewItem> GetViewsForLinkDisplay()
+    {
+        if (Doc == null) return new List<LinkDisplayViewItem>();
+        return new FilteredElementCollector(Doc)
+            .OfClass(typeof(View))
+            .Cast<View>()
+            .Where(v => !v.IsTemplate)
+            .Select(v => new LinkDisplayViewItem
+            {
+                ViewId = (int)v.Id.Value,
+                Name = v.Name,
+                ViewType = v.ViewType.ToString()
+            })
+            .OrderBy(v => v.ViewType)
+            .ThenBy(v => v.Name)
+            .ToList();
+    }
+
+    public LinkDisplayState GetLinkDisplayState(int linkInstanceId, int viewId)
+    {
+        if (Doc == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
+        var view = Doc.GetElement(new ElementId(viewId)) as View;
+        if (view == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
+
+        try
+        {
+            using var settings = view.GetLinkOverrides(link.Id);
+            if (settings != null)
+            {
+                return new LinkDisplayState
+                {
+                    LinkInstanceId = linkInstanceId,
+                    DisplayMode = settings.LinkVisibilityType.ToString()
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Warning($"Failed to read link display state: {ex.Message}");
+        }
+        return new LinkDisplayState { LinkInstanceId = linkInstanceId, DisplayMode = "ByHostView" };
+    }
+
+    public int ApplyLinkDisplaySettings(int linkInstanceId, List<int> viewIds, LinkDisplayState state)
+    {
+        if (Doc == null || viewIds.Count == 0 || state == null) return 0;
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return 0;
+
+        using var tx = new Transaction(Doc, "AllO: Link Display");
+        tx.Start();
+        int modifiedViews = 0;
+        try
+        {
+            foreach (int vid in viewIds)
+            {
+                var view = Doc.GetElement(new ElementId(vid)) as View;
+                if (view == null) continue;
+
+                try
+                {
+                    using var current = view.GetLinkOverrides(link.Id) ?? new RevitLinkGraphicsSettings();
+                    if (Enum.TryParse<LinkVisibility>(state.DisplayMode, out var mode))
+                        current.LinkVisibilityType = mode;
+                    view.SetLinkOverrides(link.Id, current);
+                    modifiedViews++;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Warning($"Failed to set link display in view {view.Name}: {ex.Message}");
+                }
+            }
+            tx.Commit();
+            Logging.Debug($"Applied link display changes to {modifiedViews} view(s)");
+            return modifiedViews;
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("ApplyLinkDisplaySettings failed", ex);
+            if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+            throw;
+        }
+    }
 }
 

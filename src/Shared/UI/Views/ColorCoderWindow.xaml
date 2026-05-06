@@ -29,7 +29,7 @@
         <SolidColorBrush x:Key="Bdr"      Color="#3A3A3A"/>
         <SolidColorBrush x:Key="Txt"      Color="#E8E8E8"/>
         <SolidColorBrush x:Key="Txt2"     Color="#9A9A9A"/>
-        <SolidColorBrush x:Key="TxtM"     Color="#6E6E6E"/>
+        <SolidColorBrush x:Key="TxtM"     Color="#909090"/>
         <SolidColorBrush x:Key="Acc"      Color="#E0E0E0"/>
         <SolidColorBrush x:Key="AccH"     Color="#FFFFFF"/>
         <SolidColorBrush x:Key="Suc"      Color="#34D399"/>
@@ -147,6 +147,9 @@
     </Window.Resources>
 
     <Border Background="#1A1A1A" BorderBrush="{StaticResource Bdr}" BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect ShadowDepth="0" BlurRadius="12" Opacity="0.4" Color="Black"/>
+        </Border.Effect>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="44"/>
@@ -175,9 +178,36 @@
                             Foreground="{StaticResource Txt2}">
                         <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
                     </Button>
-                    <Button x:Name="MaximizeButton" Style="{StaticResource ChromeSysBtn}" Click="MaximizeRestore_Click" ToolTip="Maximize"
+                    <Button x:Name="MaximizeButton" Style="{StaticResource ChromeSysBtn}" Click="MaximizeRestore_Click"
                             Foreground="{StaticResource Txt2}">
-                        <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
+                        <Button.ToolTip>
+                            <ToolTip>
+                                <TextBlock>
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Maximize"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                                                    <Setter Property="Text" Value="Restore"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </ToolTip>
+                        </Button.ToolTip>
+                        <TextBlock x:Name="MaximizeGlyph" FontFamily="Segoe MDL2 Assets" FontSize="10">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Text" Value="&#xE922;"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                                            <Setter Property="Text" Value="&#xE923;"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                     </Button>
                     <Button Style="{StaticResource ChromeCloseBtn}" Click="CloseChrome_Click" ToolTip="Close"
                             Foreground="{StaticResource Txt2}">
@@ -208,21 +238,24 @@
                             BorderThickness="1" Padding="14,12">
                         <StackPanel>
                             <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
-                                         IsChecked="{Binding ModeFill}">
+                                         IsChecked="{Binding ModeFill}"
+                                         ToolTip="Highlight elements with a diffuse glow from the top edge">
                                 <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Txt}">
                                     <Run FontWeight="SemiBold" Text="Top glow"/><Run Text=" — "/>
                                     <Run Text="Diffuse light from the top edge into the canvas — use Reach to control how far the glow spreads."/>
                                 </TextBlock>
                             </RadioButton>
                             <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
-                                         IsChecked="{Binding ModeBorder}">
+                                         IsChecked="{Binding ModeBorder}"
+                                         ToolTip="Draw an outline around the whole view area">
                                 <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Txt}">
                                     <Run FontWeight="SemiBold" Text="Border"/><Run Text=" — "/>
                                     <Run Text="Outline around the whole view area."/>
                                 </TextBlock>
                             </RadioButton>
                             <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
-                                         IsChecked="{Binding ModeLine}">
+                                         IsChecked="{Binding ModeLine}"
+                                         ToolTip="Highlight elements with a diffuse glow from the bottom edge">
                                 <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Txt}">
                                     <Run FontWeight="SemiBold" Text="Bottom glow"/><Run Text=" — "/>
                                     <Run Text="Same idea as top glow, rising from the bottom of the view."/>
@@ -245,7 +278,8 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="Opacity" FontSize="12" Foreground="{StaticResource Txt2}" VerticalAlignment="Center"/>
                                 <Slider Grid.Column="1" Minimum="0.15" Maximum="1.0"
-                                        Value="{Binding Opacity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="14,0"/>
+                                        Value="{Binding Opacity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="14,0"
+                                        ToolTip="Adjust the opacity of the highlight overlay"/>
                                 <TextBlock Grid.Column="2" Text="{Binding Opacity, StringFormat='{}{0:P0}'}"
                                            FontSize="12" Foreground="{StaticResource Txt2}" Width="40" TextAlignment="Right"/>
                             </Grid>
@@ -284,7 +318,7 @@
                         <Button Content="Reset (off)" Style="{StaticResource BtnS}" FontSize="12" Padding="16,8"
                                 Command="{Binding ResetCommand}" Margin="0,0,10,0"
                                 ToolTip="Turn Color Coder off and remove all tint overlays"/>
-                        <Button Content="Close" Style="{StaticResource BtnP}" Command="{Binding CloseCommand}" FontSize="12" Padding="16,8"/>
+                        <Button Content="Close" Style="{StaticResource BtnP}" Command="{Binding CloseCommand}" FontSize="12" Padding="16,8" ToolTip="Close"/>
                     </StackPanel>
                 </Grid>
             </Border>

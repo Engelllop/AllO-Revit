@@ -12,261 +12,11 @@
         Background="#1E1E1E">
 
     <Window.Resources>
-        <!-- ═══════ COLOR PALETTE ═══════ -->
-        <SolidColorBrush x:Key="DeepBg"       Color="#1E1E1E"/>
-        <SolidColorBrush x:Key="SurfaceBg"    Color="#252525"/>
-        <SolidColorBrush x:Key="PanelBg"      Color="#2C2C2C"/>
-        <SolidColorBrush x:Key="CardBg"       Color="#303030"/>
-        <SolidColorBrush x:Key="OverlayBg"    Color="#3B3B3B"/>
-        <SolidColorBrush x:Key="Bdr"          Color="#383838"/>
-        <SolidColorBrush x:Key="BdrLight"     Color="#494949"/>
-        <SolidColorBrush x:Key="Txt"          Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="Txt2"         Color="#999999"/>
-        <SolidColorBrush x:Key="TxtM"         Color="#787878"/>
-        <SolidColorBrush x:Key="TxtAcc"       Color="#CCCCCC"/>
-        <SolidColorBrush x:Key="Acc"          Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="AccH"         Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="Suc"          Color="#34D399"/>
-        <SolidColorBrush x:Key="Err"          Color="#FB7185"/>
-        <SolidColorBrush x:Key="Wrn"          Color="#FBBF24"/>
-
-        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
-        <!-- ═══════ BUTTON: PRIMARY ═══════ -->
-        <Style x:Key="BtnP" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource Acc}"/>
-            <Setter Property="Foreground" Value="#111111"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="26,11"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccH}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ═══════ BUTTON: SECONDARY ═══════ -->
-        <Style x:Key="BtnS" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource CardBg}"/>
-            <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="14,7"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource OverlayBg}"/>
-                                <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ═══════ TEXTBOX ═══════ -->
-        <Style x:Key="TBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#272727"/>
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-            <Setter Property="CaretBrush" Value="{StaticResource Txt}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="10,7"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4">
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Acc}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ═══════ COMBOBOX (Full dark template) ═══════ -->
-        <ControlTemplate x:Key="CbToggle" TargetType="ToggleButton">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition/>
-                    <ColumnDefinition Width="28"/>
-                </Grid.ColumnDefinitions>
-                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#272727"
-                        BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
-                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#909090" StrokeThickness="1.5"
-                      HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,1,0,0"/>
-            </Grid>
-            <ControlTemplate.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource BdrLight}"/>
-                </Trigger>
-                <Trigger Property="IsChecked" Value="True">
-                    <Setter TargetName="Bg" Property="BorderBrush" Value="{StaticResource Acc}"/>
-                </Trigger>
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
-
-        <Style x:Key="DkCombo" TargetType="ComboBox">
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,7"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid>
-                            <ToggleButton Template="{StaticResource CbToggle}"
-                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}"
-                                          Focusable="False" ClickMode="Press"/>
-                            <TextBlock Text="{TemplateBinding SelectionBoxItem}"
-                                       Margin="10,7,28,7" VerticalAlignment="Center"
-                                       HorizontalAlignment="Left" IsHitTestVisible="False"
-                                       TextTrimming="CharacterEllipsis"/>
-                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom"
-                                   Focusable="False" AllowsTransparency="True" PopupAnimation="Slide">
-                                <Border Background="#2C2C2C" BorderBrush="{StaticResource Bdr}"
-                                        BorderThickness="1" CornerRadius="4" Margin="0,2,0,0"
-                                        MinWidth="{TemplateBinding ActualWidth}"
-                                        MaxWidth="300">
-                                    <ScrollViewer MaxHeight="200">
-                                        <StackPanel IsItemsHost="True"/>
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="DkComboItem" TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,7"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBoxItem">
-                        <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#3B3B3B"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#414141"/>
-                                <Setter Property="Foreground" Value="{StaticResource TxtAcc}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- ═══════ CHECKBOX ═══════ -->
-        <Style x:Key="DkCheck" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-
-        <!-- ═══════ LABEL ═══════ -->
-        <Style x:Key="Lbl" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#686868"/>
-            <Setter Property="Margin" Value="0,0,0,5"/>
-        </Style>
-
-        <!-- ═══════ DATAGRID ═══════ -->
-        <Style x:Key="DgHdr" TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#272727"/>
-            <Setter Property="Foreground" Value="#828282"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="BorderBrush" Value="#323232"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DataGridColumnHeader">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="DgC" TargetType="DataGridCell">
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DataGridCell">
-                        <Border Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}">
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-            <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#383838"/>
-                    <Setter Property="Foreground" Value="White"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="DgR" TargetType="DataGridRow">
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#2E2E2E"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/AllO.Shared;component/UI/Styles/AllOTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid>
@@ -281,8 +31,8 @@
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- HEADER BAR                                                -->
         <!-- ══════════════════════════════════════════════════════════ -->
-        <Border Grid.Row="0" Background="{StaticResource SurfaceBg}"
-                BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1"
+        <Border Grid.Row="0" Background="{StaticResource Surface}"
+                BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1"
                 Padding="20,11">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -298,61 +48,61 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="AllO" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Acc}"/>
-                    <TextBlock Text="Publish" FontSize="10" Foreground="{StaticResource TxtM}" Margin="1,0,0,0"/>
+                    <TextBlock Text="AllO" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
+                    <TextBlock Text="Publish" FontSize="10" Foreground="{StaticResource TextMuted}" Margin="1,0,0,0"/>
                 </StackPanel>
 
                 <TextBlock Grid.Column="2" Text="{Binding DocumentName}" FontSize="12"
-                           Foreground="{StaticResource Txt2}" VerticalAlignment="Center"/>
+                           Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
 
-                <Button Grid.Column="4" Content="Select All" Style="{StaticResource BtnS}" FontSize="11" Padding="10,5"
-                        Command="{Binding SelectAllCommand}"/>
-                <Button Grid.Column="6" Content="Select None" Style="{StaticResource BtnS}" FontSize="11" Padding="10,5"
-                        Command="{Binding SelectNoneCommand}"/>
+                <Button Grid.Column="4" Content="Select All" Style="{StaticResource BtnSecondary}" FontSize="11" Padding="10,5"
+                        Command="{Binding SelectAllCommand}" ToolTip="Select all sheets"/>
+                <Button Grid.Column="6" Content="Select None" Style="{StaticResource BtnSecondary}" FontSize="11" Padding="10,5"
+                        Command="{Binding SelectNoneCommand}" ToolTip="Deselect all sheets"/>
 
                 <Grid Grid.Column="8" MinWidth="240">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Style="{StaticResource TBox}" MinWidth="160" Margin="0,0,6,0"
+                    <TextBox Grid.Column="0" Style="{StaticResource SearchBox}" MinWidth="160" Margin="0,0,6,0"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                              ToolTip="Search by sheet number or name"/>
                     <Grid Grid.Column="1">
-                        <Button x:Name="FilterSheetBtn" Style="{StaticResource BtnS}" Width="36" Padding="0"
+                        <Button x:Name="FilterSheetBtn" Style="{StaticResource BtnSecondary}" Width="36" Padding="0"
                                 Command="{Binding ToggleFilterPopupCommand}"
                                 ToolTip="Filter by any sheet parameter (shared parameters, discipline, etc.)">
                             <Grid Width="18" Height="18">
                                 <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE71C;" FontSize="15"
                                            VerticalAlignment="Center" HorizontalAlignment="Center"
-                                           Foreground="{StaticResource Txt2}"/>
+                                           Foreground="{StaticResource TextSecondary}"/>
                                 <Ellipse Width="6" Height="6" HorizontalAlignment="Right" VerticalAlignment="Top"
-                                         Margin="0,-3,-2,0" Fill="{StaticResource Acc}"
+                                         Margin="0,-3,-2,0" Fill="{StaticResource Accent}"
                                          Visibility="{Binding HasParameterFilter, Converter={StaticResource BoolToVis}}"/>
                             </Grid>
                         </Button>
                         <Popup PlacementTarget="{Binding ElementName=FilterSheetBtn}" Placement="Bottom"
                                IsOpen="{Binding IsFilterPopupOpen, Mode=TwoWay}" StaysOpen="False"
                                AllowsTransparency="True">
-                            <Border Background="#2C2C2C" BorderBrush="{StaticResource Bdr}" BorderThickness="1"
+                            <Border Background="#2C2C2C" BorderBrush="{StaticResource Border}" BorderThickness="1"
                                     CornerRadius="6" Padding="12,10" MinWidth="280"
                                     SnapsToDevicePixels="True">
                                 <StackPanel>
                                     <TextBlock Text="FILTER BY PARAMETER" Style="{StaticResource Lbl}" Margin="0,0,0,8"/>
                                     <TextBlock Text="Parameter" Style="{StaticResource Lbl}" Margin="0,0,0,4"/>
-                                    <ComboBox Style="{StaticResource DkCombo}"
+                                    <ComboBox Style="{StaticResource DarkCombo}"
                                               ItemsSource="{Binding FilterParameterNames}"
                                               SelectedItem="{Binding SelectedFilterParameter}"
-                                              ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                              ItemContainerStyle="{StaticResource DarkComboItem}"/>
                                     <TextBlock Text="Value" Style="{StaticResource Lbl}" Margin="0,10,0,4"/>
-                                    <ComboBox Style="{StaticResource DkCombo}"
+                                    <ComboBox Style="{StaticResource DarkCombo}"
                                               ItemsSource="{Binding FilterValueOptions}"
                                               SelectedItem="{Binding SelectedFilterValue}"
-                                              ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                              ItemContainerStyle="{StaticResource DarkComboItem}"/>
                                     <TextBlock Text="&quot;Any value&quot; keeps all sheets that have the parameter."
-                                               Foreground="{StaticResource TxtM}" FontSize="10" TextWrapping="Wrap"
+                                               Foreground="{StaticResource TextMuted}" FontSize="10" TextWrapping="Wrap"
                                                Margin="0,8,0,10"/>
-                                    <Button Content="Clear filter" Style="{StaticResource BtnS}" HorizontalAlignment="Left"
+                                    <Button Content="Clear filter" Style="{StaticResource BtnSecondary}" HorizontalAlignment="Left"
                                             Command="{Binding ClearSheetFilterCommand}" FontSize="11" Padding="12,6"/>
                                 </StackPanel>
                             </Border>
@@ -365,19 +115,19 @@
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- SHEET LIST                                                -->
         <!-- ══════════════════════════════════════════════════════════ -->
-        <DataGrid Grid.Row="1"
+        <DataGrid Grid.Row="1" x:Name="SheetsDataGrid"
                   ItemsSource="{Binding SheetsView}"
                   AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                   SelectionMode="Extended" HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#272727"
-                  Background="{StaticResource DeepBg}" BorderThickness="0"
+                  Background="{StaticResource Deep}" BorderThickness="0"
                   RowBackground="#252525" AlternatingRowBackground="#2B2B2B"
-                  Foreground="{StaticResource Txt}" FontSize="12.5"
+                  Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                   RowHeight="36" ColumnHeaderHeight="32"
-                  ColumnHeaderStyle="{StaticResource DgHdr}"
-                  CellStyle="{StaticResource DgC}" RowStyle="{StaticResource DgR}">
+                  ColumnHeaderStyle="{StaticResource DgColumnHeader}"
+                  CellStyle="{StaticResource DgCell}" RowStyle="{StaticResource DgRow}">
             <DataGrid.Resources>
-                <Style TargetType="ComboBoxItem" BasedOn="{StaticResource DkComboItem}"/>
+                <Style TargetType="ComboBoxItem" BasedOn="{StaticResource DarkComboItem}"/>
             </DataGrid.Resources>
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="" Width="40" CanUserResize="False">
@@ -394,7 +144,7 @@
                         <Style TargetType="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
                             <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Foreground" Value="{StaticResource TxtAcc}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextAccent}"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
@@ -403,7 +153,7 @@
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
@@ -413,7 +163,7 @@
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
                             <Setter Property="FontStyle" Value="Italic"/>
                         </Style>
@@ -440,20 +190,20 @@
                                 <TextBlock Text="{Binding Status}" FontSize="11" HorizontalAlignment="Center">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Foreground" Value="{StaticResource TxtM}"/>
+                                            <Setter Property="Foreground" Value="{StaticResource TextMuted}"/>
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding Status}" Value="Done">
-                                                    <Setter Property="Foreground" Value="{StaticResource Suc}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource Success}"/>
                                                     <Setter Property="FontWeight" Value="SemiBold"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Status}" Value="Failed">
-                                                    <Setter Property="Foreground" Value="{StaticResource Err}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Status}" Value="PDF Failed">
-                                                    <Setter Property="Foreground" Value="{StaticResource Err}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
                                                 </DataTrigger>
                                                 <DataTrigger Binding="{Binding Status}" Value="DWG Failed">
-                                                    <Setter Property="Foreground" Value="{StaticResource Err}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource Danger}"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -465,12 +215,29 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+        <Border Grid.Row="1" Background="{StaticResource Deep}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ElementName=SheetsDataGrid, Path=Items.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
+                <TextBlock Text="No sheets to publish" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                <TextBlock Text="Try clearing filters or selecting sheets" Foreground="#686868" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Border>
 
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- SETTINGS PANEL (cards layout)                             -->
         <!-- ══════════════════════════════════════════════════════════ -->
         <Border Grid.Row="2" Background="#161616"
-                BorderBrush="{StaticResource Bdr}" BorderThickness="0,1,0,0"
+                BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0"
                 Padding="16,14,16,12">
 
             <Grid>
@@ -490,9 +257,9 @@
                             <CheckBox IsChecked="{Binding ExportPdf}"
                                       Style="{StaticResource DkCheck}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="PDF" FontSize="14" FontWeight="Bold"
-                                       Foreground="{StaticResource Acc}" VerticalAlignment="Center"/>
+                                       Foreground="{StaticResource Accent}" VerticalAlignment="Center"/>
                             <TextBlock Text="Settings" FontSize="13" FontWeight="SemiBold"
-                                       Foreground="{StaticResource Txt}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <Grid>
@@ -506,31 +273,35 @@
 
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="COLOR" Style="{StaticResource Lbl}"/>
-                                <ComboBox Style="{StaticResource DkCombo}"
+                                <ComboBox Style="{StaticResource DarkCombo}"
                                           ItemsSource="{Binding ColorModes}"
                                           SelectedItem="{Binding SelectedColorMode}"
-                                          ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                          ItemContainerStyle="{StaticResource DarkComboItem}"
+                                          ToolTip="PDF color mode"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="QUALITY" Style="{StaticResource Lbl}"/>
-                                <ComboBox Style="{StaticResource DkCombo}"
+                                <ComboBox Style="{StaticResource DarkCombo}"
                                           ItemsSource="{Binding Qualities}"
                                           SelectedItem="{Binding SelectedQuality}"
-                                          ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                          ItemContainerStyle="{StaticResource DarkComboItem}"
+                                          ToolTip="Raster image quality"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="4">
                                 <TextBlock Text="PAPER SIZE" Style="{StaticResource Lbl}"/>
-                                <ComboBox Style="{StaticResource DkCombo}"
+                                <ComboBox Style="{StaticResource DarkCombo}"
                                           ItemsSource="{Binding PaperSizes}"
                                           SelectedItem="{Binding SelectedPaperSize}"
-                                          ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                          ItemContainerStyle="{StaticResource DarkComboItem}"
+                                          ToolTip="Output paper size"/>
                             </StackPanel>
                         </Grid>
 
                         <CheckBox Content="Combine all sheets into single PDF" IsChecked="{Binding CombinePdf}"
-                                  Style="{StaticResource DkCheck}" Margin="0,10,0,0" FontSize="11"/>
+                                  Style="{StaticResource DkCheck}" Margin="0,10,0,0" FontSize="11"
+                                  ToolTip="Merge all exported sheets into a single PDF file"/>
                     </StackPanel>
                 </Border>
 
@@ -542,9 +313,9 @@
                             <CheckBox IsChecked="{Binding ExportDwg}"
                                       Style="{StaticResource DkCheck}" VerticalAlignment="Center" Margin="0,0,8,0"/>
                             <TextBlock Text="DWG" FontSize="14" FontWeight="Bold"
-                                       Foreground="{StaticResource Acc}" VerticalAlignment="Center"/>
+                                       Foreground="{StaticResource Accent}" VerticalAlignment="Center"/>
                             <TextBlock Text="Settings" FontSize="13" FontWeight="SemiBold"
-                                       Foreground="{StaticResource Txt}" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                       Foreground="{StaticResource TextPrimary}" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
 
                         <Grid>
@@ -556,18 +327,20 @@
 
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="UNITS" Style="{StaticResource Lbl}"/>
-                                <ComboBox Style="{StaticResource DkCombo}"
+                                <ComboBox Style="{StaticResource DarkCombo}"
                                           ItemsSource="{Binding DwgUnits}"
                                           SelectedItem="{Binding SelectedDwgUnit}"
-                                          ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                          ItemContainerStyle="{StaticResource DarkComboItem}"
+                                          ToolTip="DWG export units"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
                                 <TextBlock Text="VERSION" Style="{StaticResource Lbl}"/>
-                                <ComboBox Style="{StaticResource DkCombo}"
+                                <ComboBox Style="{StaticResource DarkCombo}"
                                           ItemsSource="{Binding DwgVersions}"
                                           SelectedItem="{Binding SelectedDwgVersion}"
-                                          ItemContainerStyle="{StaticResource DkComboItem}"/>
+                                          ItemContainerStyle="{StaticResource DarkComboItem}"
+                                          ToolTip="AutoCAD version compatibility"/>
                             </StackPanel>
                         </Grid>
 
@@ -583,14 +356,15 @@
 
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="NAMING PATTERN" Style="{StaticResource Lbl}"/>
-                                <TextBox Style="{StaticResource TBox}"
+                                <TextBox Style="{StaticResource SearchBox}"
                                          Text="{Binding NamingPattern, UpdateSourceTrigger=PropertyChanged}"
                                          ToolTip="Use {number} and {name} as placeholders"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
                                 <CheckBox Content="Create subfolders (PDF/ DWG/)" IsChecked="{Binding CreateSubfolders}"
-                                          Style="{StaticResource DkCheck}" FontSize="11"/>
+                                          Style="{StaticResource DkCheck}" FontSize="11"
+                                          ToolTip="Organize exports into separate PDF and DWG folders"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -602,19 +376,21 @@
                         MinWidth="200">
                     <StackPanel>
                         <TextBlock Text="OUTPUT FOLDER" Style="{StaticResource Lbl}" Margin="0,0,0,5"/>
-                        <TextBox Style="{StaticResource TBox}"
+                        <TextBox Style="{StaticResource SearchBox}"
                                  Text="{Binding OutputFolder}" IsReadOnly="True"
                                  TextWrapping="NoWrap" FontSize="11"/>
 
-                        <Button Content="Browse Folder" Style="{StaticResource BtnS}"
+                        <Button Content="Browse Folder" Style="{StaticResource BtnSecondary}"
                                 Command="{Binding BrowseFolderCommand}" Margin="0,8,0,0"
-                                HorizontalAlignment="Stretch" FontSize="11" Padding="8,7"/>
+                                HorizontalAlignment="Stretch" FontSize="11" Padding="8,7"
+                                ToolTip="Choose the output folder for exported files"/>
 
                         <Border Height="1" Background="#353535" Margin="0,12,0,12"/>
 
                         <!-- PUBLISH BUTTON -->
-                        <Button Style="{StaticResource BtnP}" Command="{Binding PublishCommand}"
-                                HorizontalAlignment="Stretch">
+                        <Button Style="{StaticResource BtnPrimary}" Command="{Binding PublishCommand}"
+                                HorizontalAlignment="Stretch"
+                                ToolTip="Export selected sheets to PDF and/or DWG">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="15"
                                            VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -666,7 +442,7 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource Txt2}">
+                    <TextBlock FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TextSecondary}">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="{}{0} / {1}">
                                 <Binding Path="VisibleSheetCount"/>
@@ -674,23 +450,24 @@
                             </MultiBinding>
                         </TextBlock.Text>
                     </TextBlock>
-                    <TextBlock Text=" sheets" FontSize="12" Foreground="{StaticResource TxtM}"/>
+                    <TextBlock Text=" sheets" FontSize="12" Foreground="{StaticResource TextMuted}"/>
                 </StackPanel>
 
                 <Rectangle Grid.Column="1" Width="1" Fill="#323232" Margin="8,2"/>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <TextBlock Text="{Binding SelectedCount}" FontWeight="SemiBold" FontSize="12"
-                               Foreground="{StaticResource TxtAcc}"/>
-                    <TextBlock Text=" selected" FontSize="12" Foreground="{StaticResource TxtM}"/>
+                               Foreground="{StaticResource TextAccent}"/>
+                    <TextBlock Text=" selected" FontSize="12" Foreground="{StaticResource TextMuted}"/>
                 </StackPanel>
 
                 <TextBlock Grid.Column="4" Text="{Binding StatusMessage}" FontSize="11.5"
-                           Foreground="{StaticResource TxtM}" VerticalAlignment="Center"
+                           Foreground="{StaticResource TextMuted}" VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis"/>
 
-                <Button Grid.Column="6" Style="{StaticResource BtnS}" FontSize="11" Padding="10,5"
-                        Command="{Binding OpenFolderCommand}">
+                <Button Grid.Column="6" Style="{StaticResource BtnSecondary}" FontSize="11" Padding="10,5"
+                        Command="{Binding OpenFolderCommand}"
+                        ToolTip="Open the output folder in File Explorer">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE838;" FontFamily="Segoe MDL2 Assets" FontSize="12"
                                    VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -698,8 +475,9 @@
                     </StackPanel>
                 </Button>
 
-                <Button Grid.Column="8" Content="Close" Style="{StaticResource BtnS}"
-                        Command="{Binding CloseCommand}" FontSize="11" Padding="12,5"/>
+                <Button Grid.Column="8" Content="Close" Style="{StaticResource BtnSecondary}"
+                        Command="{Binding CloseCommand}" FontSize="11" Padding="12,5"
+                        ToolTip="Close the publish window"/>
             </Grid>
         </Border>
     </Grid>

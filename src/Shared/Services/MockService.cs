@@ -222,4 +222,20 @@ public class MockService : IRevitService
     public int ImportExcelAsTable(ExcelTableData data, string viewName, string viewType) => 1;
     public int ReloadTableView(int viewId, ExcelTableData data) => 1;
     public int DeleteTableViews(List<int> viewIds) => viewIds.Count;
+
+    // -- Link Display Manager ---
+    public List<LinkDisplayViewItem> GetViewsForLinkDisplay() => new()
+    {
+        new() { ViewId = 201, Name = "Level 1 - Floor Plan", ViewType = "FloorPlan" },
+        new() { ViewId = 202, Name = "Level 2 - Floor Plan", ViewType = "FloorPlan" },
+        new() { ViewId = 203, Name = "North Elevation", ViewType = "Elevation" },
+    };
+
+    public LinkDisplayState GetLinkDisplayState(int linkInstanceId, int viewId) => new()
+    {
+        LinkInstanceId = linkInstanceId,
+        DisplayMode = "ByHostView"
+    };
+
+    public int ApplyLinkDisplaySettings(int linkInstanceId, List<int> viewIds, LinkDisplayState settings) => viewIds.Count;
 }

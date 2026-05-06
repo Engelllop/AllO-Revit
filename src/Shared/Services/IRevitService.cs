@@ -92,6 +92,11 @@ public interface IRevitService
     int ImportExcelAsTable(ExcelTableData data, string viewName, string viewType);
     int ReloadTableView(int viewId, ExcelTableData data);
     int DeleteTableViews(List<int> viewIds);
+
+    // -- Link Display Manager --------------------------------
+    List<LinkDisplayViewItem> GetViewsForLinkDisplay();
+    LinkDisplayState GetLinkDisplayState(int linkInstanceId, int viewId);
+    int ApplyLinkDisplaySettings(int linkInstanceId, List<int> viewIds, LinkDisplayState settings);
 }
 
 /// <summary>

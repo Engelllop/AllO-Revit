@@ -243,9 +243,9 @@
                     <TextBlock Text="Align" FontSize="10" Foreground="{StaticResource TxM}" Margin="1,0,0,0"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="Select All" Style="{StaticResource BtnS}" Command="{Binding SelectAllCommand}" Margin="0,0,4,0" FontSize="11" Padding="10,5"/>
-                    <Button Content="Select None" Style="{StaticResource BtnS}" Command="{Binding SelectNoneCommand}" Margin="0,0,4,0" FontSize="11" Padding="10,5"/>
-                    <Button Content="Refresh" Style="{StaticResource BtnS}" Command="{Binding RefreshCommand}" FontSize="11" Padding="10,5"/>
+                    <Button Content="Select All" Style="{StaticResource BtnS}" Command="{Binding SelectAllCommand}" Margin="0,0,4,0" FontSize="11" Padding="10,5" ToolTip="Select all elements in the list"/>
+                    <Button Content="Select None" Style="{StaticResource BtnS}" Command="{Binding SelectNoneCommand}" Margin="0,0,4,0" FontSize="11" Padding="10,5" ToolTip="Deselect all elements in the list"/>
+                    <Button Content="Refresh" Style="{StaticResource BtnS}" Command="{Binding RefreshCommand}" FontSize="11" Padding="10,5" ToolTip="Refresh the element list from the current selection"/>
                     <TextBox Style="{StaticResource TBox}" Width="180" Margin="8,0,0,0"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
@@ -267,31 +267,31 @@
                 <StackPanel Grid.Column="0">
                     <TextBlock Text="ALIGN ELEMENTS" Style="{StaticResource Lbl}"/>
                     <WrapPanel>
-                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignLeftCommand}" Margin="0,0,6,6" ToolTip="Align Left">
+                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignLeftCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the leftmost edge">
                             <StackPanel>
                                 <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource TxA}"/>
                                 <TextBlock Text="Left" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignCenterCommand}" Margin="0,0,6,6" ToolTip="Align Center">
+                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignCenterCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the horizontal center">
                             <StackPanel>
                                 <TextBlock Text="&#xE8E4;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource TxA}"/>
                                 <TextBlock Text="Center" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignRightCommand}" Margin="0,0,6,6" ToolTip="Align Right">
+                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignRightCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the rightmost edge">
                             <StackPanel>
                                 <TextBlock Text="&#xE8A2;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource TxA}"/>
                                 <TextBlock Text="Right" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignTopCommand}" Margin="0,0,6,6" ToolTip="Align Top">
+                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignTopCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the top edge">
                             <StackPanel>
                                 <TextBlock Text="&#xE74A;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#38BDF8"/>
                                 <TextBlock Text="Top" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignMiddleCommand}" Margin="0,0,6,6" ToolTip="Align Middle">
+                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignMiddleCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the vertical middle">
                             <StackPanel>
                                 <TextBlock Text="&#xE8E4;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#38BDF8" RenderTransformOrigin="0.5,0.5">
                                     <TextBlock.RenderTransform><RotateTransform Angle="90"/></TextBlock.RenderTransform>
@@ -299,7 +299,7 @@
                                 <TextBlock Text="Middle" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignBottomCommand}" Margin="0,0,6,6" ToolTip="Align Bottom">
+                        <Button Style="{StaticResource ActBtn}" Command="{Binding AlignBottomCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the bottom edge">
                             <StackPanel>
                                 <TextBlock Text="&#xE74B;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#38BDF8"/>
                                 <TextBlock Text="Bottom" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
@@ -312,13 +312,13 @@
                 <StackPanel Grid.Column="2">
                     <TextBlock Text="DISTRIBUTE" Style="{StaticResource Lbl}"/>
                     <WrapPanel>
-                        <Button Style="{StaticResource ActBtn}" Command="{Binding DistributeHCommand}" Margin="0,0,6,6" ToolTip="Distribute Horizontally (3+ elements)">
+                        <Button Style="{StaticResource ActBtn}" Command="{Binding DistributeHCommand}" Margin="0,0,6,6" ToolTip="Distribute selected elements evenly along X axis (requires 3+ elements)">
                             <StackPanel>
                                 <TextBlock Text="&#xE8EF;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#34D399"/>
                                 <TextBlock Text="Horiz" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
-                        <Button Style="{StaticResource ActBtn}" Command="{Binding DistributeVCommand}" Margin="0,0,6,6" ToolTip="Distribute Vertically (3+ elements)">
+                        <Button Style="{StaticResource ActBtn}" Command="{Binding DistributeVCommand}" Margin="0,0,6,6" ToolTip="Distribute selected elements evenly along Y axis (requires 3+ elements)">
                             <StackPanel>
                                 <TextBlock Text="&#xE8EF;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#34D399" RenderTransformOrigin="0.5,0.5">
                                     <TextBlock.RenderTransform><RotateTransform Angle="90"/></TextBlock.RenderTransform>
@@ -348,21 +348,22 @@
                                   ItemsSource="{Binding Grids}" SelectedItem="{Binding SelectedGrid}"
                                   DisplayMemberPath="Name" ItemContainerStyle="{StaticResource DkCbI}"/>
                         <Button Grid.Row="0" Grid.Column="2" Content="Align to Grid" Style="{StaticResource BtnS}"
-                                Command="{Binding AlignToGridCommand}" FontSize="11" Padding="12,6"/>
+                                Command="{Binding AlignToGridCommand}" FontSize="11" Padding="12,6" ToolTip="Align selected elements to the chosen grid line"/>
 
                         <ComboBox Grid.Row="2" Grid.Column="0" Style="{StaticResource DkCb}"
                                   ItemsSource="{Binding Levels}" SelectedItem="{Binding SelectedLevel}"
                                   DisplayMemberPath="Name" ItemContainerStyle="{StaticResource DkCbI}"/>
                         <Button Grid.Row="2" Grid.Column="2" Content="Align to Level" Style="{StaticResource BtnS}"
-                                Command="{Binding AlignToLevelCommand}" FontSize="11" Padding="12,6"/>
+                                Command="{Binding AlignToLevelCommand}" FontSize="11" Padding="12,6" ToolTip="Align selected elements to the chosen level elevation"/>
                     </Grid>
                 </StackPanel>
             </Grid>
         </Border>
 
         <!-- ELEMENT LIST -->
-        <DataGrid Grid.Row="2"
-                  ItemsSource="{Binding ElementsView}"
+        <Grid Grid.Row="2">
+            <DataGrid x:Name="ElementsGrid"
+                      ItemsSource="{Binding ElementsView}"
                   AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                   SelectionMode="Extended" HeadersVisibility="Column"
                   GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#1A1A30"
@@ -411,7 +412,23 @@
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
             </DataGrid.Columns>
-        </DataGrid>
+            </DataGrid>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Items.Count, ElementName=ElementsGrid}" Value="0">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
+                <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
+                <TextBlock Text="No elements selected" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                <TextBlock Text="Select elements in Revit to align or distribute" Foreground="#686868" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+            </StackPanel>
+        </Grid>
 
         <!-- STATUS BAR -->
         <Border Grid.Row="3" Background="#111119" BorderBrush="#1A1A2E" BorderThickness="0,1,0,0" Padding="20,8">
@@ -434,7 +451,7 @@
                     <TextBlock Text=" selected" FontSize="12" Foreground="{StaticResource TxM}"/>
                 </StackPanel>
                 <TextBlock Grid.Column="4" Text="{Binding StatusMessage}" FontSize="11.5" Foreground="{StaticResource TxM}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                <Button Grid.Column="5" Content="Close" Style="{StaticResource BtnS}" Command="{Binding CloseCommand}" FontSize="11" Padding="12,5"/>
+                <Button Grid.Column="5" Content="Close" Style="{StaticResource BtnS}" Command="{Binding CloseCommand}" FontSize="11" Padding="12,5" ToolTip="Close"/>
             </Grid>
         </Border>
     </Grid>

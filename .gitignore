@@ -1,0 +1,44 @@
+# AllO - Revit Add-in Ignore File
+
+# Build outputs
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# VS Code
+.vscode/
+
+# Cache
+.ruff_cache/
+*.cache
+
+# Test files
+*.test
+*.tmp
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# NuGet
+packages/
+*.nupkg
+
+# Strong name key files
+*.snk
