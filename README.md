@@ -50,6 +50,20 @@ Cada proyecto copia automáticamente sus DLLs + el manifiesto `.addin` a la carp
 
 El copiado usa `ContinueOnError`, así que **la build nunca falla aunque Revit tenga las DLLs bloqueadas**. Si Revit estaba abierto, ciérralo y vuelve a abrirlo para cargar los cambios.
 
+## Tests
+
+`src/Tests/AllO.Tests.csproj` (xUnit, net8.0-windows) prueba el código
+independiente de una sesión real de Revit: `UnitConverter`, `ServiceLocator` y
+`MockService`. No carga Revit en runtime.
+
+```powershell
+dotnet test src/Tests/AllO.Tests.csproj
+```
+
+> El proyecto aún no está en `AllO.sln`: los tres proyectos de versión se llaman
+> todos `AllO.csproj`, lo que impide `dotnet sln add` por nombre duplicado.
+> Pendiente: renombrarlos (p.ej. `AllO.Revit2023.csproj`) para poder añadirlo.
+
 ## Limpieza
 
 ```powershell
