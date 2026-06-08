@@ -40,10 +40,12 @@ public sealed class RevitAsyncHelper : IExternalEventHandler
         var tcs = new TaskCompletionSource<T>();
         lock (_lock)
         {
+            // El WorkItem propaga su propio resultado/excepción al TaskCompletionSource<T>:
+            // el Tcs<bool> del WorkItem va null porque este Task lo cierra func.
             _queue.Enqueue(new WorkItem(uiApp =>
             {
-                var result = func(uiApp);
-                tcs.SetResult(result);
+                try { tcs.SetResult(func(uiApp)); }
+                catch (Exception ex) { tcs.SetException(ex); }
             }, null));
         }
         _event.Raise();
