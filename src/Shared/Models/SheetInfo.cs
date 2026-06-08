@@ -91,4 +91,20 @@ public class SheetInfo : ViewModelBase
     }
 
     public bool WillChange => !string.Equals(OriginalName, PreviewName, StringComparison.Ordinal);
+
+    // TODO: populate from RevitService (query viewports on this sheet)
+    private string _placedViewsSummary = string.Empty;
+    public string PlacedViewsSummary
+    {
+        get => _placedViewsSummary;
+        set => SetProperty(ref _placedViewsSummary, value);
+    }
+
+    // TODO: populate from RevitService (query legends on this sheet)
+    private string _placedLegendsSummary = string.Empty;
+    public string PlacedLegendsSummary
+    {
+        get => _placedLegendsSummary;
+        set => SetProperty(ref _placedLegendsSummary, value);
+    }
 }

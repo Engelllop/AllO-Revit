@@ -11,7 +11,7 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         ResizeMode="CanResize"
-        Background="#1A1A1A">
+        Background="{StaticResource Deep}">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="44"
@@ -23,72 +23,6 @@
     </shell:WindowChrome.WindowChrome>
 
     <Window.Resources>
-        <SolidColorBrush x:Key="Surface"  Color="#252525"/>
-        <SolidColorBrush x:Key="Card"     Color="#2C2C2C"/>
-        <SolidColorBrush x:Key="CardH"    Color="#383838"/>
-        <SolidColorBrush x:Key="Bdr"      Color="#3A3A3A"/>
-        <SolidColorBrush x:Key="Txt"      Color="#E8E8E8"/>
-        <SolidColorBrush x:Key="Txt2"     Color="#9A9A9A"/>
-        <SolidColorBrush x:Key="TxtM"     Color="#909090"/>
-        <SolidColorBrush x:Key="Acc"      Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="AccH"     Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="Suc"      Color="#34D399"/>
-        <SolidColorBrush x:Key="ChromeBtnHover" Color="#3D3D3D"/>
-        <SolidColorBrush x:Key="CloseHover" Color="#C42B1C"/>
-
-        <Style x:Key="BtnP" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource Acc}"/>
-            <Setter Property="Foreground" Value="#111111"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Padding" Value="20,10"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccH}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="BtnS" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource Card}"/>
-            <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="14,8"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardH}"/>
-                                <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <!-- Title-bar system buttons (min / max / close) -->
         <Style x:Key="ChromeSysBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
@@ -130,15 +64,8 @@
             </Setter>
         </Style>
 
-        <Style x:Key="Lbl" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="10"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#5A5A5A"/>
-            <Setter Property="Margin" Value="0,0,0,6"/>
-        </Style>
-
         <Style x:Key="ModeToggle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{StaticResource Txt2}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="0,0,0,5"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -146,7 +73,7 @@
         </Style>
     </Window.Resources>
 
-    <Border Background="#1A1A1A" BorderBrush="{StaticResource Bdr}" BorderThickness="1">
+    <Border Background="{StaticResource Deep}" BorderBrush="{StaticResource Border}" BorderThickness="1">
         <Border.Effect>
             <DropShadowEffect ShadowDepth="0" BlurRadius="12" Opacity="0.4" Color="Black"/>
         </Border.Effect>
@@ -158,28 +85,28 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- Custom title bar (replaces white OS chrome + Revit icon) -->
+            <!-- Custom title bar -->
             <Grid Grid.Row="0" Background="{StaticResource Surface}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,8,0">
-                    <TextBlock Text="AllO" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Acc}" VerticalAlignment="Center"/>
-                    <TextBlock Text="Color Coder" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource Txt}"
+                    <TextBlock Text="AllO" FontSize="16" FontWeight="Bold" Foreground="{StaticResource Accent}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Color Coder" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource TextPrimary}"
                                VerticalAlignment="Center" Margin="10,0,0,0"/>
-                    <Border Background="#1A2E1A" CornerRadius="5" Padding="7,2" Margin="10,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="ON" FontSize="9" Foreground="{StaticResource Suc}" FontWeight="Bold"/>
+                    <Border Background="{StaticResource SuccessDim}" CornerRadius="5" Padding="7,2" Margin="10,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="ON" FontSize="9" Foreground="{StaticResource Success}" FontWeight="Bold"/>
                     </Border>
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True">
                     <Button Style="{StaticResource ChromeSysBtn}" Click="Minimize_Click" ToolTip="Minimize"
-                            Foreground="{StaticResource Txt2}">
+                            Foreground="{StaticResource TextSecondary}">
                         <TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
                     </Button>
                     <Button x:Name="MaximizeButton" Style="{StaticResource ChromeSysBtn}" Click="MaximizeRestore_Click"
-                            Foreground="{StaticResource Txt2}">
+                            Foreground="{StaticResource TextSecondary}">
                         <Button.ToolTip>
                             <ToolTip>
                                 <TextBlock>
@@ -210,7 +137,7 @@
                         </TextBlock>
                     </Button>
                     <Button Style="{StaticResource ChromeCloseBtn}" Click="CloseChrome_Click" ToolTip="Close"
-                            Foreground="{StaticResource Txt2}">
+                            Foreground="{StaticResource TextSecondary}">
                         <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10"/>
                     </Button>
                 </StackPanel>
@@ -218,13 +145,13 @@
 
             <!-- Sub-header -->
             <Border Grid.Row="1" Background="{StaticResource Surface}"
-                    BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1"
+                    BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1"
                     Padding="22,12,22,14">
                 <StackPanel>
                     <TextBlock Text="First ribbon click turns colors on. Second click opens this panel."
-                               FontSize="12" Foreground="{StaticResource Txt2}" TextWrapping="Wrap"/>
-                    <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="{StaticResource TxtM}" TextWrapping="Wrap">
-                        <Run FontWeight="SemiBold" Foreground="{StaticResource Txt2}" Text="About view tabs: "/>
+                               FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
+                    <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap">
+                        <Run FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}" Text="About view tabs: "/>
                         <Run Text="Revit's API does not let add-ins paint the native view tab strip. Highlights are drawn on the drawing surface at the edge of the view window—not on Autodesk's tab control."/>
                     </TextBlock>
                 </StackPanel>
@@ -234,13 +161,13 @@
                 <StackPanel>
 
                     <TextBlock Text="HIGHLIGHT STYLE" Style="{StaticResource Lbl}"/>
-                    <Border Background="{StaticResource Card}" CornerRadius="8" BorderBrush="{StaticResource Bdr}"
+                    <Border Background="{StaticResource Card}" CornerRadius="8" BorderBrush="{StaticResource Border}"
                             BorderThickness="1" Padding="14,12">
                         <StackPanel>
                             <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
                                          IsChecked="{Binding ModeFill}"
                                          ToolTip="Highlight elements with a diffuse glow from the top edge">
-                                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Txt}">
+                                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}">
                                     <Run FontWeight="SemiBold" Text="Top glow"/><Run Text=" — "/>
                                     <Run Text="Diffuse light from the top edge into the canvas — use Reach to control how far the glow spreads."/>
                                 </TextBlock>
@@ -248,7 +175,7 @@
                             <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
                                          IsChecked="{Binding ModeBorder}"
                                          ToolTip="Draw an outline around the whole view area">
-                                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Txt}">
+                                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}">
                                     <Run FontWeight="SemiBold" Text="Border"/><Run Text=" — "/>
                                     <Run Text="Outline around the whole view area."/>
                                 </TextBlock>
@@ -256,18 +183,18 @@
                             <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
                                          IsChecked="{Binding ModeLine}"
                                          ToolTip="Highlight elements with a diffuse glow from the bottom edge">
-                                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource Txt}">
+                                <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}">
                                     <Run FontWeight="SemiBold" Text="Bottom glow"/><Run Text=" — "/>
                                     <Run Text="Same idea as top glow, rising from the bottom of the view."/>
                                 </TextBlock>
                             </RadioButton>
-                            <TextBlock Text="{Binding DisplayModeDescription}" FontSize="11" Foreground="{StaticResource TxtM}"
+                            <TextBlock Text="{Binding DisplayModeDescription}" FontSize="11" Foreground="{StaticResource TextMuted}"
                                        Margin="0,8,0,0" TextWrapping="Wrap"/>
                         </StackPanel>
                     </Border>
 
                     <TextBlock Text="INTENSITY" Style="{StaticResource Lbl}" Margin="0,18,0,0"/>
-                    <Border Background="{StaticResource Card}" CornerRadius="8" BorderBrush="{StaticResource Bdr}"
+                    <Border Background="{StaticResource Card}" CornerRadius="8" BorderBrush="{StaticResource Border}"
                             BorderThickness="1" Padding="14,12">
                         <StackPanel>
                             <Grid Margin="0,0,0,12">
@@ -276,12 +203,12 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="Opacity" FontSize="12" Foreground="{StaticResource Txt2}" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="0" Text="Opacity" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
                                 <Slider Grid.Column="1" Minimum="0.15" Maximum="1.0"
                                         Value="{Binding Opacity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="14,0"
                                         ToolTip="Adjust the opacity of the highlight overlay"/>
                                 <TextBlock Grid.Column="2" Text="{Binding Opacity, StringFormat='{}{0:P0}'}"
-                                           FontSize="12" Foreground="{StaticResource Txt2}" Width="40" TextAlignment="Right"/>
+                                           FontSize="12" Foreground="{StaticResource TextSecondary}" Width="40" TextAlignment="Right"/>
                             </Grid>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -289,15 +216,15 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" FontSize="12" Foreground="{StaticResource Txt2}" VerticalAlignment="Center">
-                                    <Run Text="Reach"/><LineBreak/><Run Text="(glow depth)" FontSize="10" Foreground="{StaticResource TxtM}"/>
+                                <TextBlock Grid.Column="0" FontSize="12" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center">
+                                    <Run Text="Reach"/><LineBreak/><Run Text="(glow depth)" FontSize="10" Foreground="{StaticResource TextMuted}"/>
                                 </TextBlock>
                                 <Slider Grid.Column="1" Minimum="2" Maximum="14"
                                         Value="{Binding BarThickness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                         IsSnapToTickEnabled="True" TickFrequency="1" Margin="14,0"
                                         ToolTip="How far the glow extends into the view (scaled from this value)."/>
                                 <TextBlock Grid.Column="2" Text="{Binding BarThickness, StringFormat='{}{0:0}'}"
-                                           FontSize="12" Foreground="{StaticResource Txt2}" Width="32" TextAlignment="Right"/>
+                                           FontSize="12" Foreground="{StaticResource TextSecondary}" Width="32" TextAlignment="Right"/>
                             </Grid>
                         </StackPanel>
                     </Border>
@@ -305,20 +232,20 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Border Grid.Row="3" Background="#161616" BorderBrush="#2A2A2A" BorderThickness="0,1,0,0" Padding="22,12">
+            <Border Grid.Row="3" Background="{StaticResource StatusBarBg}" BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0" Padding="22,12">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="10"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="{Binding StatusMessage}" FontSize="11" Foreground="{StaticResource TxtM}"
+                    <TextBlock Grid.Row="0" Text="{Binding StatusMessage}" FontSize="11" Foreground="{StaticResource TextMuted}"
                                TextWrapping="Wrap"/>
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="Reset (off)" Style="{StaticResource BtnS}" FontSize="12" Padding="16,8"
+                        <Button Content="Reset (off)" Style="{StaticResource BtnSecondary}" FontSize="12" Padding="16,8"
                                 Command="{Binding ResetCommand}" Margin="0,0,10,0"
                                 ToolTip="Turn Color Coder off and remove all tint overlays"/>
-                        <Button Content="Close" Style="{StaticResource BtnP}" Command="{Binding CloseCommand}" FontSize="12" Padding="16,8" ToolTip="Close"/>
+                        <Button Content="Close" Style="{StaticResource BtnPrimary}" Command="{Binding CloseCommand}" FontSize="12" Padding="16,8" ToolTip="Close"/>
                     </StackPanel>
                 </Grid>
             </Border>

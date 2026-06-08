@@ -4,14 +4,7 @@
         Title="AllO - Batch Sheet Renamer"
         Height="500" Width="700"
         WindowStartupLocation="CenterScreen"
-        Background="#FF1E1E1E">
-
-    <Window.Resources>
-        <SolidColorBrush x:Key="AccentBrush" Color="#FFE0E0E0"/>
-        <SolidColorBrush x:Key="PanelBrush" Color="#FF383838"/>
-        <SolidColorBrush x:Key="TextBrush" Color="#FFFFFFFF"/>
-        <SolidColorBrush x:Key="TextMutedBrush" Color="#FF969696"/>
-    </Window.Resources>
+        Background="{StaticResource Deep}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -22,14 +15,16 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Background="{StaticResource PanelBrush}" Padding="20,15">
+        <Border Grid.Row="0" Background="{StaticResource HeaderBg}" Padding="20,15"
+                BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
             <StackPanel>
-                <TextBlock Text="AllO - Batch Sheet Renamer" FontSize="18" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
-                <TextBlock Text="{Binding DocumentName}" FontSize="12" Foreground="{StaticResource TextMutedBrush}" Margin="0,5,0,0"/>
+                <TextBlock Text="AllO - Batch Sheet Renamer" FontSize="18" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
+                <TextBlock Text="{Binding DocumentName}" FontSize="12" Foreground="{StaticResource TextMuted}" Margin="0,5,0,0"/>
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="1" Background="#FF383838" Padding="20,15">
+        <Border Grid.Row="1" Background="{StaticResource Surface}" Padding="20,15"
+                BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -40,22 +35,30 @@
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0">
-                    <TextBlock Text="Buscar" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,5"/>
-                    <TextBox Text="{Binding FindText, UpdateSourceTrigger=PropertyChanged}" Padding="10,8" FontSize="13" Background="#FF414141" Foreground="White" BorderBrush="#FF535353"/>
+                    <TextBlock Text="Buscar" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,5"/>
+                    <TextBox Style="{StaticResource SearchBox}"
+                             Text="{Binding FindText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2">
-                    <TextBlock Text="Reemplazar con" FontSize="11" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,0,5"/>
-                    <TextBox Text="{Binding ReplaceText, UpdateSourceTrigger=PropertyChanged}" Padding="10,8" FontSize="13" Background="#FF414141" Foreground="White" BorderBrush="#FF535353"/>
+                    <TextBlock Text="Reemplazar con" FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,5"/>
+                    <TextBox Style="{StaticResource SearchBox}"
+                             Text="{Binding ReplaceText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <Button Grid.Column="4" Content="Recargar" Padding="15,8" Background="{StaticResource AccentBrush}" Foreground="#111111" BorderThickness="0" Click="Reload_Click" VerticalAlignment="Bottom"/>
+                <Button Grid.Column="4" Content="Recargar" Style="{StaticResource BtnSecondary}" Click="Reload_Click" VerticalAlignment="Bottom"/>
             </Grid>
         </Border>
 
         <DataGrid Grid.Row="2" Margin="16,10" ItemsSource="{Binding Sheets}" AutoGenerateColumns="False"
-                  IsReadOnly="True" Background="Transparent" Foreground="White" BorderBrush="#FF494949"
-                  RowBackground="#FF383838" AlternatingRowBackground="#FF2B2B2B" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#FF494949">
+                  IsReadOnly="True" Background="Transparent" Foreground="{StaticResource TextPrimary}"
+                  BorderBrush="{StaticResource Border}" GridLinesVisibility="Horizontal"
+                  HorizontalGridLinesBrush="{StaticResource DataGridGridLine}"
+                  RowBackground="{StaticResource DataGridRowEven}"
+                  AlternatingRowBackground="{StaticResource DataGridRowOdd}"
+                  ColumnHeaderStyle="{StaticResource DgColumnHeader}"
+                  CellStyle="{StaticResource DgCell}"
+                  RowStyle="{StaticResource DgRow}">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="N.°" Binding="{Binding SheetNumber}" Width="70"/>
                 <DataGridTextColumn Header="Nombre Original" Binding="{Binding OriginalName}" Width="*"/>
@@ -63,7 +66,8 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <Border Grid.Row="3" Background="{StaticResource PanelBrush}" Padding="16,12">
+        <Border Grid.Row="3" Background="{StaticResource Surface}" Padding="16,12"
+                BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -72,18 +76,19 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" VerticalAlignment="Center" FontSize="13" Foreground="{StaticResource TextMutedBrush}">
-                    <Run Text="{Binding AffectedCount}" FontWeight="Bold" Foreground="{StaticResource AccentBrush}"/>
+                <TextBlock Grid.Column="0" VerticalAlignment="Center" FontSize="13" Foreground="{StaticResource TextMuted}">
+                    <Run Text="{Binding AffectedCount}" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
                     <Run Text=" plano(s) por renombrar"/>
                 </TextBlock>
 
-                <Button Grid.Column="1" Content="Aplicar" Padding="20,8" Background="{StaticResource AccentBrush}" Foreground="#111111" BorderThickness="0" Click="Apply_Click"/>
-                <Button Grid.Column="3" Content="Cerrar" Padding="20,8" Background="#FF414141" Foreground="White" BorderThickness="0" Click="Close_Click"/>
+                <Button Grid.Column="1" Content="Aplicar" Style="{StaticResource BtnPrimary}" Click="Apply_Click"/>
+                <Button Grid.Column="3" Content="Cerrar" Style="{StaticResource BtnSecondary}" Click="Close_Click"/>
             </Grid>
         </Border>
 
-        <Border Grid.Row="4" Background="#FF1A1A1A" Padding="14,8">
-            <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{StaticResource TextMutedBrush}"/>
+        <Border Grid.Row="4" Background="{StaticResource StatusBarBg}" Padding="14,8"
+                BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0">
+            <TextBlock Text="{Binding StatusMessage}" FontSize="11" Foreground="{StaticResource TextMuted}"/>
         </Border>
     </Grid>
 </Window>

@@ -6,23 +6,23 @@
         MinHeight="550" MinWidth="750"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#1E1E1E">
+        Background="{StaticResource Deep}">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="Bg"   Color="#1E1E1E"/>
-        <SolidColorBrush x:Key="Sf"   Color="#252525"/>
-        <SolidColorBrush x:Key="Cd"   Color="#2C2C2C"/>
-        <SolidColorBrush x:Key="CdH"  Color="#383838"/>
-        <SolidColorBrush x:Key="Bdr"  Color="#383838"/>
-        <SolidColorBrush x:Key="Txt"  Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="Tx2"  Color="#999999"/>
-        <SolidColorBrush x:Key="TxM"  Color="#787878"/>
-        <SolidColorBrush x:Key="TxA"  Color="#CCCCCC"/>
-        <SolidColorBrush x:Key="Acc"  Color="#E0E0E0"/>
-        <SolidColorBrush x:Key="AcH"  Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="Suc"  Color="#34D399"/>
-        <SolidColorBrush x:Key="Err"  Color="#FB7185"/>
-        <SolidColorBrush x:Key="Teal" Color="#4BC0BE"/>
+        <SolidColorBrush x:Key="Bg"   Color="#FAF9F5"/>
+        <SolidColorBrush x:Key="Sf"   Color="#FAF9F6"/>
+        <SolidColorBrush x:Key="Cd"   Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="CdH"  Color="#F5F4EF"/>
+        <SolidColorBrush x:Key="Bdr"  Color="#E8E6DC"/>
+        <SolidColorBrush x:Key="Txt"  Color="#141413"/>
+        <SolidColorBrush x:Key="Tx2"  Color="#5C5C5C"/>
+        <SolidColorBrush x:Key="TxM"  Color="#B0AEA5"/>
+        <SolidColorBrush x:Key="TxA"  Color="#3D3D3D"/>
+        <SolidColorBrush x:Key="Acc"  Color="#D97757"/>
+        <SolidColorBrush x:Key="AcH"  Color="#C45D3D"/>
+        <SolidColorBrush x:Key="Suc"  Color="#788C5D"/>
+        <SolidColorBrush x:Key="Err"  Color="#C0392B"/>
+        <SolidColorBrush x:Key="Teal" Color="#6A9BCC"/>
 
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
 
@@ -44,7 +44,7 @@
                                 <Setter Property="FontWeight" Value="SemiBold"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2C2C2C"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource Cd}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -55,7 +55,7 @@
         <!-- Primary button -->
         <Style x:Key="BtnP" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource Acc}"/>
-            <Setter Property="Foreground" Value="#111111"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="Padding" Value="22,10"/>
@@ -109,15 +109,15 @@
         <!-- Danger button -->
         <Style x:Key="BtnDanger" TargetType="Button" BasedOn="{StaticResource BtnS}">
             <Setter Property="Foreground" Value="{StaticResource Err}"/>
-            <Setter Property="BorderBrush" Value="#3D2020"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Err}"/>
         </Style>
 
         <!-- Dark ComboBox -->
         <ControlTemplate x:Key="CbTgl" TargetType="ToggleButton">
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="28"/></Grid.ColumnDefinitions>
-                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#272727" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
-                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#909090" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="{StaticResource Sf}" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
+                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="{StaticResource TxM}" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
         </ControlTemplate>
         <Style x:Key="DkCb" TargetType="ComboBox">
@@ -132,7 +132,7 @@
                             <ToggleButton Template="{StaticResource CbTgl}" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False" ClickMode="Press"/>
                             <TextBlock Text="{TemplateBinding SelectionBoxItem}" Margin="10,7,28,7" VerticalAlignment="Center" IsHitTestVisible="False"/>
                             <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" Focusable="False" AllowsTransparency="True">
-                                <Border Background="#2C2C2C" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4" Margin="0,2,0,0" MinWidth="{TemplateBinding ActualWidth}">
+                                <Border Background="{StaticResource Cd}" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4" Margin="0,2,0,0" MinWidth="{TemplateBinding ActualWidth}">
                                     <ScrollViewer MaxHeight="250"><StackPanel IsItemsHost="True"/></ScrollViewer>
                                 </Border>
                             </Popup>
@@ -144,13 +144,13 @@
         <Style x:Key="DkCbI" TargetType="ComboBoxItem">
             <Setter Property="Foreground" Value="{StaticResource Txt}"/><Setter Property="FontSize" Value="12"/><Setter Property="Padding" Value="10,7"/><Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem"><Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
-                <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#3B3B3B"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="#414141"/></Trigger></ControlTemplate.Triggers>
+                <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="{StaticResource CdH}"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="{StaticResource Acc}"/></Trigger></ControlTemplate.Triggers>
             </ControlTemplate></Setter.Value></Setter>
         </Style>
 
         <!-- ListBox -->
         <Style x:Key="DkLb" TargetType="ListBox">
-            <Setter Property="Background" Value="#272727"/>
+            <Setter Property="Background" Value="{StaticResource Sf}"/>
             <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="{StaticResource Txt}"/>
@@ -168,8 +168,8 @@
                             <ContentPresenter/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#383838"/></Trigger>
-                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="#3B3B3B"/><Setter Property="Foreground" Value="White"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="{StaticResource CdH}"/></Trigger>
+                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="{StaticResource Acc}"/><Setter Property="Foreground" Value="{StaticResource Txt}"/></Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -224,7 +224,7 @@
                 <ListBox Grid.Row="1" x:Name="ImportTasksListBox" Style="{StaticResource DkLb}" ItemContainerStyle="{StaticResource DkLbI}"
                          ItemsSource="{Binding ImportTasks}" SelectedItem="{Binding SelectedTask}"
                          DisplayMemberPath="FileName"/>
-                <Border Grid.Row="1" Background="#272727" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                <Border Grid.Row="1" Background="{StaticResource Sf}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                     <Border.Style>
                         <Style TargetType="Border">
                             <Setter Property="Visibility" Value="Collapsed"/>
@@ -236,9 +236,9 @@
                         </Style>
                     </Border.Style>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                        <TextBlock Text="No Excel files loaded" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                        <TextBlock Text="Click 'Add Excel' to import a spreadsheet" Foreground="#686868" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                        <TextBlock Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource TxM}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No Excel files loaded" Foreground="{StaticResource Tx2}" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                        <TextBlock Text="Click 'Add Excel' to import a spreadsheet" Foreground="{StaticResource TxM}" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
                     </StackPanel>
                 </Border>
 
@@ -335,10 +335,10 @@
                             <CheckBox IsChecked="{Binding IsSelected}" VerticalAlignment="Center" Margin="0,0,10,0"/>
                             <StackPanel>
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="#E0E0E0"/>
-                                    <TextBlock Text="{Binding ViewKind}" FontSize="10" Foreground="#6B9E8E" Margin="8,2,0,0"/>
+                                    <TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource Txt}"/>
+                                    <TextBlock Text="{Binding ViewKind}" FontSize="10" Foreground="{StaticResource Teal}" Margin="8,2,0,0"/>
                                 </StackPanel>
-                                <TextBlock FontSize="11" Foreground="#787878">
+                                <TextBlock FontSize="11" Foreground="{StaticResource TxM}">
                                     <Run Text="{Binding ExcelPath, Mode=OneWay}"/>
                                     <Run Text=" ["/><Run Text="{Binding SheetName, Mode=OneWay}"/><Run Text="]"/>
                                 </TextBlock>
@@ -347,7 +347,7 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <Border Grid.Row="2" Background="#272727" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+            <Border Grid.Row="2" Background="{StaticResource Sf}" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Visibility" Value="Collapsed"/>
@@ -359,8 +359,8 @@
                     </Style>
                 </Border.Style>
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                    <TextBlock Text="No imported table views" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                    <TextBlock Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource TxM}" HorizontalAlignment="Center"/>
+                    <TextBlock Text="No imported table views" Foreground="{StaticResource Tx2}" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                 </StackPanel>
             </Border>
 
@@ -379,7 +379,7 @@
         <Border Grid.Row="2" Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVis}}"
                 Margin="20,8,20,0">
             <ProgressBar Height="6" Minimum="0" Maximum="{Binding ProgressMax}" Value="{Binding ProgressValue}"
-                         Background="#272727" BorderThickness="0">
+                         Background="{StaticResource Sf}" BorderThickness="0">
                 <ProgressBar.Foreground>
                     <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                         <GradientStop Color="#E0E0E0" Offset="0"/>
@@ -390,7 +390,7 @@
         </Border>
 
         <!-- ═══ STATUS BAR ═══ -->
-        <Border Grid.Row="3" Background="#1A1A1A" BorderBrush="#272727" BorderThickness="0,1,0,0" Padding="20,10">
+        <Border Grid.Row="3" Background="{StaticResource Bg}" BorderBrush="{StaticResource Bdr}" BorderThickness="0,1,0,0" Padding="20,10">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>

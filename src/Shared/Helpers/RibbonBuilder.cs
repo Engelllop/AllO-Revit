@@ -1,5 +1,5 @@
+using System.IO;
 using System.Reflection;
-using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Autodesk.Revit.UI;
@@ -7,8 +7,10 @@ using Autodesk.Revit.UI;
 namespace AllO.Helpers;
 
 /// <summary>
-/// Helpers para construir botones de ribbon con icono Segoe MDL2 y tooltip con imagen.
-/// Antes el código de iconos vivía en App.cs duplicado por versión de Revit.
+/// Helpers para construir botones de ribbon.
+/// NOTA: Se eliminó la generación dinámica de iconos WPF (RenderTargetBitmap) porque
+/// causa crash de Revit al serializar el layout del ribbon (File > New > Project).
+/// Revit no puede serializar bitmaps generados en memoria; usamos archivos .png físicos.
 /// </summary>
 public static class RibbonBuilder
 {
@@ -22,55 +24,49 @@ public static class RibbonBuilder
     public static PushButtonData Button(string name, string text, string commandClass)
         => new(name, text, SharedAssemblyPath(), commandClass);
 
+    /// <summary>Carga un icono PNG desde <c>Resources/Icons/{name}_{size}.png</c> relativo al assembly.</summary>
+    private static ImageSource? LoadIcon(string name, int size)
+    {
+        var dir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        var path = Path.Combine(dir, "Resources", "Icons", $"{name}_{size}.png");
+        if (!File.Exists(path))
+            return null;
+
+        var bitmap = new BitmapImage();
+        bitmap.BeginInit();
+        bitmap.UriSource = new Uri(path, UriKind.Absolute);
+        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+        bitmap.EndInit();
+        bitmap.Freeze();
+        return bitmap;
+    }
+
     /// <summary>
-    /// Configura icono pequeño + grande + tooltip largo + imagen de tooltip.
-    /// Si <paramref name="tooltipImageGlyph"/> es null se reusa el glyph principal.
+    /// Configura tooltip, descripción larga e iconos (16×16 y 32×32) desde archivos PNG.
     /// </summary>
     public static void Configure(
         PushButton button,
-        string glyph,
+        string iconName,
         string tooltip,
-        string longDescription,
-        Color? bg = null,
-        Color? fg = null,
-        string? tooltipImageGlyph = null)
+        string longDescription)
     {
-        var background = bg ?? Color.FromRgb(44, 44, 44);
-        var foreground = fg ?? Color.FromRgb(224, 224, 224);
-
         button.ToolTip = tooltip;
         button.LongDescription = longDescription;
-        button.Image      = CreateGlyphIcon(glyph, 16, background, foreground);
-        button.LargeImage = CreateGlyphIcon(glyph, 32, background, foreground);
-        button.ToolTipImage = CreateGlyphIcon(tooltipImageGlyph ?? glyph, 96, background, foreground);
+        button.Image = LoadIcon(iconName, 16);
+        button.LargeImage = LoadIcon(iconName, 32);
     }
 
-    public static void Configure(PulldownButton button, string glyph, string tooltip)
+    public static void Configure(PulldownButton button, string iconName, string tooltip)
     {
         button.ToolTip = tooltip;
-        button.Image      = CreateGlyphIcon(glyph, 16, Color.FromRgb(44,44,44), Color.FromRgb(224,224,224));
-        button.LargeImage = CreateGlyphIcon(glyph, 32, Color.FromRgb(44,44,44), Color.FromRgb(224,224,224));
+        button.Image = LoadIcon(iconName, 16);
+        button.LargeImage = LoadIcon(iconName, 32);
     }
 
-    public static BitmapSource CreateGlyphIcon(string glyph, int size, Color bg, Color fg)
+    public static void Configure(SplitButton button, string iconName, string tooltip)
     {
-        var visual = new DrawingVisual();
-        using (var dc = visual.RenderOpen())
-        {
-            dc.DrawRectangle(new SolidColorBrush(bg), null, new Rect(0, 0, size, size));
-            var ft = new FormattedText(
-                glyph,
-                System.Globalization.CultureInfo.InvariantCulture,
-                FlowDirection.LeftToRight,
-                new Typeface("Segoe MDL2 Assets"),
-                size * 0.55,
-                new SolidColorBrush(fg),
-                1.0);
-            dc.DrawText(ft, new Point((size - ft.Width) / 2, (size - ft.Height) / 2));
-        }
-        var bmp = new RenderTargetBitmap(size, size, 96, 96, PixelFormats.Pbgra32);
-        bmp.Render(visual);
-        bmp.Freeze();
-        return bmp;
+        button.ToolTip = tooltip;
+        button.Image = LoadIcon(iconName, 16);
+        button.LargeImage = LoadIcon(iconName, 32);
     }
 }

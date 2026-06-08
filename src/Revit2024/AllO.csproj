@@ -31,6 +31,11 @@
     <ProjectReference Include="..\Shared\AllO.Shared.csproj" />
   </ItemGroup>
 
+  <!-- Ribbon icons from Shared -->
+  <ItemGroup>
+    <SharedIconFiles Include="..\Shared\Resources\Icons\*.png" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Autodesk.Revit.SDK.Refs.2024" Version="*">
       <PrivateAssets>all</PrivateAssets>
@@ -48,12 +53,17 @@
       <RevitAddinsFolder>$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)</RevitAddinsFolder>
     </PropertyGroup>
     <MakeDir Directories="$(RevitAddinsFolder)" Condition="!Exists('$(RevitAddinsFolder)')" />
+    <MakeDir Directories="$(RevitAddinsFolder)\Resources\Icons" Condition="!Exists('$(RevitAddinsFolder)\Resources\Icons')" />
     <Copy SourceFiles="$(TargetPath)"
           DestinationFolder="$(RevitAddinsFolder)"
           SkipUnchangedFiles="true"
           ContinueOnError="WarnAndContinue" />
     <Copy SourceFiles="$(TargetDir)AllO.Shared.dll"
           DestinationFolder="$(RevitAddinsFolder)"
+          SkipUnchangedFiles="true"
+          ContinueOnError="WarnAndContinue" />
+    <Copy SourceFiles="@(SharedIconFiles)"
+          DestinationFolder="$(RevitAddinsFolder)\Resources\Icons"
           SkipUnchangedFiles="true"
           ContinueOnError="WarnAndContinue" />
     <Copy SourceFiles="$(ProjectDir)AllO.addin"

@@ -6,31 +6,31 @@
         MinHeight="500" MinWidth="600"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#15151E">
+        Background="{StaticResource Deep}">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="Bg"   Color="#15151E"/>
-        <SolidColorBrush x:Key="Sf"   Color="#1B1B28"/>
-        <SolidColorBrush x:Key="Cd"   Color="#1E1E32"/>
-        <SolidColorBrush x:Key="CdH"  Color="#252542"/>
-        <SolidColorBrush x:Key="Bdr"  Color="#2A2A42"/>
-        <SolidColorBrush x:Key="Txt"  Color="#E8E8F0"/>
-        <SolidColorBrush x:Key="Tx2"  Color="#9999B3"/>
-        <SolidColorBrush x:Key="TxM"  Color="#666680"/>
-        <SolidColorBrush x:Key="TxA"  Color="#9B93FF"/>
-        <SolidColorBrush x:Key="Acc"  Color="#6C63FF"/>
-        <SolidColorBrush x:Key="AcH"  Color="#5B53E8"/>
+        <SolidColorBrush x:Key="Bg"   Color="#FAF9F5"/>
+        <SolidColorBrush x:Key="Sf"   Color="#FAF9F6"/>
+        <SolidColorBrush x:Key="Cd"   Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="CdH"  Color="#F5F4EF"/>
+        <SolidColorBrush x:Key="Bdr"  Color="#E8E6DC"/>
+        <SolidColorBrush x:Key="Txt"  Color="#141413"/>
+        <SolidColorBrush x:Key="Tx2"  Color="#5C5C5C"/>
+        <SolidColorBrush x:Key="TxM"  Color="#B0AEA5"/>
+        <SolidColorBrush x:Key="TxA"  Color="#6A9BCC"/>
+        <SolidColorBrush x:Key="Acc"  Color="#D97757"/>
+        <SolidColorBrush x:Key="AcH"  Color="#C45D3D"/>
 
         <!-- Action Button -->
         <Style x:Key="ActBtn" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource Cd}"/>
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
+            <Setter Property="Background" Value="{StaticResource Card}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Width" Value="56"/>
             <Setter Property="Height" Value="56"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -43,39 +43,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CdH}"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Acc}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.3"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="BtnS" TargetType="Button">
-            <Setter Property="Background" Value="{StaticResource Cd}"/>
-            <Setter Property="Foreground" Value="{StaticResource Tx2}"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="14,7"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="5" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CdH}"/>
-                                <Setter Property="Foreground" Value="{StaticResource Txt}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource CardHover}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter TargetName="Bd" Property="Opacity" Value="0.3"/>
@@ -87,10 +56,10 @@
         </Style>
 
         <Style x:Key="TBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#1A1A2C"/>
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
-            <Setter Property="CaretBrush" Value="{StaticResource Txt}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Border}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="10,7"/>
             <Setter Property="FontSize" Value="12"/>
@@ -104,7 +73,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Acc}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource Accent}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -115,17 +84,17 @@
         <Style x:Key="Lbl" TargetType="TextBlock">
             <Setter Property="FontSize" Value="10"/>
             <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#555570"/>
+            <Setter Property="Foreground" Value="#8C8C8C"/>
             <Setter Property="Margin" Value="0,0,0,8"/>
         </Style>
 
         <Style x:Key="DgHdr" TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#1A1A2C"/>
-            <Setter Property="Foreground" Value="#7070A0"/>
+            <Setter Property="Background" Value="#F7F6F1"/>
+            <Setter Property="Foreground" Value="#8C8C8C"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="BorderBrush" Value="#222240"/>
+            <Setter Property="BorderBrush" Value="#DDDAD2"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -153,8 +122,8 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#25254A"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="#F5E9E3"/>
+                    <Setter Property="Foreground" Value="#2C2C2C"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -162,7 +131,7 @@
         <Style x:Key="DgR" TargetType="DataGridRow">
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#1F1F38"/>
+                    <Setter Property="Background" Value="#EBE9E3"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
@@ -174,13 +143,13 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="28"/>
                 </Grid.ColumnDefinitions>
-                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#1A1A2C" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
-                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#8080A0" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#FFFFFF" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="4"/>
+                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#B1ADA1" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
         </ControlTemplate>
 
         <Style x:Key="DkCb" TargetType="ComboBox">
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
@@ -190,7 +159,7 @@
                             <ToggleButton Template="{StaticResource CbTgl}" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False" ClickMode="Press"/>
                             <TextBlock Text="{TemplateBinding SelectionBoxItem}" Margin="10,7,28,7" VerticalAlignment="Center" IsHitTestVisible="False" TextTrimming="CharacterEllipsis"/>
                             <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" Focusable="False" AllowsTransparency="True">
-                                <Border Background="#1E1E32" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4" Margin="0,2,0,0" MinWidth="{TemplateBinding ActualWidth}">
+                                <Border Background="#FFFFFF" BorderBrush="{StaticResource Border}" BorderThickness="1" CornerRadius="4" Margin="0,2,0,0" MinWidth="{TemplateBinding ActualWidth}">
                                     <ScrollViewer MaxHeight="200">
                                         <StackPanel IsItemsHost="True"/>
                                     </ScrollViewer>
@@ -203,7 +172,7 @@
         </Style>
 
         <Style x:Key="DkCbI" TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="10,7"/>
             <Setter Property="Cursor" Value="Hand"/>
@@ -215,10 +184,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#2D2D48"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#EBE9E3"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#33335A"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#F5E9E3"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -236,16 +205,16 @@
         </Grid.RowDefinitions>
 
         <!-- HEADER -->
-        <Border Grid.Row="0" Background="{StaticResource Sf}" BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1" Padding="20,14">
+        <Border Grid.Row="0" Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1" Padding="20,14">
             <Grid>
                 <StackPanel>
-                    <TextBlock Text="AllO" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Acc}"/>
-                    <TextBlock Text="Align" FontSize="10" Foreground="{StaticResource TxM}" Margin="1,0,0,0"/>
+                    <TextBlock Text="AllO" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
+                    <TextBlock Text="Align" FontSize="10" Foreground="{StaticResource TextMuted}" Margin="1,0,0,0"/>
                 </StackPanel>
                 <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button Content="Select All" Style="{StaticResource BtnS}" Command="{Binding SelectAllCommand}" Margin="0,0,4,0" FontSize="11" Padding="10,5" ToolTip="Select all elements in the list"/>
-                    <Button Content="Select None" Style="{StaticResource BtnS}" Command="{Binding SelectNoneCommand}" Margin="0,0,4,0" FontSize="11" Padding="10,5" ToolTip="Deselect all elements in the list"/>
-                    <Button Content="Refresh" Style="{StaticResource BtnS}" Command="{Binding RefreshCommand}" FontSize="11" Padding="10,5" ToolTip="Refresh the element list from the current selection"/>
+                    <Button Content="Select All" Style="{StaticResource BtnSecondary}" Command="{Binding SelectAllCommand}" Margin="0,0,4,0" FontSize="11" Padding="10,5" ToolTip="Select all elements in the list"/>
+                    <Button Content="Select None" Style="{StaticResource BtnSecondary}" Command="{Binding SelectNoneCommand}" Margin="0,0,4,0" FontSize="11" Padding="10,5" ToolTip="Deselect all elements in the list"/>
+                    <Button Content="Refresh" Style="{StaticResource BtnSecondary}" Command="{Binding RefreshCommand}" FontSize="11" Padding="10,5" ToolTip="Refresh the element list from the current selection"/>
                     <TextBox Style="{StaticResource TBox}" Width="180" Margin="8,0,0,0"
                              Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
@@ -253,7 +222,7 @@
         </Border>
 
         <!-- ALIGNMENT TOOLS (grid of buttons) -->
-        <Border Grid.Row="1" Background="#191928" BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1" Padding="20,16">
+        <Border Grid.Row="1" Background="{StaticResource Surface}" BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1" Padding="20,16">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -269,26 +238,26 @@
                     <WrapPanel>
                         <Button Style="{StaticResource ActBtn}" Command="{Binding AlignLeftCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the leftmost edge">
                             <StackPanel>
-                                <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource TxA}"/>
-                                <TextBlock Text="Left" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource Teal}"/>
+                                <TextBlock Text="Left" FontSize="9" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource ActBtn}" Command="{Binding AlignCenterCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the horizontal center">
                             <StackPanel>
-                                <TextBlock Text="&#xE8E4;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource TxA}"/>
-                                <TextBlock Text="Center" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                <TextBlock Text="&#xE8E4;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource Teal}"/>
+                                <TextBlock Text="Center" FontSize="9" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource ActBtn}" Command="{Binding AlignRightCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the rightmost edge">
                             <StackPanel>
-                                <TextBlock Text="&#xE8A2;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource TxA}"/>
-                                <TextBlock Text="Right" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                <TextBlock Text="&#xE8A2;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource Teal}"/>
+                                <TextBlock Text="Right" FontSize="9" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource ActBtn}" Command="{Binding AlignTopCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the top edge">
                             <StackPanel>
-                                <TextBlock Text="&#xE74A;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#38BDF8"/>
-                                <TextBlock Text="Top" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                <TextBlock Text="&#xE74A;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource Teal}"/>
+                                <TextBlock Text="Top" FontSize="9" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource ActBtn}" Command="{Binding AlignMiddleCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the vertical middle">
@@ -296,13 +265,13 @@
                                 <TextBlock Text="&#xE8E4;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#38BDF8" RenderTransformOrigin="0.5,0.5">
                                     <TextBlock.RenderTransform><RotateTransform Angle="90"/></TextBlock.RenderTransform>
                                 </TextBlock>
-                                <TextBlock Text="Middle" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                <TextBlock Text="Middle" FontSize="9" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource ActBtn}" Command="{Binding AlignBottomCommand}" Margin="0,0,6,6" ToolTip="Align selected elements to the bottom edge">
                             <StackPanel>
-                                <TextBlock Text="&#xE74B;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#38BDF8"/>
-                                <TextBlock Text="Bottom" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                <TextBlock Text="&#xE74B;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource Teal}"/>
+                                <TextBlock Text="Bottom" FontSize="9" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
                     </WrapPanel>
@@ -314,16 +283,16 @@
                     <WrapPanel>
                         <Button Style="{StaticResource ActBtn}" Command="{Binding DistributeHCommand}" Margin="0,0,6,6" ToolTip="Distribute selected elements evenly along X axis (requires 3+ elements)">
                             <StackPanel>
-                                <TextBlock Text="&#xE8EF;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#34D399"/>
-                                <TextBlock Text="Horiz" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                <TextBlock Text="&#xE8EF;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource Success}"/>
+                                <TextBlock Text="Horiz" FontSize="9" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
                         <Button Style="{StaticResource ActBtn}" Command="{Binding DistributeVCommand}" Margin="0,0,6,6" ToolTip="Distribute selected elements evenly along Y axis (requires 3+ elements)">
                             <StackPanel>
-                                <TextBlock Text="&#xE8EF;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="#34D399" RenderTransformOrigin="0.5,0.5">
+                                <TextBlock Text="&#xE8EF;" FontFamily="Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" Foreground="{StaticResource Success}" RenderTransformOrigin="0.5,0.5">
                                     <TextBlock.RenderTransform><RotateTransform Angle="90"/></TextBlock.RenderTransform>
                                 </TextBlock>
-                                <TextBlock Text="Vert" FontSize="9" Foreground="{StaticResource TxM}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+                                <TextBlock Text="Vert" FontSize="9" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                             </StackPanel>
                         </Button>
                     </WrapPanel>
@@ -347,13 +316,13 @@
                         <ComboBox Grid.Row="0" Grid.Column="0" Style="{StaticResource DkCb}"
                                   ItemsSource="{Binding Grids}" SelectedItem="{Binding SelectedGrid}"
                                   DisplayMemberPath="Name" ItemContainerStyle="{StaticResource DkCbI}"/>
-                        <Button Grid.Row="0" Grid.Column="2" Content="Align to Grid" Style="{StaticResource BtnS}"
+                        <Button Grid.Row="0" Grid.Column="2" Content="Align to Grid" Style="{StaticResource BtnSecondary}"
                                 Command="{Binding AlignToGridCommand}" FontSize="11" Padding="12,6" ToolTip="Align selected elements to the chosen grid line"/>
 
                         <ComboBox Grid.Row="2" Grid.Column="0" Style="{StaticResource DkCb}"
                                   ItemsSource="{Binding Levels}" SelectedItem="{Binding SelectedLevel}"
                                   DisplayMemberPath="Name" ItemContainerStyle="{StaticResource DkCbI}"/>
-                        <Button Grid.Row="2" Grid.Column="2" Content="Align to Level" Style="{StaticResource BtnS}"
+                        <Button Grid.Row="2" Grid.Column="2" Content="Align to Level" Style="{StaticResource BtnSecondary}"
                                 Command="{Binding AlignToLevelCommand}" FontSize="11" Padding="12,6" ToolTip="Align selected elements to the chosen level elevation"/>
                     </Grid>
                 </StackPanel>
@@ -366,12 +335,12 @@
                       ItemsSource="{Binding ElementsView}"
                   AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                   SelectionMode="Extended" HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#1A1A30"
-                  Background="{StaticResource Bg}" BorderThickness="0"
-                  RowBackground="#1B1B28" AlternatingRowBackground="#1D1D2E"
-                  Foreground="{StaticResource Txt}" FontSize="12.5"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource Border}"
+                  Background="{StaticResource Deep}" BorderThickness="0"
+                  RowBackground="{StaticResource Surface}" AlternatingRowBackground="{StaticResource Card}"
+                  Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                   RowHeight="34" ColumnHeaderHeight="32"
-                  ColumnHeaderStyle="{StaticResource DgHdr}" CellStyle="{StaticResource DgC}" RowStyle="{StaticResource DgR}">
+                  ColumnHeaderStyle="{StaticResource DgColumnHeader}" CellStyle="{StaticResource DgCell}" RowStyle="{StaticResource DgRow}">
             <DataGrid.Columns>
                 <DataGridTemplateColumn Header="" Width="40" CanUserResize="False">
                     <DataGridTemplateColumn.CellTemplate>
@@ -384,7 +353,7 @@
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Foreground" Value="{StaticResource Txt}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
@@ -392,23 +361,23 @@
                     <DataGridTextColumn.ElementStyle>
                         <Style TargetType="TextBlock">
                             <Setter Property="VerticalAlignment" Value="Center"/>
-                            <Setter Property="Foreground" Value="{StaticResource Tx2}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
                         </Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="X" Width="70" Binding="{Binding X, StringFormat=F2}" IsReadOnly="True">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock"><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Foreground" Value="{StaticResource TxM}"/><Setter Property="FontFamily" Value="Consolas"/></Style>
+                        <Style TargetType="TextBlock"><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Foreground" Value="{StaticResource TextMuted}"/><Setter Property="FontFamily" Value="Consolas"/></Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="Y" Width="70" Binding="{Binding Y, StringFormat=F2}" IsReadOnly="True">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock"><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Foreground" Value="{StaticResource TxM}"/><Setter Property="FontFamily" Value="Consolas"/></Style>
+                        <Style TargetType="TextBlock"><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Foreground" Value="{StaticResource TextMuted}"/><Setter Property="FontFamily" Value="Consolas"/></Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
                 <DataGridTextColumn Header="Z" Width="70" Binding="{Binding Z, StringFormat=F2}" IsReadOnly="True">
                     <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock"><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Foreground" Value="{StaticResource TxM}"/><Setter Property="FontFamily" Value="Consolas"/></Style>
+                        <Style TargetType="TextBlock"><Setter Property="VerticalAlignment" Value="Center"/><Setter Property="Foreground" Value="{StaticResource TextMuted}"/><Setter Property="FontFamily" Value="Consolas"/></Style>
                     </DataGridTextColumn.ElementStyle>
                 </DataGridTextColumn>
             </DataGrid.Columns>
@@ -424,14 +393,14 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                <TextBlock Text="No elements selected" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,12,0,0"/>
-                <TextBlock Text="Select elements in Revit to align or distribute" Foreground="#686868" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource TextMuted}" HorizontalAlignment="Center"/>
+                <TextBlock Text="No elements selected" Foreground="{StaticResource TextSecondary}" FontSize="14" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                <TextBlock Text="Select elements in Revit to align or distribute" Foreground="{StaticResource TextMuted}" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
             </StackPanel>
         </Grid>
 
         <!-- STATUS BAR -->
-        <Border Grid.Row="3" Background="#111119" BorderBrush="#1A1A2E" BorderThickness="0,1,0,0" Padding="20,8">
+        <Border Grid.Row="3" Background="{StaticResource Deep}" BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0" Padding="20,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -442,16 +411,16 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <TextBlock Text="{Binding TotalCount}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource Tx2}"/>
-                    <TextBlock Text=" elements" FontSize="12" Foreground="{StaticResource TxM}"/>
+                    <TextBlock Text="{Binding TotalCount}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TextSecondary}"/>
+                    <TextBlock Text=" elements" FontSize="12" Foreground="{StaticResource TextMuted}"/>
                 </StackPanel>
-                <Rectangle Grid.Column="1" Width="1" Fill="#222240" Margin="8,2"/>
+                <Rectangle Grid.Column="1" Width="1" Fill="{StaticResource Border}" Margin="8,2"/>
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
-                    <TextBlock Text="{Binding SelectedCount}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource TxA}"/>
-                    <TextBlock Text=" selected" FontSize="12" Foreground="{StaticResource TxM}"/>
+                    <TextBlock Text="{Binding SelectedCount}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource Teal}"/>
+                    <TextBlock Text=" selected" FontSize="12" Foreground="{StaticResource TextMuted}"/>
                 </StackPanel>
-                <TextBlock Grid.Column="4" Text="{Binding StatusMessage}" FontSize="11.5" Foreground="{StaticResource TxM}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                <Button Grid.Column="5" Content="Close" Style="{StaticResource BtnS}" Command="{Binding CloseCommand}" FontSize="11" Padding="12,5" ToolTip="Close"/>
+                <TextBlock Grid.Column="4" Text="{Binding StatusMessage}" FontSize="11.5" Foreground="{StaticResource TextMuted}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                <Button Grid.Column="5" Content="Close" Style="{StaticResource BtnSecondary}" Command="{Binding CloseCommand}" FontSize="11" Padding="12,5" ToolTip="Close"/>
             </Grid>
         </Border>
     </Grid>

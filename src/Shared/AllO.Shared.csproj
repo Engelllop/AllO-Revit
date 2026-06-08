@@ -51,4 +51,11 @@
     </PackageReference>
   </ItemGroup>
 
+  <!-- Ribbon icons — copied to output so Revit can load them at runtime -->
+  <ItemGroup>
+    <Content Include="Resources\Icons\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

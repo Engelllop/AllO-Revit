@@ -85,6 +85,7 @@ public interface IRevitService
     List<DisconnectedConnectorInfo> FindDisconnectedElements();
     int AutoConnectNearby(double toleranceFeet);
     int ConnectElements(int elementId1, int elementId2);
+    int ConnectElementsBatch(int mainId, List<int> terminalIds);
     int HighlightElement(int elementId);
 
     // -- TableGen (Excel → Revit) --------------------------------

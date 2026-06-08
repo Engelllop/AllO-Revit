@@ -9,15 +9,7 @@
         MinHeight="650" MinWidth="900"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#1E1E1E">
-
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/AllO.Shared;component/UI/Styles/AllOTheme.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
+        Background="{StaticResource Deep}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -84,7 +76,7 @@
                         <Popup PlacementTarget="{Binding ElementName=FilterSheetBtn}" Placement="Bottom"
                                IsOpen="{Binding IsFilterPopupOpen, Mode=TwoWay}" StaysOpen="False"
                                AllowsTransparency="True">
-                            <Border Background="#2C2C2C" BorderBrush="{StaticResource Border}" BorderThickness="1"
+                            <Border Background="{StaticResource Card}" BorderBrush="{StaticResource Border}" BorderThickness="1"
                                     CornerRadius="6" Padding="12,10" MinWidth="280"
                                     SnapsToDevicePixels="True">
                                 <StackPanel>
@@ -119,9 +111,9 @@
                   ItemsSource="{Binding SheetsView}"
                   AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                   SelectionMode="Extended" HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#272727"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource DataGridGridLine}"
                   Background="{StaticResource Deep}" BorderThickness="0"
-                  RowBackground="#252525" AlternatingRowBackground="#2B2B2B"
+                  RowBackground="{StaticResource DataGridRowEven}" AlternatingRowBackground="{StaticResource DataGridRowOdd}"
                   Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                   RowHeight="36" ColumnHeaderHeight="32"
                   ColumnHeaderStyle="{StaticResource DgColumnHeader}"
@@ -176,13 +168,13 @@
                             <Border CornerRadius="10" Padding="8,3" HorizontalAlignment="Center">
                                 <Border.Style>
                                     <Style TargetType="Border">
-                                        <Setter Property="Background" Value="#333333"/>
+                                        <Setter Property="Background" Value="{StaticResource Overlay}"/>
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Status}" Value="Done">
-                                                <Setter Property="Background" Value="#1A2E1A"/>
+                                                <Setter Property="Background" Value="{StaticResource SuccessDim}"/>
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding Status}" Value="Failed">
-                                                <Setter Property="Background" Value="#2E1A1A"/>
+                                                <Setter Property="Background" Value="{StaticResource DangerDim}"/>
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
@@ -227,16 +219,16 @@
                 </Style>
             </Border.Style>
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                <TextBlock Text="No sheets to publish" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
-                <TextBlock Text="Try clearing filters or selecting sheets" Foreground="#686868" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource EmptyStateIcon}" HorizontalAlignment="Center"/>
+                <TextBlock Text="No sheets to publish" Foreground="{StaticResource EmptyStateText}" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                <TextBlock Text="Try clearing filters or selecting sheets" Foreground="{StaticResource EmptyStateHint}" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
             </StackPanel>
         </Border>
 
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- SETTINGS PANEL (cards layout)                             -->
         <!-- ══════════════════════════════════════════════════════════ -->
-        <Border Grid.Row="2" Background="#161616"
+        <Border Grid.Row="2" Background="{StaticResource Surface}"
                 BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0"
                 Padding="16,14,16,12">
 
@@ -250,8 +242,8 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- ── Card 1: PDF Settings ── -->
-                <Border Grid.Column="0" Background="#2C2C2C" CornerRadius="8"
-                        BorderBrush="#353535" BorderThickness="1" Padding="14,12">
+                <Border Grid.Column="0" Background="{StaticResource Card}" CornerRadius="8"
+                        BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="14,12" Effect="{StaticResource CardShadow}">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <CheckBox IsChecked="{Binding ExportPdf}"
@@ -306,8 +298,8 @@
                 </Border>
 
                 <!-- ── Card 2: DWG Settings + Output ── -->
-                <Border Grid.Column="2" Background="#2C2C2C" CornerRadius="8"
-                        BorderBrush="#353535" BorderThickness="1" Padding="14,12">
+                <Border Grid.Column="2" Background="{StaticResource Card}" CornerRadius="8"
+                        BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="14,12" Effect="{StaticResource CardShadow}">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
                             <CheckBox IsChecked="{Binding ExportDwg}"
@@ -345,7 +337,7 @@
                         </Grid>
 
                         <!-- Output settings in same card -->
-                        <Border Height="1" Background="#353535" Margin="0,12,0,10"/>
+                        <Border Height="1" Background="{StaticResource Divider}" Margin="0,12,0,10"/>
 
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -371,9 +363,9 @@
                 </Border>
 
                 <!-- ── Card 3: Output + Publish ── -->
-                <Border Grid.Column="4" Background="#2C2C2C" CornerRadius="8"
-                        BorderBrush="#353535" BorderThickness="1" Padding="14,12"
-                        MinWidth="200">
+                <Border Grid.Column="4" Background="{StaticResource Card}" CornerRadius="8"
+                        BorderBrush="{StaticResource Border}" BorderThickness="1" Padding="14,12"
+                        MinWidth="200" Effect="{StaticResource CardShadow}">
                     <StackPanel>
                         <TextBlock Text="OUTPUT FOLDER" Style="{StaticResource Lbl}" Margin="0,0,0,5"/>
                         <TextBox Style="{StaticResource SearchBox}"
@@ -385,7 +377,7 @@
                                 HorizontalAlignment="Stretch" FontSize="11" Padding="8,7"
                                 ToolTip="Choose the output folder for exported files"/>
 
-                        <Border Height="1" Background="#353535" Margin="0,12,0,12"/>
+                        <Border Height="1" Background="{StaticResource Divider}" Margin="0,12,0,12"/>
 
                         <!-- PUBLISH BUTTON -->
                         <Button Style="{StaticResource BtnPrimary}" Command="{Binding PublishCommand}"
@@ -412,7 +404,7 @@
                      Maximum="{Binding ProgressMax}"
                      Value="{Binding ProgressValue}"
                      Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVis}}"
-                     Background="#1A1A1A" BorderThickness="0">
+                     Background="{StaticResource StatusBarBg}" BorderThickness="0">
             <ProgressBar.Foreground>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
                     <GradientStop Color="#E0E0E0" Offset="0"/>
@@ -425,8 +417,8 @@
         <!-- ══════════════════════════════════════════════════════════ -->
         <!-- STATUS BAR                                                -->
         <!-- ══════════════════════════════════════════════════════════ -->
-        <Border Grid.Row="4" Background="#1A1A1A"
-                BorderBrush="#272727" BorderThickness="0,1,0,0"
+        <Border Grid.Row="4" Background="{StaticResource StatusBarBg}"
+                BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0"
                 Padding="20,8">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -453,7 +445,7 @@
                     <TextBlock Text=" sheets" FontSize="12" Foreground="{StaticResource TextMuted}"/>
                 </StackPanel>
 
-                <Rectangle Grid.Column="1" Width="1" Fill="#323232" Margin="8,2"/>
+                <Rectangle Grid.Column="1" Width="1" Fill="{StaticResource Divider}" Margin="8,2"/>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <TextBlock Text="{Binding SelectedCount}" FontWeight="SemiBold" FontSize="12"

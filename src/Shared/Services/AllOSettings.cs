@@ -24,6 +24,12 @@ public sealed class AllOSettings
     [DataMember] public bool ShowToasts { get; set; } = true;
     [DataMember] public string Language { get; set; } = "es";
 
+    /// <summary>
+    /// "Auto" = seguir tema de Revit, "Dark" = forzar oscuro, "Light" = forzar claro.
+    /// Si es null/vacío se usa <see cref="DarkTheme"/> como fallback legacy.
+    /// </summary>
+    [DataMember] public string ThemeMode { get; set; } = "Auto";
+
     private static readonly object FileLock = new();
     private static AllOSettings? _cached;
 

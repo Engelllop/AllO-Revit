@@ -6,23 +6,23 @@
         MinHeight="480" MinWidth="650"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#15151E">
+        Background="{StaticResource Deep}">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="Bg"   Color="#15151E"/>
-        <SolidColorBrush x:Key="Sf"   Color="#1B1B28"/>
-        <SolidColorBrush x:Key="Cd"   Color="#1E1E32"/>
-        <SolidColorBrush x:Key="CdH"  Color="#252542"/>
-        <SolidColorBrush x:Key="Bdr"  Color="#2A2A42"/>
-        <SolidColorBrush x:Key="Txt"  Color="#E8E8F0"/>
-        <SolidColorBrush x:Key="Tx2"  Color="#9999B3"/>
-        <SolidColorBrush x:Key="TxM"  Color="#666680"/>
-        <SolidColorBrush x:Key="TxA"  Color="#9B93FF"/>
-        <SolidColorBrush x:Key="Acc"  Color="#6C63FF"/>
-        <SolidColorBrush x:Key="AcH"  Color="#5B53E8"/>
-        <SolidColorBrush x:Key="Wrn"  Color="#FBBF24"/>
-        <SolidColorBrush x:Key="Err"  Color="#FB7185"/>
-        <SolidColorBrush x:Key="Suc"  Color="#34D399"/>
+        <SolidColorBrush x:Key="Bg"   Color="#FAF9F5"/>
+        <SolidColorBrush x:Key="Sf"   Color="#FAF9F6"/>
+        <SolidColorBrush x:Key="Cd"   Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="CdH"  Color="#F5F4EF"/>
+        <SolidColorBrush x:Key="Bdr"  Color="#E8E6DC"/>
+        <SolidColorBrush x:Key="Txt"  Color="#141413"/>
+        <SolidColorBrush x:Key="Tx2"  Color="#5C5C5C"/>
+        <SolidColorBrush x:Key="TxM"  Color="#B0AEA5"/>
+        <SolidColorBrush x:Key="TxA"  Color="#6A9BCC"/>
+        <SolidColorBrush x:Key="Acc"  Color="#D97757"/>
+        <SolidColorBrush x:Key="AcH"  Color="#C45D3D"/>
+        <SolidColorBrush x:Key="Wrn"  Color="#D4A017"/>
+        <SolidColorBrush x:Key="Err"  Color="#C0392B"/>
+        <SolidColorBrush x:Key="Suc"  Color="#788C5D"/>
 
         <Style x:Key="BtnP" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource Acc}"/>
@@ -89,7 +89,7 @@
         </Style>
 
         <Style x:Key="TBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#1A1A2C"/>
+            <Setter Property="Background" Value="#FFFFFF"/>
             <Setter Property="Foreground" Value="{StaticResource Txt}"/>
             <Setter Property="CaretBrush" Value="{StaticResource Txt}"/>
             <Setter Property="BorderBrush" Value="{StaticResource Bdr}"/>
@@ -115,8 +115,8 @@
         <ControlTemplate x:Key="CbTgl" TargetType="ToggleButton">
             <Grid>
                 <Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="28"/></Grid.ColumnDefinitions>
-                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#1A1A2C" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
-                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#8080A0" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <Border x:Name="Bg" Grid.ColumnSpan="2" Background="#FFFFFF" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4"/>
+                <Path Grid.Column="1" Data="M0,0 L4,4 L8,0" Stroke="#B1ADA1" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Grid>
         </ControlTemplate>
 
@@ -131,7 +131,7 @@
                             <ToggleButton Template="{StaticResource CbTgl}" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" Focusable="False" ClickMode="Press"/>
                             <TextBlock Text="{TemplateBinding SelectionBoxItem}" Margin="10,7,28,7" VerticalAlignment="Center" IsHitTestVisible="False" TextTrimming="CharacterEllipsis"/>
                             <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" Focusable="False" AllowsTransparency="True">
-                                <Border Background="#1E1E32" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4" Margin="0,2,0,0" MinWidth="{TemplateBinding ActualWidth}">
+                                <Border Background="#FFFFFF" BorderBrush="{StaticResource Bdr}" BorderThickness="1" CornerRadius="4" Margin="0,2,0,0" MinWidth="{TemplateBinding ActualWidth}">
                                     <ScrollViewer MaxHeight="200"><StackPanel IsItemsHost="True"/></ScrollViewer>
                                 </Border>
                             </Popup>
@@ -151,8 +151,8 @@
                     <ControlTemplate TargetType="ComboBoxItem">
                         <Border x:Name="Bd" Background="Transparent" Padding="{TemplateBinding Padding}"><ContentPresenter/></Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#2D2D48"/></Trigger>
-                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="#33335A"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Bd" Property="Background" Value="#EBE9E3"/></Trigger>
+                            <Trigger Property="IsSelected" Value="True"><Setter TargetName="Bd" Property="Background" Value="#F5E9E3"/></Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -160,12 +160,12 @@
         </Style>
 
         <Style x:Key="DgHdr" TargetType="DataGridColumnHeader">
-            <Setter Property="Background" Value="#1A1A2C"/>
-            <Setter Property="Foreground" Value="#7070A0"/>
+            <Setter Property="Background" Value="#F7F6F1"/>
+            <Setter Property="Foreground" Value="#8C8C8C"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="BorderBrush" Value="#222240"/>
+            <Setter Property="BorderBrush" Value="#DDDAD2"/>
             <Setter Property="BorderThickness" Value="0,0,0,1"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -190,13 +190,13 @@
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
-                <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="#25254A"/><Setter Property="Foreground" Value="White"/></Trigger>
+                <Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="#F5E9E3"/><Setter Property="Foreground" Value="#2C2C2C"/></Trigger>
             </Style.Triggers>
         </Style>
 
         <Style x:Key="DgR" TargetType="DataGridRow">
             <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#1F1F38"/></Trigger>
+                <Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="#EBE9E3"/></Trigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
@@ -229,7 +229,7 @@
         </Border>
 
         <!-- TOOLBAR -->
-        <Border Grid.Row="1" Background="#191928" BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1" Padding="20,14">
+        <Border Grid.Row="1" Background="{StaticResource Sf}" BorderBrush="{StaticResource Bdr}" BorderThickness="0,0,0,1" Padding="20,14">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -283,9 +283,9 @@
                       ItemsSource="{Binding DisconnectedView}"
                   AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                   SelectionMode="Extended" HeadersVisibility="Column"
-                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#1A1A30"
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource Bdr}"
                   Background="{StaticResource Bg}" BorderThickness="0"
-                  RowBackground="#1B1B28" AlternatingRowBackground="#1D1D2E"
+                  RowBackground="{StaticResource Sf}" AlternatingRowBackground="{StaticResource Cd}"
                   Foreground="{StaticResource Txt}" FontSize="12.5"
                   RowHeight="36" ColumnHeaderHeight="32"
                   ColumnHeaderStyle="{StaticResource DgHdr}" CellStyle="{StaticResource DgC}" RowStyle="{StaticResource DgR}">
@@ -319,7 +319,7 @@
                 <DataGridTemplateColumn Header="Open" Width="60">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Border Background="#2A1A2A" CornerRadius="10" Padding="8,3" HorizontalAlignment="Center">
+                            <Border Background="{StaticResource Err}" CornerRadius="10" Padding="8,3" HorizontalAlignment="Center" Opacity="0.15">
                                 <TextBlock Text="{Binding DisconnectedCount}" FontSize="12" FontWeight="Bold"
                                            Foreground="{StaticResource Wrn}" HorizontalAlignment="Center"/>
                             </Border>
@@ -362,14 +362,14 @@
                         </Style.Triggers>
                     </Style>
                 </StackPanel.Style>
-                <TextBlock Text="&#xE836;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                <TextBlock Text="No disconnected elements found" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,12,0,0"/>
-                <TextBlock Text="Click 'Scan for Disconnected' to analyze the model" Foreground="#686868" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
+                <TextBlock Text="&#xE836;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource TxM}" HorizontalAlignment="Center"/>
+                <TextBlock Text="No disconnected elements found" Foreground="{StaticResource Tx2}" FontSize="14" HorizontalAlignment="Center" Margin="0,12,0,0"/>
+                <TextBlock Text="Click 'Scan for Disconnected' to analyze the model" Foreground="{StaticResource TxM}" FontSize="12" HorizontalAlignment="Center" Margin="0,4,0,0"/>
             </StackPanel>
         </Grid>
 
         <!-- STATUS BAR -->
-        <Border Grid.Row="3" Background="#111119" BorderBrush="#1A1A2E" BorderThickness="0,1,0,0" Padding="20,8">
+        <Border Grid.Row="3" Background="{StaticResource Bg}" BorderBrush="{StaticResource Bdr}" BorderThickness="0,1,0,0" Padding="20,8">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -388,14 +388,14 @@
                     <TextBlock Text=" elements" FontSize="12" Foreground="{StaticResource TxM}"/>
                 </StackPanel>
 
-                <Rectangle Grid.Column="1" Width="1" Fill="#222240" Margin="8,2"/>
+                <Rectangle Grid.Column="1" Width="1" Fill="{StaticResource Bdr}" Margin="8,2"/>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal">
                     <TextBlock Text="{Binding TotalDisconnected}" FontWeight="SemiBold" FontSize="12" Foreground="{StaticResource Wrn}"/>
                     <TextBlock Text=" open connectors" FontSize="12" Foreground="{StaticResource TxM}"/>
                 </StackPanel>
 
-                <Rectangle Grid.Column="3" Width="1" Fill="#222240" Margin="8,2"/>
+                <Rectangle Grid.Column="3" Width="1" Fill="{StaticResource Bdr}" Margin="8,2"/>
 
                 <TextBlock Grid.Column="4" Text="{Binding StatusMessage}" FontSize="11.5" Foreground="{StaticResource TxM}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
 

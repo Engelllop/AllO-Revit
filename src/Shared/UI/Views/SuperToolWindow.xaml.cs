@@ -7,11 +7,20 @@ namespace AllO.UI.Views;
 
 public partial class SuperToolWindow : Window
 {
-    public SuperToolWindow(IRevitService service)
+    public SuperToolWindow(IRevitService service, int initialTab = 0, bool showNav = true, string? title = null)
     {
         InitializeComponent();
+        if (!string.IsNullOrEmpty(title))
+            Title = $"AllO — {title}";
+        if (!showNav)
+        {
+            SidebarBorder.Visibility = Visibility.Collapsed;
+            RootGrid.ColumnDefinitions[0].Width = new GridLength(0);
+        }
         var vm = new SuperToolViewModel(service);
         vm.CloseAction = () => Close();
+        vm.SelectedTabIndex = initialTab;
+        vm.ShowNav = showNav;
         DataContext = vm;
     }
 

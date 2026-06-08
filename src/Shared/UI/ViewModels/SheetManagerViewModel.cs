@@ -36,6 +36,13 @@ public class SheetManagerViewModel : ViewModelBase
     public bool IsViewListVisible => SelectedNavIndex == 1;
     public bool IsRevisionsVisible => SelectedNavIndex == 2;
 
+    private bool _showNav = true;
+    public bool ShowNav
+    {
+        get => _showNav;
+        set => SetProperty(ref _showNav, value);
+    }
+
     public ICommand NavSheetListCommand { get; }
     public ICommand NavViewListCommand { get; }
     public ICommand NavRevisionsCommand { get; }
@@ -292,10 +299,11 @@ public class SheetManagerViewModel : ViewModelBase
     //  CONSTRUCTOR
     // ==============================================================
 
-    public SheetManagerViewModel(IRevitService service)
+    public SheetManagerViewModel(IRevitService service, int initialPanel = 0)
     {
         _service = service;
         DocumentName = _service.GetDocumentName();
+        SelectedNavIndex = initialPanel;
 
         // Navigation
         NavSheetListCommand = new RelayCommand(_ => SelectedNavIndex = 0);

@@ -22,6 +22,7 @@ public static class ColorCoderOverlayHost
     /// <summary>Coalesces rapid ViewActivated events so layout settles before recomputing strip positions.</summary>
     private static DispatcherTimer? _debounceRefresh;
     private static readonly List<ColorCoderStripWindow> Overlays = new();
+    private static Dispatcher? _uiDispatcher;
 
     /// <summary>Last UIApplication seen (set from commands / refresh).</summary>
     public static UIApplication? LastUiApp { get; set; }
@@ -30,17 +31,22 @@ public static class ColorCoderOverlayHost
     {
         if (_registered) return;
         _registered = true;
+        // Usar Application.Current.Dispatcher si está disponible; de lo contrario
+        // Dispatcher.CurrentDispatcher (puede no ser el UI thread de Revit, pero
+        // SafeInvoke maneja el marshalling).
+        _uiDispatcher = System.Windows.Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
 
-        application.ViewActivated += (_, _) => ScheduleDebouncedRefresh();
+        // Revit dispara estos eventos desde threads variables (background para modelos
+        // workshared/cloud). Cualquier excepción que escape de la lambda es UNHANDLED
+        // y Revit se cierra silenciosamente — por eso try/catch obligatorio aquí.
+        application.ViewActivated += (_, _) => SafeInvoke(ScheduleDebouncedRefresh);
         try
         {
-            // Revit 2023/2024: use ControlledApplication (UIControlledApplication.Application is newer).
-            application.ControlledApplication.DocumentOpened += (_, _) => RefreshIfActive();
-            application.ControlledApplication.DocumentClosed += (_, _) => RefreshIfActive();
+            application.ControlledApplication.DocumentOpened += (_, _) => SafeInvoke(RefreshIfActive);
+            application.ControlledApplication.DocumentClosed += (_, _) => SafeInvoke(RefreshIfActive);
         }
         catch
         {
-            // ignore if API differs
         }
 
         _timer = new DispatcherTimer(DispatcherPriority.Background, Dispatcher.CurrentDispatcher)
@@ -60,6 +66,26 @@ public static class ColorCoderOverlayHost
             _debounceRefresh!.IsEnabled = false;
             RefreshIfActive();
         };
+    }
+
+    /// <summary>
+    /// Ejecuta <paramref name="action"/> en el UI dispatcher capturado en Register,
+    /// tragando cualquier excepción. Los eventos de Revit pueden llegar en threads
+    /// arbitrarios; tocar DispatcherTimer/WPF fuera del UI thread lanza
+    /// InvalidOperationException que Revit no maneja → cierre silencioso.
+    /// </summary>
+    private static void SafeInvoke(Action action)
+    {
+        try
+        {
+            if (_uiDispatcher != null && !_uiDispatcher.CheckAccess())
+                _uiDispatcher.BeginInvoke(action);
+            else
+                action();
+        }
+        catch
+        {
+        }
     }
 
     /// <summary>Waits briefly after a view switch so Revit finishes resizing UIView rectangles before we place strips.</summary>

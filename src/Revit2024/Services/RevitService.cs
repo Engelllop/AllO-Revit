@@ -1441,6 +1441,35 @@ public class RevitService : IRevitService
         return 0;
     }
 
+    public int ConnectElementsBatch(int mainId, List<int> terminalIds)
+    {
+        if (Doc == null) return 0;
+        using (var tx = new Transaction(Doc, "AllO Multi Connect"))
+        {
+            tx.Start();
+            int connected = 0;
+            foreach (var termId in terminalIds)
+            {
+                var el1 = Doc.GetElement(new ElementId((long)mainId));
+                var el2 = Doc.GetElement(new ElementId((long)termId));
+                if (el1 == null || el2 == null) continue;
+                ConnectorManager cm1 = null, cm2 = null;
+                if (el1 is Autodesk.Revit.DB.MEPCurve m1) cm1 = m1.ConnectorManager;
+                else if (el1 is Autodesk.Revit.DB.FamilyInstance f1) cm1 = f1.MEPModel?.ConnectorManager;
+                if (el2 is Autodesk.Revit.DB.MEPCurve m2) cm2 = m2.ConnectorManager;
+                else if (el2 is Autodesk.Revit.DB.FamilyInstance f2) cm2 = f2.MEPModel?.ConnectorManager;
+                if (cm1 == null || cm2 == null) continue;
+                Connector best1 = null, best2 = null;
+                double bestDist = double.MaxValue;
+                foreach (Connector c1 in cm1.Connectors) { if (c1.IsConnected) continue; foreach (Connector c2 in cm2.Connectors) { if (c2.IsConnected) continue; double d = c1.Origin.DistanceTo(c2.Origin); if (d < bestDist) { bestDist = d; best1 = c1; best2 = c2; } } }
+                if (best1 != null && best2 != null) { best1.ConnectTo(best2); connected++; }
+            }
+            if (connected > 0) { tx.Commit(); Logging.Debug($"Multi-connected {connected} terminals"); }
+            else { tx.RollBack(); }
+            return connected;
+        }
+    }
+
     public int HighlightElement(int elementId)
     {
         if (_uiApp.ActiveUIDocument == null) return 0;

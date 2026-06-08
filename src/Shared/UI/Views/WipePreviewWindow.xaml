@@ -1,0 +1,58 @@
+<Window x:Class="AllO.UI.Views.WipePreviewWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AllO — Wipe Preview"
+        Height="520" Width="480"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="{StaticResource Deep}">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Deep Model Cleanup" FontSize="18" FontWeight="Bold"
+                   Foreground="{StaticResource TextPrimary}" Margin="0,0,0,4"/>
+        <TextBlock Grid.Row="1" Text="Select categories to delete. Only items that are actually unused will be removed."
+                   FontSize="11" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap" Margin="0,0,0,14"/>
+
+        <Border Grid.Row="2" Background="{StaticResource Card}" CornerRadius="8"
+                BorderBrush="{StaticResource Border}" BorderThickness="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="12,8">
+                    <Button Content="Select All" Style="{StaticResource BtnSecondary}" FontSize="11"
+                            Command="{Binding SelectAllCommand}" Padding="10,4" Margin="0,0,6,0"/>
+                    <Button Content="Select None" Style="{StaticResource BtnSecondary}" FontSize="11"
+                            Command="{Binding SelectNoneCommand}" Padding="10,4"/>
+                </StackPanel>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,8">
+                    <ItemsControl ItemsSource="{Binding Items}" Margin="12,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <CheckBox IsChecked="{Binding IsSelected}" Margin="0,6" VerticalContentAlignment="Center">
+                                    <TextBlock Text="{Binding Description}" FontSize="13"
+                                               Foreground="{StaticResource TextPrimary}"/>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+            <Button Content="Cancel" Style="{StaticResource BtnSecondary}" FontSize="12"
+                    Command="{Binding CancelCommand}" Padding="18,6" Margin="0,0,8,0"/>
+            <Button Content="Execute Cleanup" Style="{StaticResource BtnDanger}" FontSize="12"
+                    Command="{Binding ExecuteCommand}" Padding="18,6"/>
+        </StackPanel>
+    </Grid>
+</Window>

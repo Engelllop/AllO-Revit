@@ -83,7 +83,7 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renames)
             {
-                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+                var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
                 var param = sheet?.get_Parameter(BuiltInParameter.SHEET_NAME);
                 if (param != null && !param.IsReadOnly) { param.Set(kvp.Value); count++; }
             }
@@ -109,7 +109,7 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renumbers)
             {
-                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+                var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
                 var param = sheet?.get_Parameter(BuiltInParameter.SHEET_NUMBER);
                 if (param != null && !param.IsReadOnly) { param.Set(kvp.Value); count++; }
             }
@@ -341,7 +341,7 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renames)
             {
-                var view = Doc.GetElement(new ElementId(kvp.Key)) as View;
+                var view = Doc.GetElement(new ElementId((long)kvp.Key)) as View;
                 if (view != null) { view.Name = kvp.Value; count++; }
             }
             tx.Commit();
@@ -778,7 +778,7 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in renames)
                 {
-                    var grid = Doc.GetElement(new ElementId(kvp.Key)) as Grid;
+                    var grid = Doc.GetElement(new ElementId((long)kvp.Key)) as Grid;
                     if (grid == null) continue;
                     try { grid.Name = kvp.Value; count++; } catch { }
                 }
@@ -964,7 +964,7 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in renames)
                 {
-                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
+                    var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
                     if (level == null) continue;
                     try { level.Name = kvp.Value; count++; } catch { }
                 }
@@ -991,7 +991,7 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in newElevations)
                 {
-                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
+                    var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
                     if (level == null) continue;
                     try { 
                         level.Elevation = UnitConverter.ToFeet(kvp.Value);
@@ -1337,7 +1337,7 @@ public class RevitService : IRevitService
         var result = new List<DisconnectedConnectorInfo>();
         foreach (var el in new FilteredElementCollector(Doc).WhereElementIsNotElementType())
         {
-            ConnectorManager cm = null;
+            ConnectorManager? cm = null;
             string category = "";
             if (el is Autodesk.Revit.DB.MEPCurve mep) { cm = mep.ConnectorManager; category = el.Category?.Name ?? "MEP"; }
             else if (el is Autodesk.Revit.DB.FamilyInstance fi && fi.MEPModel?.ConnectorManager != null) { cm = fi.MEPModel.ConnectorManager; category = el.Category?.Name ?? "MEP"; }
@@ -1379,7 +1379,7 @@ public class RevitService : IRevitService
                 var openConnectors = new List<Autodesk.Revit.DB.Connector>();
                 foreach (var el in new FilteredElementCollector(Doc).WhereElementIsNotElementType())
                 {
-                    ConnectorManager cm = null;
+                    ConnectorManager? cm = null;
                     if (el is Autodesk.Revit.DB.MEPCurve mep) cm = mep.ConnectorManager;
                     else if (el is Autodesk.Revit.DB.FamilyInstance fi) cm = fi.MEPModel?.ConnectorManager;
                     if (cm == null) continue;
@@ -1420,13 +1420,13 @@ public class RevitService : IRevitService
                 var el1 = Doc.GetElement(new ElementId((long)elementId1));
                 var el2 = Doc.GetElement(new ElementId((long)elementId2));
                 if (el1 == null || el2 == null) { tx.RollBack(); return 0; }
-                ConnectorManager cm1 = null, cm2 = null;
+                ConnectorManager? cm1 = null, cm2 = null;
                 if (el1 is Autodesk.Revit.DB.MEPCurve m1) cm1 = m1.ConnectorManager;
                 else if (el1 is Autodesk.Revit.DB.FamilyInstance f1) cm1 = f1.MEPModel?.ConnectorManager;
                 if (el2 is Autodesk.Revit.DB.MEPCurve m2) cm2 = m2.ConnectorManager;
                 else if (el2 is Autodesk.Revit.DB.FamilyInstance f2) cm2 = f2.MEPModel?.ConnectorManager;
                 if (cm1 == null || cm2 == null) { tx.RollBack(); return 0; }
-                Connector best1 = null, best2 = null;
+                Connector? best1 = null, best2 = null;
                 double bestDist = double.MaxValue;
                 foreach (Connector c1 in cm1.Connectors) { if (c1.IsConnected) continue; foreach (Connector c2 in cm2.Connectors) { if (c2.IsConnected) continue; double d = c1.Origin.DistanceTo(c2.Origin); if (d < bestDist) { bestDist = d; best1 = c1; best2 = c2; } } }
                 if (best1 != null && best2 != null) { best1.ConnectTo(best2); tx.Commit(); Logging.Debug("Connected 2 MEP elements"); return 1; }
@@ -1439,6 +1439,35 @@ public class RevitService : IRevitService
             }
         }
         return 0;
+    }
+
+    public int ConnectElementsBatch(int mainId, List<int> terminalIds)
+    {
+        if (Doc == null) return 0;
+        using (var tx = new Transaction(Doc, "AllO Multi Connect"))
+        {
+            tx.Start();
+            int connected = 0;
+            foreach (var termId in terminalIds)
+            {
+                var el1 = Doc.GetElement(new ElementId((long)mainId));
+                var el2 = Doc.GetElement(new ElementId((long)termId));
+                if (el1 == null || el2 == null) continue;
+                ConnectorManager cm1 = null, cm2 = null;
+                if (el1 is Autodesk.Revit.DB.MEPCurve m1) cm1 = m1.ConnectorManager;
+                else if (el1 is Autodesk.Revit.DB.FamilyInstance f1) cm1 = f1.MEPModel?.ConnectorManager;
+                if (el2 is Autodesk.Revit.DB.MEPCurve m2) cm2 = m2.ConnectorManager;
+                else if (el2 is Autodesk.Revit.DB.FamilyInstance f2) cm2 = f2.MEPModel?.ConnectorManager;
+                if (cm1 == null || cm2 == null) continue;
+                Connector best1 = null, best2 = null;
+                double bestDist = double.MaxValue;
+                foreach (Connector c1 in cm1.Connectors) { if (c1.IsConnected) continue; foreach (Connector c2 in cm2.Connectors) { if (c2.IsConnected) continue; double d = c1.Origin.DistanceTo(c2.Origin); if (d < bestDist) { bestDist = d; best1 = c1; best2 = c2; } } }
+                if (best1 != null && best2 != null) { best1.ConnectTo(best2); connected++; }
+            }
+            if (connected > 0) { tx.Commit(); Logging.Debug($"Multi-connected {connected} terminals"); }
+            else { tx.RollBack(); }
+            return connected;
+        }
     }
 
     public int HighlightElement(int elementId)
@@ -1834,7 +1863,7 @@ public class RevitService : IRevitService
                 var createMethod = viewLegendType.GetMethod("Create",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                 if (createMethod != null)
-                    return createMethod.Invoke(null, new object[] { Doc, legendTypeId }) as View;
+                    return createMethod.Invoke(null, new object[] { Doc!, legendTypeId }) as View;
             }
         }
         catch (Exception ex)
@@ -1850,7 +1879,7 @@ public class RevitService : IRevitService
                 if (!v.IsTemplate && v.ViewType == ViewType.Legend)
                 {
                     var newId = v.Duplicate(ViewDuplicateOption.Duplicate);
-                    return Doc.GetElement(newId) as View;
+                    return Doc!.GetElement(newId) as View;
                 }
             }
         }
@@ -1881,7 +1910,7 @@ public class RevitService : IRevitService
         }
         try
         {
-            var baseId = Doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
+            var baseId = Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
             var baseType = Doc.GetElement(baseId) as TextNoteType;
             if (baseType == null)
                 baseType = new FilteredElementCollector(Doc).OfClass(typeof(TextNoteType)).FirstElement() as TextNoteType;
@@ -1902,7 +1931,7 @@ public class RevitService : IRevitService
         {
             Logging.Error("Failed to get/create text note type", ex);
         }
-        return Doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
+        return Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
     }
 
     private void DrawTableOnView(View view, ExcelTableData data)
@@ -2030,7 +2059,7 @@ public class RevitService : IRevitService
         if (Doc == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
         if (link == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
-        var view = Doc.GetElement(new ElementId(viewId)) as View;
+        var view = Doc.GetElement(new ElementId((long)viewId)) as View;
         if (view == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
 
         try
@@ -2065,7 +2094,7 @@ public class RevitService : IRevitService
         {
             foreach (int vid in viewIds)
             {
-                var view = Doc.GetElement(new ElementId(vid)) as View;
+                var view = Doc.GetElement(new ElementId((long)vid)) as View;
                 if (view == null) continue;
 
                 try

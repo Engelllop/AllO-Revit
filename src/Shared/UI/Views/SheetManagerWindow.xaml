@@ -9,17 +9,9 @@
         MinHeight="600" MinWidth="950"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#1E1E1E">
+        Background="{StaticResource Deep}">
 
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/AllO.Shared;component/UI/Styles/AllOTheme.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
-
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="180"/>
             <ColumnDefinition Width="*"/>
@@ -28,7 +20,7 @@
         <!-- ============================================================
              LEFT SIDEBAR
              ============================================================ -->
-        <Border Grid.Column="0" Background="{StaticResource Sidebar}"
+        <Border x:Name="SidebarBorder" Grid.Column="0" Background="{StaticResource Sidebar}" Visibility="{Binding ShowNav, Converter={StaticResource BoolToVis}}"
                 BorderBrush="{StaticResource Border}" BorderThickness="0,0,1,0">
             <Grid>
                 <Grid.RowDefinitions>
@@ -180,9 +172,9 @@
                           ItemsSource="{Binding SheetsView}"
                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           SelectionMode="Extended" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#2E2E2E"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource DataGridGridLine}"
                           Background="{StaticResource Deep}" BorderThickness="0"
-                          RowBackground="#252525" AlternatingRowBackground="#2C2C2C"
+                          RowBackground="{StaticResource DataGridRowEven}" AlternatingRowBackground="{StaticResource DataGridRowOdd}"
                           Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                           RowHeight="38" ColumnHeaderHeight="36"
                           ColumnHeaderStyle="{StaticResource DgColumnHeader}"
@@ -220,7 +212,7 @@
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding WillChange}" Value="True">
                                                         <Setter Property="Text" Value="{Binding PreviewName}"/>
-                                                        <Setter Property="Foreground" Value="#34D399"/>
+                                                        <Setter Property="Foreground" Value="{StaticResource Success}"/>
                                                         <Setter Property="FontWeight" Value="SemiBold"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -258,6 +250,48 @@
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
 
+                        <DataGridTextColumn Header="Approved By" Width="100" Binding="{Binding ApprovedBy}" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Issue Date" Width="95" Binding="{Binding SheetIssueDate}" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Placed Views" Width="130" Binding="{Binding PlacedViewsSummary}" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    <Setter Property="ToolTip" Value="{Binding PlacedViewsSummary}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
+                        <DataGridTextColumn Header="Legends" Width="110" Binding="{Binding PlacedLegendsSummary}" IsReadOnly="True">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                    <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                                    <Setter Property="ToolTip" Value="{Binding PlacedLegendsSummary}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+
                         <DataGridTemplateColumn Header="Original" Width="*">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
@@ -266,7 +300,7 @@
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Text" Value="{Binding OriginalName}"/>
-                                                <Setter Property="Foreground" Value="#FB7185"/>
+                                                <Setter Property="Foreground" Value="{StaticResource Danger}"/>
                                                 <Setter Property="TextDecorations" Value="Strikethrough"/>
                                                 <Setter Property="FontSize" Value="11.5"/>
                                             </Style>
@@ -291,9 +325,9 @@
                         </Style>
                     </Border.Style>
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                        <TextBlock Text="No sheets found" FontSize="14" Foreground="#787878" Margin="0,12,0,0" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Create a new sheet to get started" FontSize="12" Foreground="#686868" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="&#xE8A9;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource EmptyStateIcon}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No sheets found" FontSize="14" Foreground="{StaticResource EmptyStateText}" Margin="0,12,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Create a new sheet to get started" FontSize="12" Foreground="{StaticResource EmptyStateHint}" Margin="0,4,0,0" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
@@ -421,9 +455,9 @@
                           ItemsSource="{Binding ViewsView}"
                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           SelectionMode="Extended" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#2E2E2E"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource DataGridGridLine}"
                           Background="{StaticResource Deep}" BorderThickness="0"
-                          RowBackground="#252525" AlternatingRowBackground="#2C2C2C"
+                          RowBackground="{StaticResource DataGridRowEven}" AlternatingRowBackground="{StaticResource DataGridRowOdd}"
                           Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                           RowHeight="38" ColumnHeaderHeight="36"
                           ColumnHeaderStyle="{StaticResource DgColumnHeader}"
@@ -521,9 +555,9 @@
                         </Style>
                     </Border.Style>
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE890;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                        <TextBlock Text="No views found" FontSize="14" Foreground="#787878" Margin="0,12,0,0" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Views will appear here when available" FontSize="12" Foreground="#686868" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="&#xE890;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource EmptyStateIcon}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No views found" FontSize="14" Foreground="{StaticResource EmptyStateText}" Margin="0,12,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Views will appear here when available" FontSize="12" Foreground="{StaticResource EmptyStateHint}" Margin="0,4,0,0" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -571,9 +605,9 @@
                           ItemsSource="{Binding Revisions}"
                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           SelectionMode="Extended" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#2E2E2E"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource DataGridGridLine}"
                           Background="{StaticResource Deep}" BorderThickness="0"
-                          RowBackground="#252525" AlternatingRowBackground="#2C2C2C"
+                          RowBackground="{StaticResource DataGridRowEven}" AlternatingRowBackground="{StaticResource DataGridRowOdd}"
                           Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                           RowHeight="38" ColumnHeaderHeight="36"
                           ColumnHeaderStyle="{StaticResource DgColumnHeader}"
@@ -649,12 +683,12 @@
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <DataTrigger Binding="{Binding Status}" Value="Issued">
-                                                        <Setter TargetName="StatusBd" Property="Background" Value="#1A3A2A"/>
+                                                        <Setter TargetName="StatusBd" Property="Background" Value="{StaticResource SuccessDim}"/>
                                                         <Setter TargetName="StatusTxt" Property="Foreground" Value="{StaticResource Success}"/>
                                                         <Setter TargetName="StatusTxt" Property="FontWeight" Value="SemiBold"/>
                                                     </DataTrigger>
                                                     <DataTrigger Binding="{Binding Status}" Value="Not Issued">
-                                                        <Setter TargetName="StatusBd" Property="Background" Value="#383838"/>
+                                                        <Setter TargetName="StatusBd" Property="Background" Value="{StaticResource Overlay}"/>
                                                         <Setter TargetName="StatusTxt" Property="Foreground" Value="{StaticResource TextMuted}"/>
                                                     </DataTrigger>
                                                     <Trigger Property="IsMouseOver" Value="True">
@@ -683,9 +717,9 @@
                         </Style>
                     </Border.Style>
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                        <TextBlock Text="No revisions found" FontSize="14" Foreground="#787878" Margin="0,12,0,0" HorizontalAlignment="Center"/>
-                        <TextBlock Text="Create a new revision to get started" FontSize="12" Foreground="#686868" Margin="0,4,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="&#xE70F;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource EmptyStateIcon}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No revisions found" FontSize="14" Foreground="{StaticResource EmptyStateText}" Margin="0,12,0,0" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Create a new revision to get started" FontSize="12" Foreground="{StaticResource EmptyStateHint}" Margin="0,4,0,0" HorizontalAlignment="Center"/>
                     </StackPanel>
                 </Border>
 
@@ -740,7 +774,7 @@
             <!-- ============================================================
                  STATUS BAR
                  ============================================================ -->
-            <Border Grid.Row="1" Background="#1A1A1A"
+            <Border Grid.Row="1" Background="{StaticResource StatusBarBg}"
                     BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0"
                     Padding="20,9">
                 <Grid>

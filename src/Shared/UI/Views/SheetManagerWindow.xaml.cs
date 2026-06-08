@@ -10,11 +10,19 @@ namespace AllO.UI.Views;
 /// </summary>
 public partial class SheetManagerWindow : Window
 {
-    public SheetManagerWindow(IRevitService service)
+    public SheetManagerWindow(IRevitService service, int initialPanel = 0, bool showNav = true, string? title = null)
     {
         InitializeComponent();
-        var vm = new SheetManagerViewModel(service);
+        if (!string.IsNullOrEmpty(title))
+            Title = $"AllO — {title}";
+        if (!showNav)
+        {
+            SidebarBorder.Visibility = Visibility.Collapsed;
+            RootGrid.ColumnDefinitions[0].Width = new GridLength(0);
+        }
+        var vm = new SheetManagerViewModel(service, initialPanel);
         vm.CloseAction = Close;
+        vm.ShowNav = showNav;
         DataContext = vm;
     }
 

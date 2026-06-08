@@ -211,6 +211,7 @@ public class MockService : IRevitService
     };
     public int AutoConnectNearby(double toleranceFeet) => 3;
     public int ConnectElements(int elementId1, int elementId2) => 1;
+    public int ConnectElementsBatch(int mainId, List<int> terminalIds) => terminalIds.Count;
     public int HighlightElement(int elementId) => 1;
 
     // -- TableGen (Excel → Revit) ---

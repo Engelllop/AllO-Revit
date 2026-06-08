@@ -6,15 +6,7 @@
         MinHeight="500" MinWidth="700"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#1E1E1E">
-
-    <Window.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/AllO.Shared;component/UI/Styles/AllOTheme.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </Window.Resources>
+        Background="{StaticResource Deep}">
 
     <Grid>
         <Grid.RowDefinitions>

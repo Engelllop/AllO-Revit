@@ -9,25 +9,46 @@
         MinHeight="550" MinWidth="850"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanResizeWithGrip"
-        Background="#1E1E1E">
+        Background="{StaticResource Deep}">
 
     <Window.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="pack://application:,,,/AllO.Shared;component/UI/Styles/AllOTheme.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
-
             <!-- Window-specific row style for sync mismatch -->
             <Style x:Key="DgRSync" TargetType="DataGridRow" BasedOn="{StaticResource DgRow}">
                 <Setter Property="MinHeight" Value="44"/>
-                <Style.Triggers>
-                    <DataTrigger Binding="{Binding HasSyncMismatch}" Value="True">
-                        <Setter Property="Background" Value="#2D2418"/>
-                        <Setter Property="BorderBrush" Value="{StaticResource Orange}"/>
-                        <Setter Property="BorderThickness" Value="0,0,0,2"/>
-                    </DataTrigger>
-                </Style.Triggers>
             </Style>
+
+            <!-- Status badge DataTemplate -->
+            <DataTemplate x:Key="SyncStatusBadge">
+                <Border CornerRadius="4" Padding="6,2" HorizontalAlignment="Left" VerticalAlignment="Center">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Background" Value="#E8F0E0"/>
+                            <Setter Property="ToolTip" Value="In sync with reference link"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasSyncMismatch}" Value="True">
+                                    <Setter Property="Background" Value="#FDEBD0"/>
+                                    <Setter Property="ToolTip" Value="{Binding SyncWarning}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock FontSize="10" FontWeight="SemiBold">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Text" Value="OK"/>
+                                <Setter Property="Foreground" Value="#788c5d"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasSyncMismatch}" Value="True">
+                                        <Setter Property="Text" Value="Error"/>
+                                        <Setter Property="Foreground" Value="#d97757"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+            </DataTemplate>
 
             <!-- Window-specific RadioButton sidebar nav -->
             <Style x:Key="NavBtn" TargetType="RadioButton">
@@ -44,11 +65,11 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Bd" Property="Background" Value="#2E2E2E"/>
+                                    <Setter TargetName="Bd" Property="Background" Value="{StaticResource Overlay}"/>
                                 </Trigger>
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="Bd" Property="Background" Value="{StaticResource Accent}"/>
-                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="Foreground" Value="{StaticResource TextOnAccent}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -58,7 +79,7 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="170"/>
             <ColumnDefinition Width="*"/>
@@ -67,7 +88,7 @@
         <!-- ═══════════════════════════════════════════ -->
         <!-- SIDEBAR                                     -->
         <!-- ═══════════════════════════════════════════ -->
-        <Border Grid.Column="0" Background="{StaticResource Surface}"
+        <Border x:Name="SidebarBorder" Grid.Column="0" Background="{StaticResource Surface}" Visibility="{Binding ShowNav, Converter={StaticResource BoolToVis}}"
                 BorderBrush="{StaticResource Border}" BorderThickness="0,0,1,0">
             <DockPanel>
                 <!-- Logo -->
@@ -78,7 +99,8 @@
 
                 <!-- Nav -->
                 <StackPanel Margin="4,0">
-                    <RadioButton Style="{StaticResource NavBtn}" IsChecked="True"
+                    <RadioButton Style="{StaticResource NavBtn}"
+                                 IsChecked="{Binding IsCropTab, Mode=OneWay}"
                                  Checked="NavTab_Checked" Tag="0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE8C6;" FontFamily="Segoe MDL2 Assets" FontSize="14"
@@ -88,6 +110,7 @@
                     </RadioButton>
 
                     <RadioButton Style="{StaticResource NavBtn}"
+                                 IsChecked="{Binding IsGridTab, Mode=OneWay}"
                                  Checked="NavTab_Checked" Tag="1">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="14"
@@ -97,6 +120,7 @@
                     </RadioButton>
 
                     <RadioButton Style="{StaticResource NavBtn}"
+                                 IsChecked="{Binding IsLevelTab, Mode=OneWay}"
                                  Checked="NavTab_Checked" Tag="2">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE81E;" FontFamily="Segoe MDL2 Assets" FontSize="14"
@@ -139,7 +163,7 @@
                 </Border>
 
                 <!-- Source selection -->
-                <Border Grid.Row="1" Background="#262626" Padding="16,10"
+                <Border Grid.Row="1" Background="{StaticResource Surface}" Padding="16,10"
                         BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="BASE SOURCE VIEW" FontSize="11" FontWeight="Bold"
@@ -159,9 +183,9 @@
                           ItemsSource="{Binding CropViewsView}"
                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           SelectionMode="Extended" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#272727"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource DataGridGridLine}"
                           Background="{StaticResource Deep}" BorderThickness="0"
-                          RowBackground="#282828" AlternatingRowBackground="#2B2B2B"
+                          RowBackground="{StaticResource DataGridRowEven}" AlternatingRowBackground="{StaticResource DataGridRowOdd}"
                           Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                           RowHeight="36" ColumnHeaderHeight="32"
                           ColumnHeaderStyle="{StaticResource DgColumnHeader}"
@@ -249,8 +273,8 @@
                         </Style>
                     </Border.Style>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="&#xE8C6;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                        <TextBlock Text="No views available" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                        <TextBlock Text="&#xE8C6;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource EmptyStateIcon}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No views available" Foreground="{StaticResource EmptyStateText}" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -277,7 +301,7 @@
                 </Border>
 
                 <!-- Reference link + copy -->
-                <Border Grid.Row="1" Background="#262626" Padding="16,10"
+                <Border Grid.Row="1" Background="{StaticResource Surface}" Padding="16,10"
                         BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="REFERENCE LINK" FontSize="11" FontWeight="Bold"
@@ -294,7 +318,7 @@
                 </Border>
 
                 <!-- Prefix/Suffix -->
-                <Border Grid.Row="2" Background="#262626" Padding="16,10"
+                <Border Grid.Row="2" Background="{StaticResource Surface}" Padding="16,10"
                         BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="PREFIX:" Style="{StaticResource Lbl}" VerticalAlignment="Center" Margin="0,0,6,0"/>
@@ -309,9 +333,9 @@
                           ItemsSource="{Binding GridsView}"
                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           SelectionMode="Extended" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#272727"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource DataGridGridLine}"
                           Background="{StaticResource Deep}" BorderThickness="0"
-                          RowBackground="#282828" AlternatingRowBackground="#2B2B2B"
+                          RowBackground="{StaticResource DataGridRowEven}" AlternatingRowBackground="{StaticResource DataGridRowOdd}"
                           Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                           ColumnHeaderHeight="32"
                           ColumnHeaderStyle="{StaticResource DgColumnHeader}"
@@ -328,15 +352,12 @@
                         <DataGridTemplateColumn Header="Name" Width="200">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Vertical" Margin="0,4">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TextAccent}"/>
-                                        <TextBlock Text="{Binding SyncWarning}" FontSize="10" Foreground="{StaticResource Orange}"
-                                                   TextWrapping="Wrap"
-                                                   Visibility="{Binding HasSyncMismatch, Converter={StaticResource BoolToVis}}"/>
-                                    </StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TextAccent}"
+                                               VerticalAlignment="Center"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Status" Width="70" CellTemplate="{StaticResource SyncStatusBadge}"/>
                         <DataGridTextColumn Header="New Name" Width="150" Binding="{Binding NewName, UpdateSourceTrigger=PropertyChanged}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
@@ -346,7 +367,7 @@
                             </DataGridTextColumn.ElementStyle>
                             <DataGridTextColumn.EditingElementStyle>
                                 <Style TargetType="TextBox">
-                                    <Setter Property="Background" Value="#272727"/>
+                                    <Setter Property="Background" Value="{StaticResource Card}"/>
                                     <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                                     <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
                                     <Setter Property="Padding" Value="4,2"/>
@@ -384,8 +405,8 @@
                         </Style>
                     </Border.Style>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                        <TextBlock Text="No grids found in the document" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                        <TextBlock Text="&#xE80A;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource EmptyStateIcon}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No grids found in the document" Foreground="{StaticResource EmptyStateText}" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>
@@ -413,7 +434,7 @@
                 </Border>
 
                 <!-- Reference link + copy -->
-                <Border Grid.Row="1" Background="#262626" Padding="16,10"
+                <Border Grid.Row="1" Background="{StaticResource Surface}" Padding="16,10"
                         BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="REFERENCE LINK" FontSize="11" FontWeight="Bold"
@@ -430,7 +451,7 @@
                 </Border>
 
                 <!-- Offset -->
-                <Border Grid.Row="2" Background="#262626" Padding="16,10"
+                <Border Grid.Row="2" Background="{StaticResource Surface}" Padding="16,10"
                         BorderBrush="{StaticResource Border}" BorderThickness="0,0,0,1">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="ELEVATION OFFSET (m):" Style="{StaticResource Lbl}" VerticalAlignment="Center" Margin="0,0,8,0"/>
@@ -443,9 +464,9 @@
                           ItemsSource="{Binding LevelsView}"
                           AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False"
                           SelectionMode="Extended" HeadersVisibility="Column"
-                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#272727"
+                          GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="{StaticResource DataGridGridLine}"
                           Background="{StaticResource Deep}" BorderThickness="0"
-                          RowBackground="#282828" AlternatingRowBackground="#2B2B2B"
+                          RowBackground="{StaticResource DataGridRowEven}" AlternatingRowBackground="{StaticResource DataGridRowOdd}"
                           Foreground="{StaticResource TextPrimary}" FontSize="12.5"
                           ColumnHeaderHeight="32"
                           ColumnHeaderStyle="{StaticResource DgColumnHeader}"
@@ -462,15 +483,12 @@
                         <DataGridTemplateColumn Header="Name" Width="200">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Vertical" Margin="0,4">
-                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TextAccent}"/>
-                                        <TextBlock Text="{Binding SyncWarning}" FontSize="10" Foreground="{StaticResource Orange}"
-                                                   TextWrapping="Wrap"
-                                                   Visibility="{Binding HasSyncMismatch, Converter={StaticResource BoolToVis}}"/>
-                                    </StackPanel>
+                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="{StaticResource TextAccent}"
+                                               VerticalAlignment="Center"/>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Header="Status" Width="70" CellTemplate="{StaticResource SyncStatusBadge}"/>
                         <DataGridTextColumn Header="New Name" Width="150" Binding="{Binding NewName, UpdateSourceTrigger=PropertyChanged}">
                             <DataGridTextColumn.ElementStyle>
                                 <Style TargetType="TextBlock">
@@ -480,7 +498,7 @@
                             </DataGridTextColumn.ElementStyle>
                             <DataGridTextColumn.EditingElementStyle>
                                 <Style TargetType="TextBox">
-                                    <Setter Property="Background" Value="#272727"/>
+                                    <Setter Property="Background" Value="{StaticResource Card}"/>
                                     <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                                     <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
                                     <Setter Property="Padding" Value="4,2"/>
@@ -506,7 +524,7 @@
                             </DataGridTextColumn.ElementStyle>
                             <DataGridTextColumn.EditingElementStyle>
                                 <Style TargetType="TextBox">
-                                    <Setter Property="Background" Value="#272727"/>
+                                    <Setter Property="Background" Value="{StaticResource Card}"/>
                                     <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
                                     <Setter Property="CaretBrush" Value="{StaticResource TextPrimary}"/>
                                     <Setter Property="Padding" Value="4,2"/>
@@ -547,22 +565,22 @@
                         </Style>
                     </Border.Style>
                     <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="&#xE81E;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="#484848" HorizontalAlignment="Center"/>
-                        <TextBlock Text="No levels found in the document" Foreground="#787878" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
+                        <TextBlock Text="&#xE81E;" FontFamily="Segoe MDL2 Assets" FontSize="48" Foreground="{StaticResource EmptyStateIcon}" HorizontalAlignment="Center"/>
+                        <TextBlock Text="No levels found in the document" Foreground="{StaticResource EmptyStateText}" FontSize="14" HorizontalAlignment="Center" Margin="0,8,0,0"/>
                     </StackPanel>
                 </Border>
             </Grid>
 
             <!-- ═══ PROGRESS ═══ -->
-            <Border Grid.Row="1" Background="#1A1A1A" Padding="20,6,20,4"
+            <Border Grid.Row="1" Background="{StaticResource StatusBarBg}" Padding="20,6,20,4"
                     Visibility="{Binding ShowProgress, Converter={StaticResource BoolToVis}}">
                 <ProgressBar Height="6" Minimum="0" Maximum="{Binding ProgressMax}" Value="{Binding ProgressValue}"
-                             Foreground="{StaticResource Orange}" Background="#2A2A2A" BorderThickness="0"/>
+                             Foreground="{StaticResource Orange}" Background="{StaticResource Surface}" BorderThickness="0"/>
             </Border>
 
             <!-- ═══ STATUS BAR ═══ -->
-            <Border Grid.Row="2" Background="#1A1A1A"
-                    BorderBrush="#272727" BorderThickness="0,1,0,0" Padding="20,8">
+            <Border Grid.Row="2" Background="{StaticResource StatusBarBg}"
+                    BorderBrush="{StaticResource Border}" BorderThickness="0,1,0,0" Padding="20,8">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>

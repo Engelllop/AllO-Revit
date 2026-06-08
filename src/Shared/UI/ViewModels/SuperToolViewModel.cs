@@ -32,6 +32,13 @@ public class SuperToolViewModel : ViewModelBase
         }
     }
 
+    private bool _showNav = true;
+    public bool ShowNav
+    {
+        get => _showNav;
+        set => SetProperty(ref _showNav, value);
+    }
+
     public bool IsCropTab => SelectedTabIndex == 0;
     public bool IsGridTab => SelectedTabIndex == 1;
     public bool IsLevelTab => SelectedTabIndex == 2;
