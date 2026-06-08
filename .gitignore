@@ -1,5 +1,11 @@
 # AllO - Revit Add-in Ignore File
 
+# Proyecto independiente anidado por error (tiene su propio repo git)
+TheApp/
+
+# Archivos de prueba sueltos
+test_icon.png
+
 # Build outputs
 bin/
 obj/
