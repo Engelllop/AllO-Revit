@@ -60,10 +60,6 @@ independiente de una sesión real de Revit: `UnitConverter`, `ServiceLocator` y
 dotnet test src/Tests/AllO.Tests.csproj
 ```
 
-> El proyecto aún no está en `AllO.sln`: los tres proyectos de versión se llaman
-> todos `AllO.csproj`, lo que impide `dotnet sln add` por nombre duplicado.
-> Pendiente: renombrarlos (p.ej. `AllO.Revit2023.csproj`) para poder añadirlo.
-
 ## Limpieza
 
 ```powershell
