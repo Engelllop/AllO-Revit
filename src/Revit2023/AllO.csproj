@@ -17,7 +17,16 @@
     <Version>1.0.0</Version>
     <Description>AllO Add-in for Revit 2023</Description>
     <RevitVersion>2023</RevitVersion>
+    <DefineConstants>$(DefineConstants);REVIT2023</DefineConstants>
   </PropertyGroup>
+
+  <!-- App.cs + RevitService.cs compartidos: un solo source, compilado contra
+       el SDK de esta versión. Las diferencias de API van con #if REVIT2023. -->
+  <ItemGroup>
+    <Compile Include="..\Versioned\**\*.cs">
+      <Link>Versioned\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </Compile>
+  </ItemGroup>
 
   <ItemGroup>
     <Using Include="System" />

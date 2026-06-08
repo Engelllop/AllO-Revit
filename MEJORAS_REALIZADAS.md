@@ -120,7 +120,7 @@ if (cell.VAlign == (int)ExcelVAlign.Bottom) { ... }
 
 ### Limpieza
 ```powershell
-cd C:\Users\Engelllop\Documents\Nex\AllO
+# desde la raíz del repo
 .\cleanup.ps1
 ```
 

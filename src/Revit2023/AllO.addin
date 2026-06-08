@@ -3,7 +3,7 @@
   <AddIn Type="Application">
     <Name>AllO</Name>
     <Assembly>AllO.dll</Assembly>
-    <FullClassName>AllO.Revit2023.App</FullClassName>
+    <FullClassName>AllO.App</FullClassName>
     <ClientId>a1b2c3d4-e5f6-4a7b-9c2d-112233445501</ClientId>
     <VendorId>AllO</VendorId>
     <VendorDescription>AllO Revit Add-in</VendorDescription>
