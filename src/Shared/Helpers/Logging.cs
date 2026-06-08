@@ -9,7 +9,9 @@ namespace AllO.Helpers;
 public static class Logging
 {
     private const string Prefix = "[AllO]";
-    private static readonly bool EnableDebug = true;
+
+    /// <summary>Permite activar/desactivar el logging Debug en runtime (p.ej. desde settings).</summary>
+    public static bool EnableDebug { get; set; } = true;
     private static readonly object FileLock = new();
     private static readonly string LogDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "AllO", "logs");

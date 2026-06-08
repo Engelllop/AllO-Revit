@@ -104,7 +104,11 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renames)
             {
+#if REVIT2023
                 var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+#else
+                var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
+#endif
                 var param = sheet?.get_Parameter(BuiltInParameter.SHEET_NAME);
                 if (param != null && !param.IsReadOnly) { param.Set(kvp.Value); count++; }
             }
@@ -130,7 +134,11 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renumbers)
             {
+#if REVIT2023
                 var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+#else
+                var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
+#endif
                 var param = sheet?.get_Parameter(BuiltInParameter.SHEET_NUMBER);
                 if (param != null && !param.IsReadOnly) { param.Set(kvp.Value); count++; }
             }
@@ -406,7 +414,11 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renames)
             {
+#if REVIT2023
                 var view = Doc.GetElement(new ElementId(kvp.Key)) as View;
+#else
+                var view = Doc.GetElement(new ElementId((long)kvp.Key)) as View;
+#endif
                 if (view != null) { view.Name = kvp.Value; count++; }
             }
             tx.Commit();
@@ -1158,7 +1170,11 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in renames)
                 {
+#if REVIT2023
                     var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
+#else
+                    var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
+#endif
                     if (level == null) continue;
                     try { level.Name = kvp.Value; count++; } catch { }
                 }
@@ -1185,7 +1201,11 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in newElevations)
                 {
+#if REVIT2023
                     var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
+#else
+                    var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
+#endif
                     if (level == null) continue;
                     try { 
 #if REVIT2023
@@ -2337,7 +2357,11 @@ public class RevitService : IRevitService
         if (Doc == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
         if (link == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
+#if REVIT2023
         var view = Doc.GetElement(new ElementId(viewId)) as View;
+#else
+        var view = Doc.GetElement(new ElementId((long)viewId)) as View;
+#endif
         if (view == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
 
         try
@@ -2377,7 +2401,11 @@ public class RevitService : IRevitService
         {
             foreach (int vid in viewIds)
             {
+#if REVIT2023
                 var view = Doc.GetElement(new ElementId(vid)) as View;
+#else
+                var view = Doc.GetElement(new ElementId((long)vid)) as View;
+#endif
                 if (view == null) continue;
 
                 try
