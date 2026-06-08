@@ -399,6 +399,13 @@
                                            FontSize="14" Opacity="0.6"/>
                             </StackPanel>
                         </Button>
+
+                        <!-- CANCEL BUTTON (visible solo durante el export) -->
+                        <Button Style="{StaticResource BtnSecondary}" Command="{Binding CancelExportCommand}"
+                                HorizontalAlignment="Stretch" Margin="0,8,0,0"
+                                Content="Cancel export"
+                                ToolTip="Stop after the current sheet"
+                                Visibility="{Binding IsExporting, Converter={StaticResource BoolToVis}}"/>
                     </StackPanel>
                 </Border>
             </Grid>
