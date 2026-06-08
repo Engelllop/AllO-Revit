@@ -148,6 +148,7 @@ public class RevitService : IRevitService
 
     public int DeleteSheets(List<int> elementIds)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
         int count = 0;
         using var tx = new Transaction(Doc, "AllO - Delete Sheets");
@@ -165,6 +166,7 @@ public class RevitService : IRevitService
             }
             tx.Commit();
             Logging.Debug($"Deleted {count} sheets");
+            Logging.OperationComplete("Delete sheets", __opSw.Elapsed);
         }
         catch (Exception ex)
         {
@@ -177,6 +179,7 @@ public class RevitService : IRevitService
 
     public List<int> CreateSheets(int titleBlockTypeId, List<SheetCreateRequest> requests)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return new List<int>();
         var created = new List<int>();
         using var tx = new Transaction(Doc, "AllO - Create Sheets");
@@ -201,6 +204,7 @@ public class RevitService : IRevitService
             }
             tx.Commit();
             Logging.Debug($"Created {created.Count} sheets");
+            Logging.OperationComplete("Create sheets", __opSw.Elapsed);
         }
         catch (Exception ex)
         {
@@ -213,6 +217,7 @@ public class RevitService : IRevitService
 
     public int DuplicateSheets(List<int> elementIds)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
         int count = 0;
         using var tx = new Transaction(Doc, "AllO - Duplicate Sheets");
@@ -238,6 +243,7 @@ public class RevitService : IRevitService
             }
             tx.Commit();
             Logging.Debug($"Duplicated {count} sheets");
+            Logging.OperationComplete("Duplicate sheets", __opSw.Elapsed);
         }
         catch (Exception ex)
         {
@@ -361,6 +367,7 @@ public class RevitService : IRevitService
 
     public int DeleteViews(List<int> elementIds)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
         int count = 0;
         using var tx = new Transaction(Doc, "AllO - Delete Views");
@@ -378,6 +385,7 @@ public class RevitService : IRevitService
             }
             tx.Commit();
             Logging.Debug($"Deleted {count} views");
+            Logging.OperationComplete("Delete views", __opSw.Elapsed);
         }
         catch (Exception ex)
         {
@@ -469,6 +477,7 @@ public class RevitService : IRevitService
 
     public int DeleteRevisions(List<int> elementIds)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
         int count = 0;
         using var tx = new Transaction(Doc, "AllO - Delete Revisions");
@@ -486,6 +495,7 @@ public class RevitService : IRevitService
             }
             tx.Commit();
             Logging.Debug($"Deleted {count} revisions");
+            Logging.OperationComplete("Delete revisions", __opSw.Elapsed);
         }
         catch (Exception ex)
         {
@@ -578,6 +588,7 @@ public class RevitService : IRevitService
 
     public bool ExportSingleToPdf(int sheetElementId, string outputFolder, string namingPattern, bool combinePdf = false)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return false;
         try
         {
@@ -606,6 +617,7 @@ public class RevitService : IRevitService
             var result = Doc.Export(outputFolder, singleList, options);
             if (result) Logging.Debug($"Exported sheet {sheetElementId} to PDF");
             else Logging.Warning($"Export to PDF failed for sheet {sheetElementId}");
+            Logging.OperationComplete("Export PDF", __opSw.Elapsed);
             return result;
         }
         catch (Exception ex)
@@ -617,6 +629,7 @@ public class RevitService : IRevitService
 
     public bool ExportSingleToDwg(int sheetElementId, string outputFolder, string namingPattern)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return false;
         try
         {
@@ -642,6 +655,7 @@ public class RevitService : IRevitService
             var result = Doc.Export(outputFolder, fileName, singleList, dwgOptions);
             if (result) Logging.Debug($"Exported sheet {sheetElementId} to DWG");
             else Logging.Warning($"Export to DWG failed for sheet {sheetElementId}");
+            Logging.OperationComplete("Export DWG", __opSw.Elapsed);
             return result;
         }
         catch (Exception ex)
@@ -819,6 +833,7 @@ public class RevitService : IRevitService
 
     public int CopyFamilyInstancesFromLinkToHost(int linkInstanceId, long familySymbolId)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
 #if REVIT2023
         var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
@@ -859,6 +874,7 @@ public class RevitService : IRevitService
             tx.Commit();
             int n = copied?.Count ?? 0;
             Logging.Debug($"Copied {n} instance(s) from link to host");
+            Logging.OperationComplete("Copy family instances from link", __opSw.Elapsed);
             return n;
         }
         catch (Exception ex)
@@ -942,6 +958,7 @@ public class RevitService : IRevitService
 
     public int DeleteGrids(List<int> elementIds)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
         int count = 0;
         using (var tx = new Transaction(Doc, "AllO: Delete Grids"))
@@ -959,6 +976,7 @@ public class RevitService : IRevitService
                 }
                 tx.Commit();
                 Logging.Debug($"Deleted {count} grids");
+                Logging.OperationComplete("Delete grids", __opSw.Elapsed);
             }
             catch (Exception ex)
             {
@@ -1049,6 +1067,7 @@ public class RevitService : IRevitService
 
     public int SyncGridsFromLink(int linkInstanceId)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
 #if REVIT2023
         var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
@@ -1087,6 +1106,7 @@ public class RevitService : IRevitService
                 }
                 tx.Commit();
                 Logging.Debug($"Synced {count} grid(s) from link");
+                Logging.OperationComplete("Sync grids from link", __opSw.Elapsed);
             }
             catch (Exception ex)
             {
@@ -1190,6 +1210,7 @@ public class RevitService : IRevitService
 
     public int DeleteLevels(List<int> elementIds)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
         int count = 0;
         using (var tx = new Transaction(Doc, "AllO: Delete Levels"))
@@ -1207,6 +1228,7 @@ public class RevitService : IRevitService
                 }
                 tx.Commit();
                 Logging.Debug($"Deleted {count} levels");
+                Logging.OperationComplete("Delete levels", __opSw.Elapsed);
             }
             catch (Exception ex)
             {
@@ -1297,6 +1319,7 @@ public class RevitService : IRevitService
 
     public int SyncLevelsFromLink(int linkInstanceId)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
 #if REVIT2023
         var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
@@ -1327,6 +1350,7 @@ public class RevitService : IRevitService
                 }
                 tx.Commit();
                 Logging.Debug($"Synced {count} level(s) from link");
+                Logging.OperationComplete("Sync levels from link", __opSw.Elapsed);
             }
             catch (Exception ex)
             {
@@ -1738,6 +1762,7 @@ public class RevitService : IRevitService
 
     public int ImportExcelAsTable(ExcelTableData data, string viewName, string viewType)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
         if (string.Equals(viewType, TableGenConstants.OutputKeySchedule, StringComparison.OrdinalIgnoreCase))
             return ImportExcelAsKeySchedule(data, viewName);
@@ -1784,6 +1809,7 @@ public class RevitService : IRevitService
 
                 try { _uiApp.ActiveUIDocument.ActiveView = newView; } catch { }
                 Logging.Debug($"Imported Excel table as view: {newView.Name}");
+                Logging.OperationComplete("Import Excel table", __opSw.Elapsed);
 #if REVIT2023
                 return newView.Id.IntegerValue;
 #else
@@ -1800,6 +1826,7 @@ public class RevitService : IRevitService
 
     public int ReloadTableView(int viewId, ExcelTableData data)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
         try
         {
@@ -1828,6 +1855,7 @@ public class RevitService : IRevitService
                 }
                 tx.Commit();
                 Logging.Debug($"Reloaded table view {viewId}");
+                Logging.OperationComplete("Reload table view", __opSw.Elapsed);
             }
             return 1;
         }
@@ -1840,6 +1868,7 @@ public class RevitService : IRevitService
 
     public int DeleteTableViews(List<int> viewIds)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
         if (Doc == null) return 0;
         int count = 0;
         try
@@ -1860,6 +1889,7 @@ public class RevitService : IRevitService
                 }
                 tx.Commit();
                 Logging.Debug($"Deleted {count} table views");
+                Logging.OperationComplete("Delete table views", __opSw.Elapsed);
             }
         }
         catch (Exception ex)
@@ -2332,6 +2362,7 @@ public class RevitService : IRevitService
 
     public int ApplyLinkDisplaySettings(int linkInstanceId, List<int> viewIds, LinkDisplayState state)
     {
+        var __opSw = System.Diagnostics.Stopwatch.StartNew();
 #if REVIT2023
         throw new NotSupportedException("Link Display Manager requires Revit 2024 or newer.");
 #else
@@ -2364,6 +2395,7 @@ public class RevitService : IRevitService
             }
             tx.Commit();
             Logging.Debug($"Applied link display changes to {modifiedViews} view(s)");
+            Logging.OperationComplete("Apply link display", __opSw.Elapsed);
             return modifiedViews;
         }
         catch (Exception ex)
