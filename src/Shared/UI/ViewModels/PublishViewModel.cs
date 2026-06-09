@@ -257,6 +257,10 @@ public class PublishViewModel : ViewModelBase
     public ICommand CloseCommand { get; }
     public ICommand ToggleFilterPopupCommand { get; }
     public ICommand ClearSheetFilterCommand { get; }
+    public ICommand CancelExportCommand { get; }
+
+    // Cancelación cooperativa del export en curso (el loop la consulta entre sheets).
+    private volatile bool _cancelRequested;
 
     public Action? CloseAction { get; set; }
 
@@ -279,6 +283,8 @@ public class PublishViewModel : ViewModelBase
             _ => ExecutePublish(),
             _ => SelectedCount > 0 && (ExportPdf || ExportDwg)
                  && !string.IsNullOrWhiteSpace(OutputFolder) && !IsExporting);
+
+        CancelExportCommand = new RelayCommand(_ => _cancelRequested = true, _ => IsExporting);
 
         OpenFolderCommand = new RelayCommand(
             _ => OpenOutputFolder(),
@@ -470,7 +476,8 @@ public class PublishViewModel : ViewModelBase
     /// </summary>
     private void ForceUiUpdate()
     {
-        _dispatcher.Invoke(() => { }, DispatcherPriority.Render);
+        // Background procesa también input (clic en Cancelar) durante el bombeo síncrono.
+        _dispatcher.Invoke(() => { }, DispatcherPriority.Background);
     }
 
     private void ExecutePublish()
@@ -483,6 +490,7 @@ public class PublishViewModel : ViewModelBase
         ProgressValue = 0;
         ExportedCount = 0;
         FailedCount = 0;
+        _cancelRequested = false;
 
         int totalSteps = 0;
         if (ExportPdf) totalSteps += selected.Count;
@@ -515,6 +523,7 @@ public class PublishViewModel : ViewModelBase
             {
                 foreach (var sheet in selected)
                 {
+                    if (_cancelRequested) break;
                     currentStep++;
                     sheet.Status = $"PDF ({currentStep}/{totalSteps})...";
                     StatusMessage = $"Exporting PDF: {sheet.SheetNumber} — {currentStep} of {totalSteps}";
@@ -537,10 +546,11 @@ public class PublishViewModel : ViewModelBase
             }
 
             // ── DWG export (sheet by sheet) ──
-            if (ExportDwg)
+            if (ExportDwg && !_cancelRequested)
             {
                 foreach (var sheet in selected)
                 {
+                    if (_cancelRequested) break;
                     currentStep++;
                     sheet.Status = $"DWG ({currentStep}/{totalSteps})...";
                     StatusMessage = $"Exporting DWG: {sheet.SheetNumber} — {currentStep} of {totalSteps}";
@@ -563,7 +573,9 @@ public class PublishViewModel : ViewModelBase
             }
 
             ProgressValue = ProgressMax;
-            string summary = $"Export complete: {ExportedCount} exported";
+            string summary = _cancelRequested
+                ? $"Export cancelled: {ExportedCount} exported"
+                : $"Export complete: {ExportedCount} exported";
             if (FailedCount > 0)
                 summary += $", {FailedCount} failed";
             StatusMessage = summary;
