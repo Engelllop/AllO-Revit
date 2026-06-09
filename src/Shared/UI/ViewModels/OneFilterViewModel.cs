@@ -7,7 +7,7 @@ namespace AllO.UI.ViewModels;
 public class OneFilterViewModel : ViewModelBase
 {
     public ObservableCollection<string> Parameters { get; } = new();
-    public ObservableCollection<string> Operators { get; } = new() { "Equals", "Contains", "Greater", "Less" };
+    public ObservableCollection<string> Operators { get; } = new() { "Equals", "Not Equals", "Contains", "Greater", "Greater or Equal", "Less", "Less or Equal" };
 
     private string _selectedParameter = "";
     public string SelectedParameter

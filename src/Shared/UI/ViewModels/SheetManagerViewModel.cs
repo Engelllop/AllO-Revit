@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
+using System.Text;
 using System.Windows.Data;
 using System.Windows.Input;
 using AllO.Core;
@@ -257,6 +259,21 @@ public class SheetManagerViewModel : ViewModelBase
         set => SetProperty(ref _newSheetName, value);
     }
 
+    // -- Batch renumber ------------------------------------------
+    private string _renumberPattern = "A-{nn}";
+    public string RenumberPattern
+    {
+        get => _renumberPattern;
+        set => SetProperty(ref _renumberPattern, value);
+    }
+
+    private int _renumberStart = 1;
+    public int RenumberStart
+    {
+        get => _renumberStart;
+        set => SetProperty(ref _renumberStart, value);
+    }
+
     // ==============================================================
     //  COMMANDS -- Sheets
     // ==============================================================
@@ -272,6 +289,9 @@ public class SheetManagerViewModel : ViewModelBase
     public ICommand CreateSheetCommand { get; }
     public ICommand CloseCommand { get; }
     public ICommand ChangeTitleBlockCommand { get; }
+    public ICommand RenumberCommand { get; }
+    public ICommand ExportIndexCommand { get; }
+    public ICommand AssignRevisionCommand { get; }
 
     // ==============================================================
     //  COMMANDS -- Views
@@ -349,6 +369,11 @@ public class SheetManagerViewModel : ViewModelBase
             if (param is SheetInfo sheet)
                 ExecuteChangeTitleBlock(sheet);
         });
+
+        RenumberCommand = new RelayCommand(_ => ExecuteRenumber(), _ => SelectedCount > 0);
+        ExportIndexCommand = new RelayCommand(_ => ExecuteExportIndex(), _ => Sheets.Count > 0);
+        AssignRevisionCommand = new RelayCommand(_ => ExecuteAssignRevision(),
+            _ => SelectedCount > 0 && Revisions.Any(r => r.IsSelected));
 
         // View commands
         ViewSelectAllCommand = new RelayCommand(_ => SetAllViewsSelected(true));
@@ -471,6 +496,64 @@ public class SheetManagerViewModel : ViewModelBase
             TotalCount = Revisions.Count;
             SelectedCount = RevSelectedCount;
         }
+    }
+
+    // ==============================================================
+    //  BATCH: renumber / export / assign revision
+    // ==============================================================
+
+    private IEnumerable<SheetInfo> SelectedSheetsInOrder()
+        => (SheetsView?.Cast<SheetInfo>() ?? Sheets).Where(s => s.IsSelected);
+
+    private void ExecuteRenumber()
+    {
+        var selected = SelectedSheetsInOrder().ToList();
+        if (selected.Count == 0) return;
+
+        var renumbers = new Dictionary<int, string>();
+        int n = RenumberStart;
+        foreach (var s in selected)
+            renumbers[s.ElementId] = Helpers.SheetNaming.ExpandNumberPattern(RenumberPattern, n++);
+
+        int done = _service.RenumberSheets(renumbers);
+        LoadSheets();
+        StatusMessage = $"Renumbered {done} sheet(s).";
+    }
+
+    private void ExecuteExportIndex()
+    {
+        var dlg = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Export sheet index",
+            Filter = "CSV file|*.csv",
+            FileName = "Sheet Index.csv"
+        };
+        if (dlg.ShowDialog() != true) return;
+
+        var rows = (SheetsView?.Cast<SheetInfo>() ?? Sheets).ToList();
+        var sb = new StringBuilder();
+        sb.AppendLine("Number,Name,Title Block,Designed By,Approved By,Issue Date");
+        string Csv(string? v) => Helpers.SheetNaming.CsvEscape(v);
+        foreach (var s in rows)
+            sb.AppendLine(string.Join(",",
+                Csv(s.SheetNumber), Csv(s.OriginalName), Csv(s.TitleBlockName),
+                Csv(s.DesignedBy), Csv(s.ApprovedBy), Csv(s.SheetIssueDate)));
+
+        File.WriteAllText(dlg.FileName, sb.ToString(), new UTF8Encoding(true));
+        StatusMessage = $"Exported {rows.Count} sheet(s) to CSV.";
+    }
+
+    private void ExecuteAssignRevision()
+    {
+        var rev = Revisions.FirstOrDefault(r => r.IsSelected);
+        var sheetIds = Sheets.Where(s => s.IsSelected).Select(s => s.ElementId).ToList();
+        if (rev == null || sheetIds.Count == 0)
+        {
+            StatusMessage = "Select a revision and at least one sheet.";
+            return;
+        }
+        int n = _service.AddRevisionToSheets(rev.ElementId, sheetIds);
+        StatusMessage = $"Revision added to {n} sheet(s).";
     }
 
     // ==============================================================

@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="AllO — Sheet Manager"
+        Style="{StaticResource AllOWindow}"
         Height="780" Width="1200"
         MinHeight="600" MinWidth="950"
         WindowStartupLocation="CenterScreen"
@@ -115,7 +116,7 @@
             </Grid.RowDefinitions>
 
             <!-- ========== SHEET LIST PANEL ========== -->
-            <Grid Grid.Row="0" Visibility="{Binding IsSheetListVisible, Converter={StaticResource BoolToVis}}">
+            <Grid Grid.Row="0" Style="{StaticResource PanelSwap}" Visibility="{Binding IsSheetListVisible, Converter={StaticResource BoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -160,6 +161,25 @@
                         <Button Grid.Column="6" Content="Select None" Style="{StaticResource BtnSecondary}"
                                 Command="{Binding SelectNoneCommand}" FontSize="11" Padding="10,6"
                                 ToolTip="Deselect all sheets"/>
+
+                        <StackPanel Grid.Column="7" Orientation="Horizontal" HorizontalAlignment="Left"
+                                    VerticalAlignment="Center" Margin="0,0,12,0">
+                            <TextBox Style="{StaticResource SearchBox}" Width="92" Margin="0,0,4,0"
+                                     Text="{Binding RenumberPattern, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Renumber pattern: {n}, {nn}, {nnn}"/>
+                            <TextBox Style="{StaticResource SearchBox}" Width="44" Margin="0,0,4,0"
+                                     Text="{Binding RenumberStart, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Start number"/>
+                            <Button Content="Renumber" Style="{StaticResource BtnSecondary}" FontSize="11" Padding="10,6"
+                                    Command="{Binding RenumberCommand}" Margin="0,0,10,0"
+                                    ToolTip="Renumber selected sheets using the pattern"/>
+                            <Button Content="Export CSV" Style="{StaticResource BtnSecondary}" FontSize="11" Padding="10,6"
+                                    Command="{Binding ExportIndexCommand}" Margin="0,0,4,0"
+                                    ToolTip="Export the sheet index (current filter) to CSV"/>
+                            <Button Content="Assign Rev" Style="{StaticResource BtnSecondary}" FontSize="11" Padding="10,6"
+                                    Command="{Binding AssignRevisionCommand}"
+                                    ToolTip="Assign the revision selected in the Revisions tab to the selected sheets"/>
+                        </StackPanel>
 
                         <TextBox Grid.Column="8" Style="{StaticResource SearchBox}" Width="220"
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
@@ -413,7 +433,7 @@
             </Grid>
 
             <!-- ========== VIEW LIST PANEL ========== -->
-            <Grid Grid.Row="0" Visibility="{Binding IsViewListVisible, Converter={StaticResource BoolToVis}}">
+            <Grid Grid.Row="0" Style="{StaticResource PanelSwap}" Visibility="{Binding IsViewListVisible, Converter={StaticResource BoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -563,7 +583,7 @@
             </Grid>
 
             <!-- ========== REVISIONS PANEL ========== -->
-            <Grid Grid.Row="0" Visibility="{Binding IsRevisionsVisible, Converter={StaticResource BoolToVis}}">
+            <Grid Grid.Row="0" Style="{StaticResource PanelSwap}" Visibility="{Binding IsRevisionsVisible, Converter={StaticResource BoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>

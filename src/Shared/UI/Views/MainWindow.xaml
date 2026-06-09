@@ -2,6 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="AllO - Batch Sheet Renamer"
+        Style="{StaticResource AllOWindow}"
         Height="500" Width="700"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource Deep}">

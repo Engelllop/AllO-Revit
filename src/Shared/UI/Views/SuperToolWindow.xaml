@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="AllO — Toolkit"
+        Style="{StaticResource AllOWindow}"
         Height="720" Width="1000"
         MinHeight="550" MinWidth="850"
         WindowStartupLocation="CenterScreen"
@@ -143,7 +144,7 @@
             </Grid.RowDefinitions>
 
             <!-- ═══ TAB 0: COPY CROP ═══ -->
-            <Grid Grid.Row="0" Visibility="{Binding IsCropTab, Converter={StaticResource BoolToVis}}">
+            <Grid Grid.Row="0" Style="{StaticResource PanelSwap}" Visibility="{Binding IsCropTab, Converter={StaticResource BoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -280,7 +281,7 @@
             </Grid>
 
             <!-- ═══ TAB 1: GRIDS ═══ -->
-            <Grid Grid.Row="0" Visibility="{Binding IsGridTab, Converter={StaticResource BoolToVis}}">
+            <Grid Grid.Row="0" Style="{StaticResource PanelSwap}" Visibility="{Binding IsGridTab, Converter={StaticResource BoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -412,7 +413,7 @@
             </Grid>
 
             <!-- ═══ TAB 2: LEVELS ═══ -->
-            <Grid Grid.Row="0" Visibility="{Binding IsLevelTab, Converter={StaticResource BoolToVis}}">
+            <Grid Grid.Row="0" Style="{StaticResource PanelSwap}" Visibility="{Binding IsLevelTab, Converter={StaticResource BoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>

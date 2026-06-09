@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="AllO — Publish"
+        Style="{StaticResource AllOWindow}"
         Height="780" Width="1060"
         MinHeight="650" MinWidth="900"
         WindowStartupLocation="CenterScreen"
@@ -39,13 +40,13 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="0">
-                    <TextBlock Text="AllO" FontSize="20" FontWeight="Bold" Foreground="{StaticResource Accent}"/>
-                    <TextBlock Text="Publish" FontSize="10" Foreground="{StaticResource TextMuted}" Margin="1,0,0,0"/>
-                </StackPanel>
+                <ComboBox Grid.Column="0" Style="{StaticResource DarkCombo}" Width="170" VerticalAlignment="Center"
+                          ItemsSource="{Binding SheetSets}" SelectedItem="{Binding SelectedSheetSet}"
+                          ItemContainerStyle="{StaticResource DarkComboItem}"
+                          ToolTip="Mark sheets from a saved Sheet Set"/>
 
-                <TextBlock Grid.Column="2" Text="{Binding DocumentName}" FontSize="12"
-                           Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="{Binding DocumentName}" FontSize="13" FontWeight="SemiBold"
+                           Foreground="{StaticResource TextPrimary}" VerticalAlignment="Center"/>
 
                 <Button Grid.Column="4" Content="Select All" Style="{StaticResource BtnSecondary}" FontSize="11" Padding="10,5"
                         Command="{Binding SelectAllCommand}" ToolTip="Select all sheets"/>
@@ -357,6 +358,9 @@
                                 <CheckBox Content="Create subfolders (PDF/ DWG/)" IsChecked="{Binding CreateSubfolders}"
                                           Style="{StaticResource DkCheck}" FontSize="11"
                                           ToolTip="Organize exports into separate PDF and DWG folders"/>
+                                <CheckBox Content="Subfolder per discipline" IsChecked="{Binding SubfolderByDiscipline}"
+                                          Style="{StaticResource DkCheck}" FontSize="11" Margin="0,6,0,0"
+                                          ToolTip="Create a subfolder per sheet discipline (Discipline / SISTEMA)"/>
                             </StackPanel>
                         </Grid>
                     </StackPanel>
@@ -377,6 +381,11 @@
                                 HorizontalAlignment="Stretch" FontSize="11" Padding="8,7"
                                 ToolTip="Choose the output folder for exported files"/>
 
+                        <Button Content="Save as Sheet Set" Style="{StaticResource BtnSecondary}"
+                                Command="{Binding SaveSheetSetCommand}" Margin="0,6,0,0"
+                                HorizontalAlignment="Stretch" FontSize="11" Padding="8,7"
+                                ToolTip="Save the selected sheets as a named Sheet Set"/>
+
                         <Border Height="1" Background="{StaticResource Divider}" Margin="0,12,0,12"/>
 
                         <!-- PUBLISH BUTTON -->
@@ -391,6 +400,14 @@
                                            FontSize="14" Opacity="0.6"/>
                             </StackPanel>
                         </Button>
+
+                        <!-- SPINNER (visible solo durante el export) -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0"
+                                    Visibility="{Binding IsExporting, Converter={StaticResource BoolToVis}}">
+                            <Path Style="{StaticResource Spinner}"/>
+                            <TextBlock Text="Publishing…" Margin="8,0,0,0" VerticalAlignment="Center"
+                                       Foreground="{StaticResource TextSecondary}" FontSize="12"/>
+                        </StackPanel>
 
                         <!-- CANCEL BUTTON (visible solo durante el export) -->
                         <Button Style="{StaticResource BtnSecondary}" Command="{Binding CancelExportCommand}"

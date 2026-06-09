@@ -4,10 +4,11 @@ namespace AllO.Models;
 
 public class ReorderItem : ViewModelBase
 {
-    public int ElementId { get; set; }
+    public long ElementId { get; set; }
     public string ElementName { get; set; } = "";
     public string Category { get; set; } = "";
     public string CurrentValue { get; set; } = "";
+    public double SortKey { get; set; }
 
     private string _previewValue = "";
     public string PreviewValue

@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.DB.Mechanical;
+using AllO.Helpers;
 
 namespace AllO.Commands;
 
@@ -48,7 +49,7 @@ public static class ElbowHelper
         try
         {
             var picked = uiDoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element,
-                new MepCurveFilter(), "Select a pipe or duct to add elbow to");
+                new MepUtils.MepCurveFilter(), "Select a pipe or duct to add elbow to");
             var elem = doc.GetElement(picked);
             if (elem is not MEPCurve curve) return Result.Failed;
 
@@ -66,20 +67,22 @@ public static class ElbowHelper
             var project = line.Project(pt);
             var splitPt = line.Evaluate(project.Parameter, false);
 
-            // Shorten original to split point
+            // El nuevo tramo conserva la longitud que tenía el tubo desde el punto
+            // hasta su extremo (antes se descartaba y se forzaba a 2 ft fijos).
+            double stubLen = splitPt.DistanceTo(p1);
+            if (stubLen < 0.1) stubLen = 2.0;
+            var elbowEnd = splitPt + direction.Normalize() * stubLen;
+
+            // Recorta el original hasta el punto y crea el tramo girado como copia.
             loc.Curve = Line.CreateBound(p0, splitPt);
-
-            // Determine elbow orientation based on current pipe direction and user direction
-            var pipeDir = (p1 - p0).Normalize();
-            var elbowEnd = splitPt + direction * 2.0; // 2 feet stub
-
-            var stubLine = Line.CreateBound(splitPt, elbowEnd);
             var newElem = ElementTransformUtils.CopyElement(doc, curve.Id, XYZ.Zero).FirstOrDefault();
-            if (newElem != null)
-            {
-                var stub = doc.GetElement(newElem) as MEPCurve;
-                (stub!.Location as LocationCurve)!.Curve = stubLine;
-            }
+            var stub = newElem != null ? doc.GetElement(newElem) as MEPCurve : null;
+            if (stub == null) { tx.Commit(); return Result.Succeeded; }
+            (stub.Location as LocationCurve)!.Curve = Line.CreateBound(splitPt, elbowEnd);
+            doc.Regenerate();
+
+            // Inserta un codo real entre ambos tramos (antes quedaban sueltos).
+            TryElbow(doc, ConnectorAt(curve, splitPt), ConnectorAt(stub, splitPt));
 
             tx.Commit();
             return Result.Succeeded;
@@ -95,10 +98,27 @@ public static class ElbowHelper
         }
     }
 
-    private class MepCurveFilter : Autodesk.Revit.UI.Selection.ISelectionFilter
+    private static Connector? ConnectorAt(MEPCurve curve, XYZ pt)
     {
-        public bool AllowElement(Element elem)
-            => elem is Pipe || elem is Duct || elem is FlexPipe || elem is FlexDuct;
-        public bool AllowReference(Reference reference, XYZ position) => false;
+        Connector? best = null;
+        double bd = double.MaxValue;
+        foreach (Connector c in curve.ConnectorManager.Connectors)
+        {
+            if (c.ConnectorType != ConnectorType.End) continue;
+            double d = c.Origin.DistanceTo(pt);
+            if (d < bd) { bd = d; best = c; }
+        }
+        return best;
+    }
+
+    private static void TryElbow(Document doc, Connector? a, Connector? b)
+    {
+        if (a == null || b == null) return;
+        try { doc.Create.NewElbowFitting(a, b); }
+        catch
+        {
+            // Si no hay familia de codo aplicable, al menos conéctalos.
+            try { if (!a.IsConnectedTo(b)) a.ConnectTo(b); } catch { }
+        }
     }
 }

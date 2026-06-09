@@ -1,0 +1,160 @@
+<Window x:Class="AllO.UI.Views.ViewManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AllO — View Manager"
+        Style="{StaticResource AllOWindow}"
+        Height="640" Width="520"
+        MinHeight="520" MinWidth="460"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanResize"
+        Background="{StaticResource Deep}">
+
+    <Window.Resources>
+        <Style x:Key="VmRadio" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="{StaticResource TextPrimary}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,0,16,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="20,16,20,16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Create Views" FontSize="18" FontWeight="Bold"
+                   Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
+        <TextBlock Grid.Row="1" Text="Batch-create views (and optionally sheets) across the model."
+                   FontSize="11" Foreground="{StaticResource TextMuted}" Margin="0,0,0,14"/>
+
+        <!-- View type -->
+        <StackPanel Grid.Row="2" Margin="0,0,0,12">
+            <TextBlock Text="VIEW TYPE" Style="{StaticResource Lbl}"/>
+            <WrapPanel>
+                <RadioButton Style="{StaticResource VmRadio}" GroupName="VK" Content="Floor Plan"   IsChecked="{Binding IsFloor}"/>
+                <RadioButton Style="{StaticResource VmRadio}" GroupName="VK" Content="Ceiling Plan" IsChecked="{Binding IsCeiling}"/>
+                <RadioButton Style="{StaticResource VmRadio}" GroupName="VK" Content="Section"      IsChecked="{Binding IsSection}"/>
+                <RadioButton Style="{StaticResource VmRadio}" GroupName="VK" Content="Elevation"    IsChecked="{Binding IsElevation}"/>
+                <RadioButton Style="{StaticResource VmRadio}" GroupName="VK" Content="3D"           IsChecked="{Binding Is3D}"/>
+            </WrapPanel>
+        </StackPanel>
+
+        <!-- Levels (only for plans) -->
+        <Border Grid.Row="3" Background="{StaticResource Card}" BorderBrush="{StaticResource Border}"
+                BorderThickness="1" CornerRadius="8" Padding="2"
+                Visibility="{Binding UsesLevels, Converter={StaticResource BoolToVis}}">
+            <DockPanel>
+                <Grid DockPanel.Dock="Top" Margin="10,8,10,4">
+                    <TextBlock Text="LEVELS" Style="{StaticResource Lbl}" VerticalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="All" Style="{StaticResource BtnSecondary}" FontSize="11" Padding="10,3"
+                                Command="{Binding SelectAllLevelsCommand}" Margin="0,0,6,0"/>
+                        <Button Content="None" Style="{StaticResource BtnSecondary}" FontSize="11" Padding="10,3"
+                                Command="{Binding SelectNoneLevelsCommand}"/>
+                    </StackPanel>
+                </Grid>
+                <ListBox ItemsSource="{Binding Levels}" Background="Transparent" BorderThickness="0"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <CheckBox Style="{StaticResource DkCheck}" Content="{Binding Name}"
+                                      IsChecked="{Binding IsSelected}" Margin="10,4"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Template + naming -->
+        <StackPanel Grid.Row="4" Margin="0,12,0,0">
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="View Template" Foreground="{StaticResource TextSecondary}" FontSize="12"
+                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <ComboBox Grid.Column="1" Style="{StaticResource DarkCombo}" ItemContainerStyle="{StaticResource DarkComboItem}"
+                          ItemsSource="{Binding Templates}" SelectedItem="{Binding SelectedTemplate}" DisplayMemberPath="Name"/>
+            </Grid>
+            <Grid Margin="0,0,0,10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Scope Box" Foreground="{StaticResource TextSecondary}" FontSize="12"
+                           VerticalAlignment="Center" Margin="0,0,12,0"/>
+                <ComboBox Grid.Column="1" Style="{StaticResource DarkCombo}" ItemContainerStyle="{StaticResource DarkComboItem}"
+                          ItemsSource="{Binding ScopeBoxes}" SelectedItem="{Binding SelectedScopeBox}" DisplayMemberPath="Name"/>
+            </Grid>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Prefix" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,4"/>
+                    <TextBox Style="{StaticResource SearchBox}" Text="{Binding Prefix, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Suffix" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,4"/>
+                    <TextBox Style="{StaticResource SearchBox}" Text="{Binding Suffix, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+            </Grid>
+            <TextBlock Margin="0,8,0,0" FontSize="11" Foreground="{StaticResource TextMuted}">
+                <Run Text="Preview: "/><Run Text="{Binding NamePreview}" Foreground="{StaticResource Accent}" FontWeight="SemiBold"/>
+            </TextBlock>
+        </StackPanel>
+
+        <!-- Sheets -->
+        <StackPanel Grid.Row="5" Margin="0,14,0,0">
+            <CheckBox Style="{StaticResource DkCheck}" Content="Create a sheet per view"
+                      IsChecked="{Binding CreateSheets}"/>
+            <Grid Margin="22,8,0,0" Visibility="{Binding CreateSheets, Converter={StaticResource BoolToVis}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0">
+                    <TextBlock Text="Title Block" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,4"/>
+                    <ComboBox Style="{StaticResource DarkCombo}" ItemContainerStyle="{StaticResource DarkComboItem}"
+                              ItemsSource="{Binding TitleBlocks}" SelectedItem="{Binding SelectedTitleBlock}" DisplayMemberPath="Name"/>
+                </StackPanel>
+                <StackPanel Grid.Column="2">
+                    <TextBlock Text="Base number" Foreground="{StaticResource TextSecondary}" FontSize="12" Margin="0,0,0,4"/>
+                    <TextBox Style="{StaticResource SearchBox}" Width="110" Text="{Binding BaseSheetNumber, UpdateSourceTrigger=PropertyChanged}"/>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <Button Content="Cancel" Style="{StaticResource BtnSecondary}" FontSize="12" Padding="18,6"
+                    Command="{Binding CancelCommand}" Margin="0,0,8,0"/>
+            <Button Content="Create" Style="{StaticResource BtnPrimary}" FontSize="12" Padding="18,6"
+                    Command="{Binding CreateCommand}"/>
+        </StackPanel>
+    </Grid>
+</Window>

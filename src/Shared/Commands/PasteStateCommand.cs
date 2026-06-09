@@ -66,7 +66,7 @@ public class PasteStateCommand : IExternalCommand
             }
 
             // Apply filters
-            foreach (int filterIdInt in state.ActiveFilters)
+            foreach (long filterIdInt in state.ActiveFilters)
             {
                 var filterId = new ElementId(filterIdInt);
                 try
@@ -84,8 +84,9 @@ public class PasteStateCommand : IExternalCommand
                 catch { }
             }
 
-            // Apply detail level
+            // Apply detail level and display style (antes el DisplayStyle se copiaba pero no se aplicaba)
             try { view.DetailLevel = state.DetailLevel; } catch { }
+            try { view.DisplayStyle = state.DisplayStyle; } catch { }
 
             tx.Commit();
 

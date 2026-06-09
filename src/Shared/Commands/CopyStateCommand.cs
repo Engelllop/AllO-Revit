@@ -46,7 +46,7 @@ public class CopyStateCommand : IExternalCommand
             {
                 try
                 {
-                    state.CategoryVisibility[cat.Id.IntegerValue] = view.GetCategoryHidden(cat.Id);
+                    state.CategoryVisibility[cat.Id.Value] = view.GetCategoryHidden(cat.Id);
                 }
                 catch { }
             }
@@ -54,21 +54,14 @@ public class CopyStateCommand : IExternalCommand
             // View filters and overrides
             foreach (ElementId filterId in view.GetFilters())
             {
-                state.ActiveFilters.Add(filterId.IntegerValue);
+                state.ActiveFilters.Add(filterId.Value);
                 var overrides = view.GetFilterOverrides(filterId);
-                state.FilterOverrides[filterId.IntegerValue] = overrides;
+                state.FilterOverrides[filterId.Value] = overrides;
             }
 
             // View detail level and display style
             state.DetailLevel = view.DetailLevel;
             try { state.DisplayStyle = view.DisplayStyle; } catch { }
-
-            // Import visibility
-            var imports = new FilteredElementCollector(doc).OfClass(typeof(ImportInstance)).ToElementIds();
-            foreach (ElementId id in imports)
-            {
-                state.ImportVisibility[id.IntegerValue] = view.IsElementVisibleInTemporaryViewMode(TemporaryViewMode.TemporaryHideIsolate, id);
-            }
 
             StoredState = state;
 
@@ -90,10 +83,9 @@ public class CopyStateCommand : IExternalCommand
 public class ViewState
 {
     public Dictionary<int, WorksetVisibility> WorksetVisibility { get; } = new();
-    public Dictionary<int, bool> CategoryVisibility { get; } = new();
-    public List<int> ActiveFilters { get; } = new();
-    public Dictionary<int, OverrideGraphicSettings> FilterOverrides { get; } = new();
+    public Dictionary<long, bool> CategoryVisibility { get; } = new();
+    public List<long> ActiveFilters { get; } = new();
+    public Dictionary<long, OverrideGraphicSettings> FilterOverrides { get; } = new();
     public ViewDetailLevel DetailLevel { get; set; }
     public DisplayStyle DisplayStyle { get; set; }
-    public Dictionary<int, bool> ImportVisibility { get; } = new();
 }

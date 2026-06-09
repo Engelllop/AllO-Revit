@@ -2,6 +2,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using AllO.Helpers;
 
 namespace AllO.Commands;
 
@@ -14,18 +15,6 @@ namespace AllO.Commands;
 [Regeneration(RegenerationOption.Manual)]
 public class AlignCommand : IExternalCommand
 {
-    private static readonly HashSet<BuiltInCategory> MepCategories = new()
-    {
-        BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_PipeCurves,
-        BuiltInCategory.OST_Conduit, BuiltInCategory.OST_CableTray,
-        BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_PipeFitting,
-        BuiltInCategory.OST_ConduitFitting, BuiltInCategory.OST_CableTrayFitting,
-        BuiltInCategory.OST_DuctAccessory, BuiltInCategory.OST_PipeAccessory,
-        BuiltInCategory.OST_DuctTerminal, BuiltInCategory.OST_PlumbingFixtures,
-        BuiltInCategory.OST_ElectricalEquipment, BuiltInCategory.OST_ElectricalFixtures,
-        BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_Sprinklers
-    };
-
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         UIDocument uidoc = commandData.Application.ActiveUIDocument;
@@ -43,13 +32,13 @@ public class AlignCommand : IExternalCommand
                 "Select REFERENCE element (target height)");
             Element refElement = doc.GetElement(ref1);
 
-            if (!IsMepElement(refElement))
+            if (!MepUtils.IsMepElement(refElement))
             {
                 TaskDialog.Show("AllO — Level Align", "Reference element must be an MEP element.");
                 return Result.Cancelled;
             }
 
-            double? refZ = GetMidElevation(refElement);
+            double? refZ = MepUtils.GetMidElevation(refElement);
             if (refZ == null)
             {
                 TaskDialog.Show("AllO — Level Align", "Could not determine elevation for the reference element.");
@@ -61,7 +50,7 @@ public class AlignCommand : IExternalCommand
                 "Select element to ALIGN to reference height");
             Element targetElement = doc.GetElement(ref2);
 
-            if (!IsMepElement(targetElement))
+            if (!MepUtils.IsMepElement(targetElement))
             {
                 TaskDialog.Show("AllO — Level Align", "Target element must be an MEP element.");
                 return Result.Cancelled;
@@ -70,7 +59,7 @@ public class AlignCommand : IExternalCommand
             if (targetElement.Id == refElement.Id)
                 return Result.Succeeded;
 
-            double? targetZ = GetMidElevation(targetElement);
+            double? targetZ = MepUtils.GetMidElevation(targetElement);
             if (targetZ == null)
             {
                 TaskDialog.Show("AllO — Level Align", "Could not determine elevation for the target element.");
@@ -101,36 +90,5 @@ public class AlignCommand : IExternalCommand
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException) { return Result.Cancelled; }
         catch (Exception ex) { message = ex.Message; return Result.Failed; }
-    }
-
-    private static bool IsMepElement(Element el)
-    {
-        if (el?.Category == null) return false;
-        var bic = (BuiltInCategory)el.Category.Id.GetHashCode();
-        return MepCategories.Contains(bic);
-    }
-
-    private static double? GetMidElevation(Element el)
-    {
-        try
-        {
-            var loc = el.Location;
-            if (loc is LocationPoint lp)
-                return lp.Point.Z;
-            if (loc is LocationCurve lc)
-            {
-                var p1 = lc.Curve.GetEndPoint(0);
-                var p2 = lc.Curve.GetEndPoint(1);
-                return (p1.Z + p2.Z) / 2.0;
-            }
-
-            // Fallback: bounding box center
-            var bbox = el.get_BoundingBox(null);
-            if (bbox != null)
-                return (bbox.Min.Z + bbox.Max.Z) / 2.0;
-
-            return null;
-        }
-        catch { return null; }
     }
 }

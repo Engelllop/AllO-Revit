@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Plumbing;
 using Autodesk.Revit.DB.Mechanical;
+using AllO.UI.Toast;
 
 namespace AllO.Commands;
 
@@ -73,7 +74,7 @@ public class BloomCommand : IExternalCommand
             }
             tx.Commit();
 
-            TaskDialog.Show("Bloom", $"Created {created} MEP stub(s) from equipment connectors.");
+            ToastHost.Show("Bloom", $"Created {created} MEP stub(s).", ToastKind.Success);
             return Result.Succeeded;
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)

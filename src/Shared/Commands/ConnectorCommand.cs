@@ -2,6 +2,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
+using AllO.Helpers;
 
 namespace AllO.Commands;
 
@@ -13,18 +14,6 @@ namespace AllO.Commands;
 [Regeneration(RegenerationOption.Manual)]
 public class ConnectorCommand : IExternalCommand
 {
-    private static readonly HashSet<BuiltInCategory> MepCategories = new()
-    {
-        BuiltInCategory.OST_DuctCurves, BuiltInCategory.OST_PipeCurves,
-        BuiltInCategory.OST_Conduit, BuiltInCategory.OST_CableTray,
-        BuiltInCategory.OST_DuctFitting, BuiltInCategory.OST_PipeFitting,
-        BuiltInCategory.OST_ConduitFitting, BuiltInCategory.OST_CableTrayFitting,
-        BuiltInCategory.OST_DuctAccessory, BuiltInCategory.OST_PipeAccessory,
-        BuiltInCategory.OST_DuctTerminal, BuiltInCategory.OST_PlumbingFixtures,
-        BuiltInCategory.OST_ElectricalEquipment, BuiltInCategory.OST_ElectricalFixtures,
-        BuiltInCategory.OST_MechanicalEquipment, BuiltInCategory.OST_Sprinklers
-    };
-
     public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
     {
         UIDocument uidoc = commandData.Application.ActiveUIDocument;
@@ -44,7 +33,7 @@ public class ConnectorCommand : IExternalCommand
             var ref2 = uidoc.Selection.PickObject(ObjectType.Element, "Select SECOND MEP element (will be moved)");
             Element el2 = doc.GetElement(ref2);
 
-            if (!IsMepElement(el1) || !IsMepElement(el2))
+            if (!MepUtils.IsMepElement(el1) || !MepUtils.IsMepElement(el2))
             {
                 TaskDialog.Show("AllO — Connector", "Both elements must be MEP elements\n(Ducts, Pipes, Conduit, Cable Tray, Fittings, etc.)");
                 return Result.Cancelled;
@@ -107,13 +96,6 @@ public class ConnectorCommand : IExternalCommand
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException) { return Result.Cancelled; }
         catch (Exception ex) { message = ex.Message; return Result.Failed; }
-    }
-
-    private static bool IsMepElement(Element el)
-    {
-        if (el?.Category == null) return false;
-        var bic = (BuiltInCategory)el.Category.Id.GetHashCode();
-        return MepCategories.Contains(bic);
     }
 
     private static List<Connector> GetEndConnectors(Element el)

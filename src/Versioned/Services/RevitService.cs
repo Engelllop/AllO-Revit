@@ -115,8 +115,6 @@ public class RevitService : IRevitService
             {
 #if REVIT2023
                 var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
-#elif REVIT2024
-                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
 #else
                 var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
 #endif
@@ -146,8 +144,6 @@ public class RevitService : IRevitService
             foreach (var kvp in renumbers)
             {
 #if REVIT2023
-                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
-#elif REVIT2024
                 var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
 #else
                 var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
@@ -439,8 +435,6 @@ public class RevitService : IRevitService
             {
 #if REVIT2023
                 var view = Doc.GetElement(new ElementId(kvp.Key)) as View;
-#elif REVIT2024
-                var view = Doc.GetElement(new ElementId(kvp.Key)) as View;
 #else
                 var view = Doc.GetElement(new ElementId((long)kvp.Key)) as View;
 #endif
@@ -606,6 +600,43 @@ public class RevitService : IRevitService
         }
     }
 
+    public int AddRevisionToSheets(int revisionElementId, List<int> sheetElementIds)
+    {
+        if (Doc == null) return 0;
+        using var tx = new Transaction(Doc, "AllO - Assign Revision");
+        tx.Start();
+        try
+        {
+#if REVIT2023
+            var revId = new ElementId(revisionElementId);
+#else
+            var revId = new ElementId((long)revisionElementId);
+#endif
+            if (Doc.GetElement(revId) is not Revision) { tx.RollBack(); return 0; }
+            int n = 0;
+            foreach (var sid in sheetElementIds)
+            {
+#if REVIT2023
+                var sheet = Doc.GetElement(new ElementId(sid)) as ViewSheet;
+#else
+                var sheet = Doc.GetElement(new ElementId((long)sid)) as ViewSheet;
+#endif
+                if (sheet == null) continue;
+                var ids = sheet.GetAdditionalRevisionIds();
+                if (!ids.Contains(revId)) { ids.Add(revId); sheet.SetAdditionalRevisionIds(ids); n++; }
+            }
+            tx.Commit();
+            Logging.Debug($"Assigned revision {revisionElementId} to {n} sheet(s)");
+            return n;
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("Failed to assign revision to sheets", ex);
+            if (tx.HasStarted() && !tx.HasEnded()) tx.RollBack();
+            return 0;
+        }
+    }
+
     // ── Publishing / Export ───────────────────────────────────
 
     public List<PublishSheetItem> GetSheetsForPublish()
@@ -631,6 +662,65 @@ public class RevitService : IRevitService
             })
             .OrderBy(s => s.SheetNumber)
             .ToList();
+    }
+
+    public List<string> GetSheetSetNames()
+    {
+        if (Doc == null) return new List<string>();
+        return new FilteredElementCollector(Doc)
+            .OfClass(typeof(ViewSheetSet))
+            .Cast<ViewSheetSet>()
+            .Select(s => s.Name)
+            .OrderBy(n => n)
+            .ToList();
+    }
+
+    public bool CreateSheetSet(string name, List<int> sheetElementIds)
+    {
+        if (Doc == null || string.IsNullOrWhiteSpace(name)) return false;
+        try
+        {
+            var viewSet = new ViewSet();
+            foreach (var id in sheetElementIds)
+            {
+#if REVIT2023
+                var sheet = Doc.GetElement(new ElementId(id)) as ViewSheet;
+#else
+                var sheet = Doc.GetElement(new ElementId((long)id)) as ViewSheet;
+#endif
+                if (sheet != null) viewSet.Insert(sheet);
+            }
+            if (viewSet.Size == 0) return false;
+
+            var setting = Doc.PrintManager.ViewSheetSetting;
+            setting.CurrentViewSheetSet.Views = viewSet;
+            // Reemplaza un set con el mismo nombre si ya existe.
+            var existing = new FilteredElementCollector(Doc).OfClass(typeof(ViewSheetSet))
+                .Cast<ViewSheetSet>().FirstOrDefault(s => s.Name == name);
+            if (existing != null) setting.Delete();
+            setting.SaveAs(name);
+            Logging.Debug($"Saved sheet set '{name}' with {viewSet.Size} sheets");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("CreateSheetSet failed", ex);
+            return false;
+        }
+    }
+
+    public List<string> GetSheetNumbersInSet(string setName)
+    {
+        var result = new List<string>();
+        if (Doc == null || string.IsNullOrEmpty(setName)) return result;
+        var set = new FilteredElementCollector(Doc)
+            .OfClass(typeof(ViewSheetSet))
+            .Cast<ViewSheetSet>()
+            .FirstOrDefault(s => s.Name == setName);
+        if (set == null) return result;
+        foreach (View v in set.Views)
+            if (v is ViewSheet vs) result.Add(vs.SheetNumber);
+        return result;
     }
 
     public bool ExportSingleToPdf(int sheetElementId, string outputFolder, string namingPattern, bool combinePdf = false)
@@ -1243,8 +1333,6 @@ public class RevitService : IRevitService
                 {
 #if REVIT2023
                     var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
-#elif REVIT2024
-                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
 #else
                     var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
 #endif
@@ -1275,8 +1363,6 @@ public class RevitService : IRevitService
                 foreach (var kvp in newElevations)
                 {
 #if REVIT2023
-                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
-#elif REVIT2024
                     var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
 #else
                     var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
@@ -1704,13 +1790,7 @@ public class RevitService : IRevitService
         var result = new List<DisconnectedConnectorInfo>();
         foreach (var el in new FilteredElementCollector(Doc).WhereElementIsNotElementType())
         {
-#if REVIT2023
             ConnectorManager? cm = null;
-#elif REVIT2024
-            ConnectorManager cm = null;
-#else
-            ConnectorManager? cm = null;
-#endif
             string category = "";
             if (el is Autodesk.Revit.DB.MEPCurve mep) { cm = mep.ConnectorManager; category = el.Category?.Name ?? "MEP"; }
             else if (el is Autodesk.Revit.DB.FamilyInstance fi && fi.MEPModel?.ConnectorManager != null) { cm = fi.MEPModel.ConnectorManager; category = el.Category?.Name ?? "MEP"; }
@@ -1767,13 +1847,7 @@ public class RevitService : IRevitService
                 var openConnectors = new List<Autodesk.Revit.DB.Connector>();
                 foreach (var el in new FilteredElementCollector(Doc).WhereElementIsNotElementType())
                 {
-#if REVIT2023
                     ConnectorManager? cm = null;
-#elif REVIT2024
-                    ConnectorManager cm = null;
-#else
-                    ConnectorManager? cm = null;
-#endif
                     if (el is Autodesk.Revit.DB.MEPCurve mep) cm = mep.ConnectorManager;
                     else if (el is Autodesk.Revit.DB.FamilyInstance fi) cm = fi.MEPModel?.ConnectorManager;
                     if (cm == null) continue;
@@ -1822,25 +1896,13 @@ public class RevitService : IRevitService
                 var el2 = Doc.GetElement(new ElementId((long)elementId2));
 #endif
                 if (el1 == null || el2 == null) { tx.RollBack(); return 0; }
-#if REVIT2023
                 ConnectorManager? cm1 = null, cm2 = null;
-#elif REVIT2024
-                ConnectorManager cm1 = null, cm2 = null;
-#else
-                ConnectorManager? cm1 = null, cm2 = null;
-#endif
                 if (el1 is Autodesk.Revit.DB.MEPCurve m1) cm1 = m1.ConnectorManager;
                 else if (el1 is Autodesk.Revit.DB.FamilyInstance f1) cm1 = f1.MEPModel?.ConnectorManager;
                 if (el2 is Autodesk.Revit.DB.MEPCurve m2) cm2 = m2.ConnectorManager;
                 else if (el2 is Autodesk.Revit.DB.FamilyInstance f2) cm2 = f2.MEPModel?.ConnectorManager;
                 if (cm1 == null || cm2 == null) { tx.RollBack(); return 0; }
-#if REVIT2023
                 Connector? best1 = null, best2 = null;
-#elif REVIT2024
-                Connector best1 = null, best2 = null;
-#else
-                Connector? best1 = null, best2 = null;
-#endif
                 double bestDist = double.MaxValue;
                 foreach (Connector c1 in cm1.Connectors) { if (c1.IsConnected) continue; foreach (Connector c2 in cm2.Connectors) { if (c2.IsConnected) continue; double d = c1.Origin.DistanceTo(c2.Origin); if (d < bestDist) { bestDist = d; best1 = c1; best2 = c2; } } }
                 if (best1 != null && best2 != null) { best1.ConnectTo(best2); tx.Commit(); Logging.Debug("Connected 2 MEP elements"); return 1; }
@@ -1855,7 +1917,7 @@ public class RevitService : IRevitService
         return 0;
     }
 
-    public int ConnectElementsBatch(int mainId, List<int> terminalIds)
+    public int ConnectElementsBatch(long mainId, List<long> terminalIds)
     {
         if (Doc == null) return 0;
         using (var tx = new Transaction(Doc, "AllO Multi Connect"))
@@ -1865,23 +1927,20 @@ public class RevitService : IRevitService
             foreach (var termId in terminalIds)
             {
 #if REVIT2023
+                var el1 = Doc.GetElement(new ElementId((int)mainId));
+                var el2 = Doc.GetElement(new ElementId((int)termId));
+#else
                 var el1 = Doc.GetElement(new ElementId(mainId));
                 var el2 = Doc.GetElement(new ElementId(termId));
-#elif REVIT2024
-                var el1 = Doc.GetElement(new ElementId((long)mainId));
-                var el2 = Doc.GetElement(new ElementId((long)termId));
-#else
-                var el1 = Doc.GetElement(new ElementId((long)mainId));
-                var el2 = Doc.GetElement(new ElementId((long)termId));
 #endif
                 if (el1 == null || el2 == null) continue;
-                ConnectorManager cm1 = null, cm2 = null;
+                ConnectorManager? cm1 = null, cm2 = null;
                 if (el1 is Autodesk.Revit.DB.MEPCurve m1) cm1 = m1.ConnectorManager;
                 else if (el1 is Autodesk.Revit.DB.FamilyInstance f1) cm1 = f1.MEPModel?.ConnectorManager;
                 if (el2 is Autodesk.Revit.DB.MEPCurve m2) cm2 = m2.ConnectorManager;
                 else if (el2 is Autodesk.Revit.DB.FamilyInstance f2) cm2 = f2.MEPModel?.ConnectorManager;
                 if (cm1 == null || cm2 == null) continue;
-                Connector best1 = null, best2 = null;
+                Connector? best1 = null, best2 = null;
                 double bestDist = double.MaxValue;
                 foreach (Connector c1 in cm1.Connectors) { if (c1.IsConnected) continue; foreach (Connector c2 in cm2.Connectors) { if (c2.IsConnected) continue; double d = c1.Origin.DistanceTo(c2.Origin); if (d < bestDist) { bestDist = d; best1 = c1; best2 = c2; } } }
                 if (best1 != null && best2 != null) { best1.ConnectTo(best2); connected++; }
@@ -2366,13 +2425,7 @@ public class RevitService : IRevitService
                 var createMethod = viewLegendType.GetMethod("Create",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                 if (createMethod != null)
-#if REVIT2023
                     return createMethod.Invoke(null, new object[] { Doc!, legendTypeId }) as View;
-#elif REVIT2024
-                    return createMethod.Invoke(null, new object[] { Doc, legendTypeId }) as View;
-#else
-                    return createMethod.Invoke(null, new object[] { Doc!, legendTypeId }) as View;
-#endif
             }
         }
         catch (Exception ex)
@@ -2388,13 +2441,7 @@ public class RevitService : IRevitService
                 if (!v.IsTemplate && v.ViewType == ViewType.Legend)
                 {
                     var newId = v.Duplicate(ViewDuplicateOption.Duplicate);
-#if REVIT2023
                     return Doc!.GetElement(newId) as View;
-#elif REVIT2024
-                    return Doc.GetElement(newId) as View;
-#else
-                    return Doc!.GetElement(newId) as View;
-#endif
                 }
             }
         }
@@ -2425,13 +2472,7 @@ public class RevitService : IRevitService
         }
         try
         {
-#if REVIT2023
             var baseId = Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
-#elif REVIT2024
-            var baseId = Doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
-#else
-            var baseId = Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
-#endif
             var baseType = Doc.GetElement(baseId) as TextNoteType;
             if (baseType == null)
                 baseType = new FilteredElementCollector(Doc).OfClass(typeof(TextNoteType)).FirstElement() as TextNoteType;
@@ -2452,13 +2493,7 @@ public class RevitService : IRevitService
         {
             Logging.Error("Failed to get/create text note type", ex);
         }
-#if REVIT2023
         return Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
-#elif REVIT2024
-        return Doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
-#else
-        return Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
-#endif
     }
 
     private void DrawTableOnView(View view, ExcelTableData data)
@@ -2594,7 +2629,7 @@ public class RevitService : IRevitService
         if (Doc == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
         if (link == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
-        var view = Doc.GetElement(new ElementId(viewId)) as View;
+        var view = Doc.GetElement(new ElementId((long)viewId)) as View;
         if (view == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
 
         try
@@ -2656,7 +2691,7 @@ public class RevitService : IRevitService
         {
             foreach (int vid in viewIds)
             {
-                var view = Doc.GetElement(new ElementId(vid)) as View;
+                var view = Doc.GetElement(new ElementId((long)vid)) as View;
                 if (view == null) continue;
 
                 try

@@ -82,6 +82,7 @@ public class MockService : IRevitService
     public int DeleteRevisions(List<int> elementIds) => elementIds.Count;
     public int UpdateRevision(int elementId, string date, string description, string issuedBy, string issuedTo) => 1;
     public int ToggleRevisionIssued(int elementId) => 1;
+    public int AddRevisionToSheets(int revisionElementId, List<int> sheetElementIds) => sheetElementIds.Count;
 
     public List<PublishSheetItem> GetSheetsForPublish()
     {
@@ -101,6 +102,10 @@ public class MockService : IRevitService
             }
         }).ToList();
     }
+
+    public List<string> GetSheetSetNames() => new() { "Architectural", "Electrical" };
+    public List<string> GetSheetNumbersInSet(string setName) => new();
+    public bool CreateSheetSet(string name, List<int> sheetElementIds) => true;
 
     public bool ExportSingleToPdf(int sheetElementId, string outputFolder, string namingPattern, bool combinePdf = false) => true;
     public bool ExportSingleToDwg(int sheetElementId, string outputFolder, string namingPattern) => true;
@@ -211,7 +216,7 @@ public class MockService : IRevitService
     };
     public int AutoConnectNearby(double toleranceFeet) => 3;
     public int ConnectElements(int elementId1, int elementId2) => 1;
-    public int ConnectElementsBatch(int mainId, List<int> terminalIds) => terminalIds.Count;
+    public int ConnectElementsBatch(long mainId, List<long> terminalIds) => terminalIds.Count;
     public int HighlightElement(int elementId) => 1;
 
     // -- TableGen (Excel → Revit) ---

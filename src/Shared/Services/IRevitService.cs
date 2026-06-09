@@ -34,9 +34,14 @@ public interface IRevitService
     int DeleteRevisions(List<int> elementIds);
     int UpdateRevision(int elementId, string date, string description, string issuedBy, string issuedTo);
     int ToggleRevisionIssued(int elementId);
+    /// <summary>Añade la revisión a las hojas indicadas (sin quitar las existentes). Devuelve nº de hojas modificadas.</summary>
+    int AddRevisionToSheets(int revisionElementId, List<int> sheetElementIds);
 
     // -- Publishing / Export ------------------------------------
     List<PublishSheetItem> GetSheetsForPublish();
+    List<string> GetSheetSetNames();
+    List<string> GetSheetNumbersInSet(string setName);
+    bool CreateSheetSet(string name, List<int> sheetElementIds);
     bool ExportSingleToPdf(int sheetElementId, string outputFolder, string namingPattern, bool combinePdf = false);
     bool ExportSingleToDwg(int sheetElementId, string outputFolder, string namingPattern);
 
@@ -85,7 +90,7 @@ public interface IRevitService
     List<DisconnectedConnectorInfo> FindDisconnectedElements();
     int AutoConnectNearby(double toleranceFeet);
     int ConnectElements(int elementId1, int elementId2);
-    int ConnectElementsBatch(int mainId, List<int> terminalIds);
+    int ConnectElementsBatch(long mainId, List<long> terminalIds);
     int HighlightElement(int elementId);
 
     // -- TableGen (Excel → Revit) --------------------------------

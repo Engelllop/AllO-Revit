@@ -2,6 +2,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
 using AllO.Helpers;
+using AllO.UI.Toast;
 
 namespace AllO.Commands;
 
@@ -16,18 +17,9 @@ public class FamilyExportCommand : IExternalCommand
 
         try
         {
-            // Selector de carpeta gráfico (truco SaveFileDialog: se toma su directorio).
-            var picker = new Microsoft.Win32.SaveFileDialog
-            {
-                Title = "Select destination folder (just click Save)",
-                FileName = "Select Folder",
-                Filter = "Folder|*.folder",
-                CheckFileExists = false,
-                CheckPathExists = true,
-                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
-            };
-            if (picker.ShowDialog() != true) return Result.Cancelled;
-            var folder = Path.GetDirectoryName(picker.FileName);
+            var dialog = new AllO.UI.Views.FamilyExportWindow();
+            if (dialog.ShowDialog() != true) return Result.Cancelled;
+            var folder = dialog.SelectedFolder;
             if (string.IsNullOrWhiteSpace(folder)) return Result.Cancelled;
 
             if (!Directory.Exists(folder))
@@ -67,8 +59,9 @@ public class FamilyExportCommand : IExternalCommand
             }
 
             Logging.OperationComplete($"Family Export ({exported} families)", sw.Elapsed);
-            TaskDialog.Show("Family Export",
-                $"Exported {exported} family(s) in {sw.Elapsed.TotalSeconds:F1}s.\nFailed: {failed}.");
+            ToastHost.Show("Family Export",
+                $"Exported {exported} family(s) in {sw.Elapsed.TotalSeconds:F1}s. Failed: {failed}.",
+                failed > 0 ? ToastKind.Warning : ToastKind.Success);
             return Result.Succeeded;
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)

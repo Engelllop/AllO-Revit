@@ -1,7 +1,8 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
-using AllO.Services;
+using AllO.Helpers;
+using AllO.UI.Toast;
 
 namespace AllO.Commands;
 
@@ -20,7 +21,7 @@ public class MatchElevationCommand : IExternalCommand
             var refObj = uiDoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element,
                 "Select reference element to match elevation");
             var refElem = doc.GetElement(refObj);
-            var refZ = GetElementZ(refElem);
+            var refZ = MepUtils.GetMidElevation(refElem) ?? 0;
 
             // Pick targets
             var targets = uiDoc.Selection.PickObjects(Autodesk.Revit.UI.Selection.ObjectType.Element,
@@ -68,10 +69,10 @@ public class MatchElevationCommand : IExternalCommand
             }
             tx.Commit();
 
-            var msg = $"Matched elevation on {moved} element(s).";
-            if (skippedPinned > 0) msg += $"\nSkipped {skippedPinned} pinned element(s).";
-            if (skippedUnsupported > 0) msg += $"\nSkipped {skippedUnsupported} unsupported element(s).";
-            TaskDialog.Show("Match Elevation", msg);
+            var msg = $"{moved} element(s) matched.";
+            if (skippedPinned > 0) msg += $" {skippedPinned} pinned skipped.";
+            if (skippedUnsupported > 0) msg += $" {skippedUnsupported} unsupported skipped.";
+            ToastHost.Show("Match Elevation", msg, ToastKind.Success);
             return Result.Succeeded;
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)
@@ -83,13 +84,5 @@ public class MatchElevationCommand : IExternalCommand
             message = ex.Message;
             return Result.Failed;
         }
-    }
-
-    private static double GetElementZ(Element elem)
-    {
-        if (elem.Location is LocationPoint lp) return lp.Point.Z;
-        if (elem.Location is LocationCurve lc) return (lc.Curve.GetEndPoint(0).Z + lc.Curve.GetEndPoint(1).Z) / 2;
-        var bbox = elem.get_BoundingBox(null);
-        return bbox != null ? (bbox.Min.Z + bbox.Max.Z) / 2 : 0;
     }
 }

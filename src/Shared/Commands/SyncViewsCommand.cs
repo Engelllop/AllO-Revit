@@ -28,16 +28,18 @@ public class SyncViewsCommand : IExternalCommand
                 return Result.Succeeded;
             }
 
-            // Start syncing
-            var masterRef = InputDialog.Show("Sync Views",
-                "Enter the name of the MASTER view (the one you navigate):",
-                doc.ActiveView.Name);
-            if (string.IsNullOrWhiteSpace(masterRef)) return Result.Cancelled;
+            // Start syncing — pick master/slave from the project's views
+            var viewNames = new FilteredElementCollector(doc).OfClass(typeof(View)).Cast<View>()
+                .Where(v => !v.IsTemplate)
+                .Select(v => v.Name)
+                .OrderBy(n => n)
+                .ToList();
 
-            var slaveRef = InputDialog.Show("Sync Views",
-                "Enter the name of the SLAVE view (the one that follows):",
-                "");
-            if (string.IsNullOrWhiteSpace(slaveRef)) return Result.Cancelled;
+            var syncWin = new AllO.UI.Views.SyncViewsWindow(viewNames, doc.ActiveView?.Name);
+            if (syncWin.ShowDialog() != true) return Result.Cancelled;
+            var masterRef = syncWin.SelectedMaster;
+            var slaveRef = syncWin.SelectedSlave;
+            if (string.IsNullOrWhiteSpace(masterRef) || string.IsNullOrWhiteSpace(slaveRef)) return Result.Cancelled;
 
             var masterView = new FilteredElementCollector(doc)
                 .OfClass(typeof(View))

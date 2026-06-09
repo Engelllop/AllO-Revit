@@ -4,6 +4,8 @@ using Autodesk.Revit.DB;
 using AllO.Models;
 using AllO.UI.ViewModels;
 using AllO.UI.Views;
+using ToastHost = AllO.UI.Toast.ToastHost;
+using ToastKind = AllO.UI.Toast.ToastKind;
 
 namespace AllO.Commands;
 
@@ -121,9 +123,9 @@ public class MatchCommand : IExternalCommand
 
             tx.Commit();
 
-            var msg = $"Copied {matchedParams} parameter value(s) to {matchedTargets} element(s).";
-            if (skippedPinned > 0) msg += $"\nSkipped {skippedPinned} pinned element(s).";
-            TaskDialog.Show("Match", msg);
+            var msg = $"{matchedParams} value(s) copied to {matchedTargets} element(s).";
+            if (skippedPinned > 0) msg += $" {skippedPinned} pinned skipped.";
+            ToastHost.Show("Match", msg, ToastKind.Success);
             return Result.Succeeded;
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)

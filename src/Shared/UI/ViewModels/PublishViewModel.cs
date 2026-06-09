@@ -13,6 +13,7 @@ public class PublishViewModel : ViewModelBase
 {
     public const string FilterParamNoneLabel = "— Parameter —";
     public const string FilterValueAnyLabel = "— Any value —";
+    public const string SheetSetNoneLabel = "— Sheet Set —";
 
     private readonly IRevitService _service;
 
@@ -20,6 +21,25 @@ public class PublishViewModel : ViewModelBase
 
     public ObservableCollection<string> FilterParameterNames { get; } = new();
     public ObservableCollection<string> FilterValueOptions { get; } = new();
+    public ObservableCollection<string> SheetSets { get; } = new();
+
+    private string? _selectedSheetSet = SheetSetNoneLabel;
+    /// <summary>Conjunto de hojas guardado (ViewSheetSet) cuyo contenido marca la selección.</summary>
+    public string? SelectedSheetSet
+    {
+        get => _selectedSheetSet;
+        set { if (SetProperty(ref _selectedSheetSet, value)) ApplySheetSet(); }
+    }
+
+    private void ApplySheetSet()
+    {
+        if (string.IsNullOrEmpty(_selectedSheetSet) || _selectedSheetSet == SheetSetNoneLabel) return;
+        var nums = new HashSet<string>(_service.GetSheetNumbersInSet(_selectedSheetSet!), StringComparer.OrdinalIgnoreCase);
+        if (nums.Count == 0) return;
+        foreach (var s in Sheets) s.IsSelected = nums.Contains(s.SheetNumber);
+        SelectedCount = Sheets.Count(s => s.IsSelected);
+        StatusMessage = $"Set '{_selectedSheetSet}': {SelectedCount} sheet(s) selected";
+    }
 
     private ICollectionView? _sheetsView;
     public ICollectionView? SheetsView
@@ -173,6 +193,20 @@ public class PublishViewModel : ViewModelBase
         set => SetProperty(ref _createSubfolders, value);
     }
 
+    private bool _subfolderByDiscipline;
+    public bool SubfolderByDiscipline
+    {
+        get => _subfolderByDiscipline;
+        set => SetProperty(ref _subfolderByDiscipline, value);
+    }
+
+    private string _newSetName = string.Empty;
+    public string NewSetName
+    {
+        get => _newSetName;
+        set => SetProperty(ref _newSetName, value);
+    }
+
     // ── Status / Progress ───────────────────────────────────
 
     private string _statusMessage = "Ready";
@@ -258,6 +292,7 @@ public class PublishViewModel : ViewModelBase
     public ICommand ToggleFilterPopupCommand { get; }
     public ICommand ClearSheetFilterCommand { get; }
     public ICommand CancelExportCommand { get; }
+    public ICommand SaveSheetSetCommand { get; }
 
     // Cancelación cooperativa del export en curso (el loop la consulta entre sheets).
     private volatile bool _cancelRequested;
@@ -273,11 +308,15 @@ public class PublishViewModel : ViewModelBase
         _dispatcher = Dispatcher.CurrentDispatcher;
 
         DocumentName = _service.GetDocumentName();
-        OutputFolder = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        var lastFolder = AllOSettings.Current.LastPublishFolder;
+        OutputFolder = !string.IsNullOrWhiteSpace(lastFolder) && System.IO.Directory.Exists(lastFolder)
+            ? lastFolder
+            : Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
         SelectAllCommand = new RelayCommand(_ => SetAllSelected(true));
         SelectNoneCommand = new RelayCommand(_ => SetAllSelected(false));
         BrowseFolderCommand = new RelayCommand(_ => BrowseFolder());
+        SaveSheetSetCommand = new RelayCommand(_ => SaveSheetSet(), _ => Sheets.Any(s => s.IsSelected));
 
         PublishCommand = new RelayCommand(
             _ => ExecutePublish(),
@@ -324,6 +363,13 @@ public class PublishViewModel : ViewModelBase
         SheetsView.Filter = FilterSheet;
 
         TotalInDocument = Sheets.Count;
+
+        SheetSets.Clear();
+        SheetSets.Add(SheetSetNoneLabel);
+        foreach (var setName in _service.GetSheetSetNames()) SheetSets.Add(setName);
+        _selectedSheetSet = SheetSetNoneLabel;
+        OnPropertyChanged(nameof(SelectedSheetSet));
+
         RefreshFilterParameterNames();
         _selectedFilterParameter = FilterParamNoneLabel;
         _selectedFilterValue = FilterValueAnyLabel;
@@ -457,7 +503,11 @@ public class PublishViewModel : ViewModelBase
         {
             string? folder = System.IO.Path.GetDirectoryName(dialog.FileName);
             if (!string.IsNullOrEmpty(folder))
+            {
                 OutputFolder = folder;
+                AllOSettings.Current.LastPublishFolder = folder;
+                AllOSettings.Current.Save();
+            }
         }
     }
 
@@ -491,6 +541,9 @@ public class PublishViewModel : ViewModelBase
         ExportedCount = 0;
         FailedCount = 0;
         _cancelRequested = false;
+
+        AllOSettings.Current.LastPublishFolder = OutputFolder;
+        AllOSettings.Current.Save();
 
         int totalSteps = 0;
         if (ExportPdf) totalSteps += selected.Count;
@@ -530,7 +583,8 @@ public class PublishViewModel : ViewModelBase
                     ProgressValue = currentStep;
                     ForceUiUpdate();
 
-                    bool ok = _service.ExportSingleToPdf(sheet.ElementId, pdfFolder, NamingPattern, CombinePdf);
+                    var targetPdf = SubfolderByDiscipline ? EnsureDisciplineFolder(pdfFolder, sheet) : pdfFolder;
+                    bool ok = _service.ExportSingleToPdf(sheet.ElementId, targetPdf, NamingPattern, CombinePdf);
                     if (ok)
                     {
                         sheet.Status = ExportDwg ? "PDF ✓" : "Done";
@@ -557,7 +611,8 @@ public class PublishViewModel : ViewModelBase
                     ProgressValue = currentStep;
                     ForceUiUpdate();
 
-                    bool ok = _service.ExportSingleToDwg(sheet.ElementId, dwgFolder, NamingPattern);
+                    var targetDwg = SubfolderByDiscipline ? EnsureDisciplineFolder(dwgFolder, sheet) : dwgFolder;
+                    bool ok = _service.ExportSingleToDwg(sheet.ElementId, targetDwg, NamingPattern);
                     if (ok)
                     {
                         sheet.Status = "Done";
@@ -590,5 +645,39 @@ public class PublishViewModel : ViewModelBase
         {
             IsExporting = false;
         }
+    }
+
+    private static readonly string[] DisciplineKeys =
+        { "Discipline", "View Discipline", "SISTEMA", "Sub-Discipline" };
+
+    private string EnsureDisciplineFolder(string baseFolder, PublishSheetItem sheet)
+    {
+        string disc = "General";
+        foreach (var key in DisciplineKeys)
+            if (sheet.ParameterValues != null
+                && sheet.ParameterValues.TryGetValue(key, out var v)
+                && !string.IsNullOrWhiteSpace(v))
+            { disc = v; break; }
+
+        foreach (var c in System.IO.Path.GetInvalidFileNameChars())
+            disc = disc.Replace(c, '_');
+
+        var folder = System.IO.Path.Combine(baseFolder, disc);
+        System.IO.Directory.CreateDirectory(folder);
+        return folder;
+    }
+
+    private void SaveSheetSet()
+    {
+        var ids = Sheets.Where(s => s.IsSelected).Select(s => s.ElementId).ToList();
+        if (ids.Count == 0) return;
+
+        var name = Helpers.InputDialog.Show("Save Sheet Set",
+            "Name for the new sheet set:", string.IsNullOrWhiteSpace(NewSetName) ? "AllO Set" : NewSetName);
+        if (string.IsNullOrWhiteSpace(name)) return;
+
+        bool ok = _service.CreateSheetSet(name!, ids);
+        if (ok && !SheetSets.Contains(name!)) SheetSets.Add(name!);
+        StatusMessage = ok ? $"Sheet set '{name}' saved ({ids.Count} sheets)." : "Could not save sheet set.";
     }
 }

@@ -19,15 +19,15 @@ public class SplitPipeCommand : IExternalCommand
         try
         {
             var picked = uiDoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element,
-                new MepCurveFilter(), "Select a pipe or duct to split");
+                new MepUtils.MepCurveFilter(), "Select a pipe or duct to split");
             var elem = doc.GetElement(picked);
             if (elem is not MEPCurve curve) return Result.Failed;
 
-            var pt = uiDoc.Selection.PickPoint("Click point along the pipe/duct to split");
+            var optWin = new AllO.UI.Views.SplitOptionsWindow();
+            if (optWin.ShowDialog() != true) return Result.Cancelled;
+            if (!double.TryParse(optWin.Gap, out double gap)) gap = 0;
 
-            var gapInput = InputDialog.Show(
-                "Split Pipe/Duct", "Enter gap distance in feet (0 = split without gap):", "0");
-            if (!double.TryParse(gapInput, out double gap)) gap = 0;
+            var pt = uiDoc.Selection.PickPoint("Click point along the pipe/duct to split");
 
             using var tx = new Transaction(doc, "AllO - Split Pipe/Duct");
             tx.Start();
@@ -105,13 +105,5 @@ public class SplitPipeCommand : IExternalCommand
         if (a == null || b == null) return;
         try { if (!a.IsConnectedTo(b)) a.ConnectTo(b); }
         catch { /* connectors incompatibles: se deja sin conectar */ }
-    }
-
-    private class MepCurveFilter : Autodesk.Revit.UI.Selection.ISelectionFilter
-    {
-        public bool AllowElement(Element elem)
-            => elem is Pipe || elem is Duct || elem is FlexPipe || elem is FlexDuct;
-
-        public bool AllowReference(Reference reference, XYZ position) => false;
     }
 }

@@ -1,0 +1,54 @@
+<Window x:Class="AllO.UI.Views.RerouteOptionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="AllO — Reroute Around"
+        Style="{StaticResource AllOWindow}"
+        Height="270" Width="380"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="{StaticResource Deep}">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Reroute Around" FontSize="18" FontWeight="Bold"
+                   Foreground="{StaticResource TextPrimary}" Margin="0,0,0,2"/>
+        <TextBlock Grid.Row="1" Text="Set the detour direction and offset, then pick the two break points."
+                   FontSize="11" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+        <Grid Grid.Row="2" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Direction" Foreground="{StaticResource TextSecondary}" FontSize="12"
+                       VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <ComboBox Grid.Column="1" Style="{StaticResource DarkCombo}" ItemContainerStyle="{StaticResource DarkComboItem}"
+                      ItemsSource="{Binding Directions}" SelectedItem="{Binding SelectedDirection}"/>
+        </Grid>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Offset (ft)" Foreground="{StaticResource TextSecondary}" FontSize="12"
+                       VerticalAlignment="Center" Margin="0,0,12,0"/>
+            <TextBox Grid.Column="1" Style="{StaticResource SearchBox}"
+                     Text="{Binding Offset, UpdateSourceTrigger=PropertyChanged}"/>
+        </Grid>
+
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cancel" Style="{StaticResource BtnSecondary}" FontSize="12" Padding="18,6"
+                    Margin="0,0,8,0" IsCancel="True" Click="Cancel_Click"/>
+            <Button Content="Continue" Style="{StaticResource BtnPrimary}" FontSize="12" Padding="18,6"
+                    IsDefault="True" Click="Ok_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

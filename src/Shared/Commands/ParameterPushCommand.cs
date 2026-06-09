@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
 using AllO.Services;
 using AllO.Helpers;
+using AllO.UI.Toast;
 
 namespace AllO.Commands;
 
@@ -22,9 +23,15 @@ public class ParameterPushCommand : IExternalCommand
                 "Select source element with the parameter to copy");
             var srcElem = doc.GetElement(srcRef);
 
-            // Ask user for parameter name
-            var paramName = InputDialog.Show(
-                "Parameter Push", "Enter parameter name to copy:", "Comments");
+            // Choose parameter from the source element's own parameters
+            var paramNames = srcElem.Parameters.Cast<Parameter>()
+                .Where(p => p.Definition != null)
+                .Select(p => p.Definition.Name)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(n => n);
+            var pwin = new AllO.UI.Views.ParameterPushWindow(paramNames);
+            if (pwin.ShowDialog() != true) return Result.Cancelled;
+            var paramName = pwin.SelectedParameter;
             if (string.IsNullOrWhiteSpace(paramName)) return Result.Cancelled;
 
             var srcParam = srcElem.LookupParameter(paramName);
@@ -75,7 +82,7 @@ public class ParameterPushCommand : IExternalCommand
             }
             tx.Commit();
 
-            TaskDialog.Show("Parameter Push", $"Applied to {applied} element(s).");
+            ToastHost.Show("Parameter Push", $"Applied to {applied} element(s).", ToastKind.Success);
             return Result.Succeeded;
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)

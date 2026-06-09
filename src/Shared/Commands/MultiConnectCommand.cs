@@ -3,6 +3,7 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
 using AllO.Core;
 using AllO.Services;
+using AllO.UI.Toast;
 
 namespace AllO.Commands;
 
@@ -14,23 +15,23 @@ public class MultiConnectCommand : IExternalCommand
     {
         var uiDoc = commandData.Application.ActiveUIDocument;
         var doc = uiDoc.Document;
-        var service = ServiceLocator.Resolve<IRevitService>();
+        var service = RevitServiceFactory.Create(commandData.Application);
 
         try
         {
             var mainRef = uiDoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element,
                 "Select main pipe/duct/branch");
-            var mainId = (int)doc.GetElement(mainRef).Id.Value;
+            var mainId = doc.GetElement(mainRef).Id.Value;
 
             var termRefs = uiDoc.Selection.PickObjects(Autodesk.Revit.UI.Selection.ObjectType.Element,
                 "Select terminal elements to connect to main");
 
             if (termRefs == null || termRefs.Count == 0) return Result.Cancelled;
 
-            var termIds = termRefs.Select(r => (int)doc.GetElement(r).Id.Value).ToList();
+            var termIds = termRefs.Select(r => doc.GetElement(r).Id.Value).ToList();
             int connected = service.ConnectElementsBatch(mainId, termIds);
 
-            TaskDialog.Show("Multi Connect", $"Connected {connected} of {termIds.Count} element(s) to main.");
+            ToastHost.Show("Multi Connect", $"Connected {connected} of {termIds.Count} element(s).", ToastKind.Success);
             return Result.Succeeded;
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)

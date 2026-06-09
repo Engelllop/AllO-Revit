@@ -19,22 +19,18 @@ public class RerouteAroundCommand : IExternalCommand
         try
         {
             var pipeRef = uiDoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element,
-                new MepCurveFilter(), "Select pipe/duct to reroute");
+                new MepUtils.MepCurveFilter(), "Select pipe/duct to reroute");
             var elem = doc.GetElement(pipeRef);
             if (elem is not MEPCurve curve) return Result.Failed;
+
+            var optWin = new AllO.UI.Views.RerouteOptionsWindow();
+            if (optWin.ShowDialog() != true) return Result.Cancelled;
+            if (!double.TryParse(optWin.Offset, out double offset)) offset = 2.0;
 
             var pt1 = uiDoc.Selection.PickPoint("Pick first break point");
             var pt2 = uiDoc.Selection.PickPoint("Pick second break point");
 
-            var dirInput = InputDialog.Show(
-                "Reroute Direction", "Enter direction: Left, Right, Up, Down", "Right");
-            if (string.IsNullOrWhiteSpace(dirInput)) return Result.Cancelled;
-
-            var angleInput = InputDialog.Show(
-                "Reroute Offset", "Enter offset distance in feet:", "2");
-            if (!double.TryParse(angleInput, out double offset)) offset = 2.0;
-
-            XYZ offsetDir = (dirInput ?? "right").Trim().ToLower() switch
+            XYZ offsetDir = optWin.SelectedDirection.Trim().ToLower() switch
             {
                 "left" => XYZ.BasisX.Negate(),
                 "right" => XYZ.BasisX,
@@ -70,11 +66,18 @@ public class RerouteAroundCommand : IExternalCommand
             // Original pipe: start -> break1
             loc.Curve = Line.CreateBound(start, break1);
 
-            // Create reroute segments
-            CreateStub(doc, curve, Line.CreateBound(break1, corner1));
-            CreateStub(doc, curve, Line.CreateBound(corner1, corner2));
-            CreateStub(doc, curve, Line.CreateBound(corner2, break2));
-            CreateStub(doc, curve, Line.CreateBound(break2, end));
+            // Crea los 4 tramos del rodeo.
+            var segA = CreateStub(doc, curve, Line.CreateBound(break1, corner1));
+            var segB = CreateStub(doc, curve, Line.CreateBound(corner1, corner2));
+            var segC = CreateStub(doc, curve, Line.CreateBound(corner2, break2));
+            var segD = CreateStub(doc, curve, Line.CreateBound(break2, end));
+            doc.Regenerate();
+
+            // Une los tramos con codos en cada vértice (antes quedaban sueltos = red rota).
+            TryElbow(doc, ConnectorAt(curve, break1), ConnectorAt(segA, break1));
+            TryElbow(doc, ConnectorAt(segA, corner1), ConnectorAt(segB, corner1));
+            TryElbow(doc, ConnectorAt(segB, corner2), ConnectorAt(segC, corner2));
+            TryElbow(doc, ConnectorAt(segC, break2), ConnectorAt(segD, break2));
 
             tx.Commit();
             return Result.Succeeded;
@@ -90,19 +93,34 @@ public class RerouteAroundCommand : IExternalCommand
         }
     }
 
-    private static void CreateStub(Document doc, MEPCurve template, Line line)
+    private static MEPCurve? CreateStub(Document doc, MEPCurve template, Line line)
     {
         var newId = ElementTransformUtils.CopyElement(doc, template.Id, XYZ.Zero).FirstOrDefault();
-        if (newId == null) return;
+        if (newId == null) return null;
         var stub = doc.GetElement(newId) as MEPCurve;
-        if (stub == null) return;
+        if (stub == null) return null;
         (stub.Location as LocationCurve)!.Curve = line;
+        return stub;
     }
 
-    private class MepCurveFilter : Autodesk.Revit.UI.Selection.ISelectionFilter
+    private static Connector? ConnectorAt(MEPCurve? curve, XYZ pt)
     {
-        public bool AllowElement(Element elem)
-            => elem is Pipe || elem is Duct || elem is FlexPipe || elem is FlexDuct;
-        public bool AllowReference(Reference reference, XYZ position) => false;
+        if (curve == null) return null;
+        Connector? best = null;
+        double bd = double.MaxValue;
+        foreach (Connector c in curve.ConnectorManager.Connectors)
+        {
+            if (c.ConnectorType != ConnectorType.End) continue;
+            double d = c.Origin.DistanceTo(pt);
+            if (d < bd) { bd = d; best = c; }
+        }
+        return best;
+    }
+
+    private static void TryElbow(Document doc, Connector? a, Connector? b)
+    {
+        if (a == null || b == null) return;
+        try { doc.Create.NewElbowFitting(a, b); }
+        catch { try { if (!a.IsConnectedTo(b)) a.ConnectTo(b); } catch { } }
     }
 }

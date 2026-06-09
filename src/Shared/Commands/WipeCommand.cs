@@ -46,6 +46,8 @@ public class WipeCommand : IExternalCommand
                          $"  Imports: {result.DeletedImports}\n" +
                          $"  Line Patterns: {result.DeletedLinePatterns}\n" +
                          $"  Fill Patterns: {result.DeletedFillPatterns}";
+            if (result.Failed > 0)
+                report += $"\n\n{result.Failed} item(s) could not be deleted (in use or pinned).";
 
             TaskDialog.Show("Wipe - Cleanup Report", report);
             return Result.Succeeded;
@@ -100,7 +102,10 @@ public class WipeCommand : IExternalCommand
         // Filters
         var filtersInUse = new HashSet<ElementId>();
         foreach (var view in new FilteredElementCollector(doc).OfClass(typeof(View)).Cast<View>())
+        {
+            if (!view.AreGraphicsOverridesAllowed()) continue; // schedules/legends lanzan en GetFilters()
             foreach (ElementId id in view.GetFilters()) filtersInUse.Add(id);
+        }
 
         var unusedFilters = new FilteredElementCollector(doc)
             .OfClass(typeof(ParameterFilterElement)).Cast<ParameterFilterElement>()
@@ -111,7 +116,8 @@ public class WipeCommand : IExternalCommand
         // Imports
         var imports = new FilteredElementCollector(doc).OfClass(typeof(ImportInstance)).Cast<ImportInstance>().ToList();
         if (imports.Count > 0)
-            items.Add(new WipeItem { Category = "unusedimports", DisplayName = "Import Instances", Count = imports.Count, IsSelected = true });
+            // Borra TODOS los CAD imports (no solo "sin usar"): deseleccionado por defecto para evitar perder CAD en uso.
+            items.Add(new WipeItem { Category = "unusedimports", DisplayName = "CAD Imports (ALL — review!)", Count = imports.Count, IsSelected = false });
 
         // Line Patterns (CAD-like names only)
         var cadLinePatterns = new FilteredElementCollector(doc)
@@ -147,7 +153,7 @@ public class WipeCommand : IExternalCommand
             foreach (var v in views)
             {
                 try { doc.Delete(v.Id); result.DeletedViews++; }
-                catch { }
+                catch { result.Failed++; }
             }
         }
 
@@ -161,7 +167,7 @@ public class WipeCommand : IExternalCommand
                 if (!vps.Any())
                 {
                     try { doc.Delete(sheet.Id); result.DeletedSheets++; }
-                    catch { }
+                    catch { result.Failed++; }
                 }
             }
         }
@@ -178,7 +184,7 @@ public class WipeCommand : IExternalCommand
             foreach (var t in templates)
             {
                 try { doc.Delete(t.Id); result.DeletedTemplates++; }
-                catch { }
+                catch { result.Failed++; }
             }
         }
 
@@ -186,7 +192,10 @@ public class WipeCommand : IExternalCommand
         {
             var filtersInUse = new HashSet<ElementId>();
             foreach (var view in new FilteredElementCollector(doc).OfClass(typeof(View)).Cast<View>())
+            {
+                if (!view.AreGraphicsOverridesAllowed()) continue;
                 foreach (ElementId id in view.GetFilters()) filtersInUse.Add(id);
+            }
 
             var filters = new FilteredElementCollector(doc)
                 .OfClass(typeof(ParameterFilterElement)).Cast<ParameterFilterElement>()
@@ -194,7 +203,7 @@ public class WipeCommand : IExternalCommand
             foreach (var f in filters)
             {
                 try { doc.Delete(f.Id); result.DeletedFilters++; }
-                catch { }
+                catch { result.Failed++; }
             }
         }
 
@@ -204,7 +213,7 @@ public class WipeCommand : IExternalCommand
             foreach (var imp in imports)
             {
                 try { doc.Delete(imp.Id); result.DeletedImports++; }
-                catch { }
+                catch { result.Failed++; }
             }
         }
 
@@ -216,7 +225,7 @@ public class WipeCommand : IExternalCommand
             foreach (var lp in linePatterns)
             {
                 try { doc.Delete(lp.Id); result.DeletedLinePatterns++; }
-                catch { }
+                catch { result.Failed++; }
             }
         }
 
@@ -228,7 +237,7 @@ public class WipeCommand : IExternalCommand
             foreach (var fp in fillPatterns)
             {
                 try { doc.Delete(fp.Id); result.DeletedFillPatterns++; }
-                catch { }
+                catch { result.Failed++; }
             }
         }
 
@@ -245,5 +254,6 @@ public class WipeCommand : IExternalCommand
         public int DeletedImports;
         public int DeletedLinePatterns;
         public int DeletedFillPatterns;
+        public int Failed;
     }
 }

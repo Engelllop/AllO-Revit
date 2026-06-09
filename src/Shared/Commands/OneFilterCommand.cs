@@ -3,6 +3,8 @@ using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
 using AllO.UI.ViewModels;
 using AllO.UI.Views;
+using ToastHost = AllO.UI.Toast.ToastHost;
+using ToastKind = AllO.UI.Toast.ToastKind;
 
 namespace AllO.Commands;
 
@@ -52,23 +54,32 @@ public class OneFilterCommand : IExternalCommand
                 var p = elem.LookupParameter(paramName);
                 if (p == null) continue;
 
+                var ci = System.Globalization.CultureInfo.InvariantCulture;
                 string? val = p.StorageType switch
                 {
                     StorageType.String => p.AsString(),
-                    StorageType.Double => p.AsDouble().ToString(),
-                    StorageType.Integer => p.AsInteger().ToString(),
-                    StorageType.ElementId => p.AsElementId()?.ToString(),
+                    StorageType.Double => p.AsDouble().ToString(ci),
+                    StorageType.Integer => p.AsInteger().ToString(ci),
+                    StorageType.ElementId => p.AsElementId()?.Value.ToString(ci),
                     _ => null
                 };
 
                 if (val == null) continue;
 
+                bool Num(Func<double, double, bool> cmp)
+                    => double.TryParse(val, System.Globalization.NumberStyles.Any, ci, out var a)
+                       && double.TryParse(targetValue, System.Globalization.NumberStyles.Any, ci, out var b)
+                       && cmp(a, b);
+
                 bool ok = op.Trim().ToLower() switch
                 {
                     "equals" or "=" => val.Equals(targetValue, StringComparison.OrdinalIgnoreCase),
+                    "not equals" or "!=" => !val.Equals(targetValue, StringComparison.OrdinalIgnoreCase),
                     "contains" => val.IndexOf(targetValue, StringComparison.OrdinalIgnoreCase) >= 0,
-                    "greater" or ">" => double.TryParse(val, out var dv) && double.TryParse(targetValue, out var tv) && dv > tv,
-                    "less" or "<" => double.TryParse(val, out var dv2) && double.TryParse(targetValue, out var tv2) && dv2 < tv2,
+                    "greater" or ">" => Num((a, b) => a > b),
+                    "greater or equal" or ">=" => Num((a, b) => a >= b),
+                    "less" or "<" => Num((a, b) => a < b),
+                    "less or equal" or "<=" => Num((a, b) => a <= b),
                     _ => val.Equals(targetValue, StringComparison.OrdinalIgnoreCase)
                 };
 
@@ -78,11 +89,11 @@ public class OneFilterCommand : IExternalCommand
             if (matched.Count > 0)
             {
                 uiDoc.Selection.SetElementIds(matched);
-                TaskDialog.Show("OneFilter", $"Selected {matched.Count} element(s).");
+                ToastHost.Show("One Filter", $"Selected {matched.Count} element(s).", ToastKind.Success);
             }
             else
             {
-                TaskDialog.Show("OneFilter", "No elements matched the criteria.");
+                ToastHost.Show("One Filter", "No elements matched the criteria.", ToastKind.Info);
             }
             return Result.Succeeded;
         }

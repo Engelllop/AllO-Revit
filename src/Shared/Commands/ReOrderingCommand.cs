@@ -4,6 +4,8 @@ using Autodesk.Revit.DB;
 using AllO.Models;
 using AllO.UI.ViewModels;
 using AllO.UI.Views;
+using ToastHost = AllO.UI.Toast.ToastHost;
+using ToastKind = AllO.UI.Toast.ToastKind;
 
 namespace AllO.Commands;
 
@@ -68,33 +70,15 @@ public class ReOrderingCommand : IExternalCommand
 
                     return new ReorderItem
                     {
-                        ElementId = (int)e.Id.Value,
+                        ElementId = e.Id.Value,
                         ElementName = e.Name,
                         Category = e.Category?.Name ?? "",
                         CurrentValue = currentVal,
+                        SortKey = param,
                         IsSelected = true
                     };
                 })
-                .OrderBy(x =>
-                {
-                    // We need to re-project here because we lost the param in the ReorderItem
-                    // Alternative: store the param in ReorderItem. Let's add a SortKey property.
-                    // For now, re-project from the element.
-                    var e = doc.GetElement(new ElementId(x.ElementId));
-                    if (e == null) return 0.0;
-                    var loc = e.Location;
-                    XYZ? pt = null;
-                    if (loc is LocationPoint lp) pt = lp.Point;
-                    else if (loc is LocationCurve lc) pt = (lc.Curve.GetEndPoint(0) + lc.Curve.GetEndPoint(1)) / 2;
-                    else
-                    {
-                        var bbox = e.get_BoundingBox(null);
-                        if (bbox != null) pt = (bbox.Min + bbox.Max) / 2;
-                    }
-                    if (pt == null) return 0.0;
-                    try { return pathCurve.Project(pt).Parameter; }
-                    catch { return 0.0; }
-                })
+                .OrderBy(x => x.SortKey)
                 .ToList();
 
             if (ordered.Count == 0)
@@ -147,7 +131,7 @@ public class ReOrderingCommand : IExternalCommand
             }
             tx.Commit();
 
-            TaskDialog.Show("ReOrdering", $"Renumbered {selectedItems.Count} element(s).");
+            ToastHost.Show("Re-Ordering", $"Renumbered {selectedItems.Count} element(s).", ToastKind.Success);
             return Result.Succeeded;
         }
         catch (Autodesk.Revit.Exceptions.OperationCanceledException)
