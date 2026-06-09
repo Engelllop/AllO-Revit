@@ -78,10 +78,14 @@ public static class Logging
     }
 
     /// <summary>
-    /// Logs operation timing information.
+    /// Logs operation timing information. Escribe al log de archivo (no solo Debug)
+    /// para tener visibilidad de operaciones largas también en builds Release.
     /// </summary>
     public static void OperationComplete(string operation, TimeSpan elapsed, [System.Runtime.CompilerServices.CallerMemberName] string caller = "")
     {
-        Debug($"{operation} completed in {elapsed.TotalMilliseconds:F2}ms", caller);
+        var msg = $"{operation} completed in {elapsed.TotalMilliseconds:F0}ms";
+        var fullMessage = string.IsNullOrEmpty(caller) ? $"{Prefix} {msg}" : $"{Prefix} [{caller}] {msg}";
+        System.Diagnostics.Debug.WriteLine(fullMessage);
+        WriteFile("PERF", fullMessage);
     }
 }
