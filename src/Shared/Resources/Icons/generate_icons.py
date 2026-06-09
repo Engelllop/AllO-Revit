@@ -244,6 +244,19 @@ def draw_match(draw, s):
     draw.line([(m, cy-1), (s-m, cy-1)], fill=FG, width=max(1, s // 12))
     draw.line([(m, cy+1), (s-m, cy+1)], fill=FG, width=max(1, s // 12))
 
+def draw_auto_section_box(draw, s):
+    m = scale(s, 0.22)
+    d = scale(s, 0.12)  # depth offset (perspectiva)
+    w = max(1, s // 16)
+    fx1, fy1, fx2, fy2 = m, m + d, s - m - d, s - m          # cara frontal
+    bx1, by1, bx2, by2 = m + d, m, s - m, s - m - d          # cara trasera
+    draw.rectangle([fx1, fy1, fx2, fy2], outline=FG, width=w)
+    draw.rectangle([bx1, by1, bx2, by2], outline=FG, width=w)
+    draw.line([(fx1, fy1), (bx1, by1)], fill=FG, width=w)
+    draw.line([(fx2, fy1), (bx2, by1)], fill=FG, width=w)
+    draw.line([(fx1, fy2), (bx1, by2)], fill=FG, width=w)
+    draw.line([(fx2, fy2), (bx2, by2)], fill=FG, width=w)
+
 def draw_link_family(draw, s):
     m = scale(s, 0.25)
     cy = s // 2
@@ -283,6 +296,7 @@ ICONS = {
     "reOrdering": draw_re_ordering,
     "familyExport": draw_family_export,
     "viewManager": draw_view_manager,
+    "autoSectionBox": draw_auto_section_box,
     "wipe": draw_wipe,
     "syncViews": draw_sync_views,
     "copyState": draw_copy_state,

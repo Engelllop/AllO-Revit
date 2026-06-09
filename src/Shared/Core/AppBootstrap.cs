@@ -66,7 +66,13 @@ public static class AppBootstrap
         BuildToolsPanel(application);
         StartupLog.Write("  BuildToolsPanel done");
 
-        // BuildAuditPanel & BuildCoordinationPanel removed — commands merged into existing panels
+        StartupLog.Write("  BuildCoordinationPanel...");
+        BuildCoordinationPanel(application);
+        StartupLog.Write("  BuildCoordinationPanel done");
+
+        StartupLog.Write("  BuildAuditPanel...");
+        BuildAuditPanel(application);
+        StartupLog.Write("  BuildAuditPanel done");
 
         StartupLog.Write("  BuildLinksPanel...");
         BuildLinksPanel(application);
@@ -153,6 +159,13 @@ public static class AppBootstrap
             RibbonBuilder.Configure(lb, "levels",
                 "Rename, move, delete, copy and sync levels from linked models.",
                 "AllO Levels. Level management with elevation offsets and link sync.");
+
+        var sectionBoxBtn = RibbonBuilder.Button("AutoSectionBox", "Section\nBox",
+            "AllO.Commands.AutoSectionBoxCommand");
+        if (panel.AddItem(sectionBoxBtn) is PushButton sb)
+            RibbonBuilder.Configure(sb, "autoSectionBox",
+                "Create a 3D view with a section box fit to the selected elements.",
+                "AllO Auto Section Box. Aísla la selección en una vista 3D con section box ajustado.");
     }
 
     private static void BuildProductivityPanel(UIControlledApplication app)
