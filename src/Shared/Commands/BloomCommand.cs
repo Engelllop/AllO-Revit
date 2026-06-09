@@ -31,6 +31,15 @@ public class BloomCommand : IExternalCommand
 
             using var tx = new Transaction(doc, "AllO - Bloom");
             tx.Start();
+            // Nivel robusto: la vista activa puede no tener GenLevel (3D, sección).
+            var levelId = ResolveLevelId(doc, equip);
+            if (levelId == ElementId.InvalidElementId)
+            {
+                tx.RollBack();
+                TaskDialog.Show("Bloom", "No level found to host the new MEP curves.");
+                return Result.Failed;
+            }
+
             int created = 0;
             foreach (var c in connectors)
             {
@@ -39,27 +48,27 @@ public class BloomCommand : IExternalCommand
                 var start = c.Origin;
                 var end = start + dir * 2.0; // 2-foot stub
 
+                MEPCurve? stub = null;
                 if (c.Domain == Domain.DomainPiping)
                 {
                     var pipeType = new FilteredElementCollector(doc).OfClass(typeof(PipeType)).FirstOrDefault() as PipeType;
                     var sysType = new FilteredElementCollector(doc).OfClass(typeof(PipingSystemType)).FirstOrDefault() as PipingSystemType;
-                    var level = doc.ActiveView.GenLevel;
-                    if (pipeType != null && sysType != null && level != null)
-                    {
-                        Pipe.Create(doc, sysType.Id, pipeType.Id, level.Id, start, end);
-                        created++;
-                    }
+                    if (pipeType != null && sysType != null)
+                        stub = Pipe.Create(doc, sysType.Id, pipeType.Id, levelId, start, end);
                 }
                 else if (c.Domain == Domain.DomainHvac)
                 {
                     var ductType = new FilteredElementCollector(doc).OfClass(typeof(DuctType)).FirstOrDefault() as DuctType;
                     var sysType = new FilteredElementCollector(doc).OfClass(typeof(MechanicalSystemType)).FirstOrDefault() as MechanicalSystemType;
-                    var level = doc.ActiveView.GenLevel;
-                    if (ductType != null && sysType != null && level != null)
-                    {
-                        Duct.Create(doc, sysType.Id, ductType.Id, level.Id, start, end);
-                        created++;
-                    }
+                    if (ductType != null && sysType != null)
+                        stub = Duct.Create(doc, sysType.Id, ductType.Id, levelId, start, end);
+                }
+
+                if (stub != null)
+                {
+                    // Conectar el stub al connector del equipo (antes quedaban sueltos).
+                    ConnectStubToSource(stub, c, start);
+                    created++;
                 }
             }
             tx.Commit();
@@ -75,6 +84,31 @@ public class BloomCommand : IExternalCommand
         {
             message = ex.Message;
             return Result.Failed;
+        }
+    }
+
+    private static ElementId ResolveLevelId(Document doc, Element equip)
+    {
+        var genLevel = doc.ActiveView.GenLevel;
+        if (genLevel != null) return genLevel.Id;
+        if (equip.LevelId != ElementId.InvalidElementId) return equip.LevelId;
+        return new FilteredElementCollector(doc).OfClass(typeof(Level)).FirstElementId();
+    }
+
+    private static void ConnectStubToSource(MEPCurve stub, Connector source, XYZ at)
+    {
+        if (source.IsConnected) return;
+        Connector? nearest = null;
+        double best = double.MaxValue;
+        foreach (Connector nc in stub.ConnectorManager.Connectors)
+        {
+            double d = nc.Origin.DistanceTo(at);
+            if (d < best) { best = d; nearest = nc; }
+        }
+        if (nearest != null)
+        {
+            try { source.ConnectTo(nearest); }
+            catch { /* connectors incompatibles (forma/dirección): se deja el stub sin conectar */ }
         }
     }
 

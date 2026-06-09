@@ -42,27 +42,36 @@ public class SplitPipeCommand : IExternalCommand
             var p1 = originalCurve.GetEndPoint(1);
             var param = originalCurve.Project(pt).Parameter;
             var splitPt = originalCurve.Evaluate(param, false);
+            var dir = (p1 - p0).Normalize();
+
+            // Capturar lo que está conectado al extremo p1 ANTES de cortar,
+            // para reconectarlo al 2º tramo (si no, la red aguas abajo queda suelta).
+            Connector? downstream = null;
+            var endConn = ConnectorAt(curve, p1);
+            if (endConn != null && endConn.IsConnected)
+            {
+                foreach (Connector r in endConn.AllRefs)
+                    if (r.Owner.Id != curve.Id && r.ConnectorType == ConnectorType.End) { downstream = r; break; }
+            }
 
             var seg1 = Line.CreateBound(p0, splitPt);
-            var seg2 = Line.CreateBound(splitPt, p1);
+            var seg2Start = gap > 0 ? splitPt + dir * gap : splitPt;
+            var seg2 = Line.CreateBound(seg2Start, p1);
 
-            if (gap > 0)
-            {
-                var dir = (p1 - p0).Normalize();
-                seg2 = Line.CreateBound(splitPt + dir * gap, p1);
-            }
-
+            // 1er tramo = curva original recortada
             locCurve.Curve = seg1;
 
+            // 2º tramo = copia de la original
             var newElem = ElementTransformUtils.CopyElement(doc, curve.Id, XYZ.Zero).FirstOrDefault();
-            if (newElem != null)
-            {
-                var newCurve = doc.GetElement(newElem) as MEPCurve;
-                if (newCurve != null)
-                {
-                    (newCurve.Location as LocationCurve)!.Curve = seg2;
-                }
-            }
+            var newCurve = newElem != null ? doc.GetElement(newElem) as MEPCurve : null;
+            if (newCurve == null) { tx.Commit(); return Result.Succeeded; }
+            (newCurve.Location as LocationCurve)!.Curve = seg2;
+
+            // Reconexiones: unir los dos tramos en el corte (si no hay gap) y
+            // re-enganchar la red aguas abajo al 2º tramo.
+            if (gap <= 0)
+                TryConnect(ConnectorAt(curve, splitPt), ConnectorAt(newCurve, seg2Start));
+            TryConnect(ConnectorAt(newCurve, p1), downstream);
 
             tx.Commit();
             return Result.Succeeded;
@@ -76,6 +85,26 @@ public class SplitPipeCommand : IExternalCommand
             message = ex.Message;
             return Result.Failed;
         }
+    }
+
+    private static Connector? ConnectorAt(MEPCurve curve, XYZ pt)
+    {
+        Connector? best = null;
+        double bd = double.MaxValue;
+        foreach (Connector c in curve.ConnectorManager.Connectors)
+        {
+            if (c.ConnectorType != ConnectorType.End) continue;
+            double d = c.Origin.DistanceTo(pt);
+            if (d < bd) { bd = d; best = c; }
+        }
+        return best;
+    }
+
+    private static void TryConnect(Connector? a, Connector? b)
+    {
+        if (a == null || b == null) return;
+        try { if (!a.IsConnectedTo(b)) a.ConnectTo(b); }
+        catch { /* connectors incompatibles: se deja sin conectar */ }
     }
 
     private class MepCurveFilter : Autodesk.Revit.UI.Selection.ISelectionFilter
