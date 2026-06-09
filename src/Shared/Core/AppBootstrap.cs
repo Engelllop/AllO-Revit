@@ -267,6 +267,14 @@ public static class AppBootstrap
                 new PushButtonData("ElbowDown", "Down", RibbonBuilder.SharedAssemblyPath(), "AllO.Commands.ElbowDownCommand"));
             RibbonBuilder.Configure(down, "elbowDir", "Place elbow pointing Down.", "AllO Elbow Down.");
         }
+
+        var netTreeBtn = RibbonBuilder.Button("NetworkTree", "Network\nTree",
+            "AllO.Commands.NetworkTreeCommand");
+        if (panel.AddItem(netTreeBtn) is PushButton nt)
+            RibbonBuilder.Configure(nt, "netTree",
+                "Analyze a connected MEP network: lengths per run, elbows, tees/wyes, as a tree diagram.",
+                "AllO Network Tree. Pick any pipe/duct/conduit element and get total length, longest run, " +
+                "fitting counts and a branch-by-branch breakdown. Export to CSV.");
     }
 
     private static void BuildToolsPanel(UIControlledApplication app)

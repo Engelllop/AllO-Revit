@@ -273,6 +273,25 @@ def draw_link_visibility(draw, s):
     # link line under
     draw.line([(cx-r//2, cy+r//2+1), (cx+r//2, cy+r//2+1)], fill=FG, width=max(1, s // 16))
 
+def draw_net_tree(draw, s):
+    m = scale(s, 0.2)
+    w = max(1, s // 16)
+    trunk_x = m + scale(s, 0.1)
+    # trunk
+    draw.line([(trunk_x, m), (trunk_x, s - m)], fill=FG, width=w)
+    # branches
+    y1 = m + scale(s, 0.15)
+    y2 = s // 2
+    y3 = s - m - scale(s, 0.1)
+    bx = s - m
+    draw.line([(trunk_x, y1), (bx, y1)], fill=FG, width=w)
+    draw.line([(trunk_x, y2), (bx - scale(s, 0.12), y2)], fill=FG, width=w)
+    draw.line([(trunk_x, y3), (bx, y3)], fill=FG, width=w)
+    # leaf dots
+    r = max(1, scale(s, 0.06))
+    for (x, y) in [(bx, y1), (bx - scale(s, 0.12), y2), (bx, y3)]:
+        draw.ellipse([x - r, y - r, x + r, y + r], fill=FG)
+
 # ------------------------------------------------------------------
 ICONS = {
     "sheetList": draw_sheet_list,
@@ -304,6 +323,7 @@ ICONS = {
     "match": draw_match,
     "linkFamily": draw_link_family,
     "linkVisibility": draw_link_visibility,
+    "netTree": draw_net_tree,
 }
 
 def gen(name, size):

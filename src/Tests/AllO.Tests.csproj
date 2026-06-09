@@ -19,6 +19,7 @@
   <!-- Solo archivos PUROS (sin dependencias del API de Revit) -->
   <ItemGroup>
     <Compile Include="..\Shared\Helpers\SheetNaming.cs" Link="Pure\SheetNaming.cs" />
+    <Compile Include="..\Shared\Models\NetworkTree.cs" Link="Pure\NetworkTree.cs" />
     <Compile Include="..\Shared\UI\Converters\TitleSuffixConverter.cs" Link="Pure\TitleSuffixConverter.cs" />
     <Compile Include="..\Shared\UI\Converters\InverseBoolConverter.cs" Link="Pure\InverseBoolConverter.cs" />
   </ItemGroup>
