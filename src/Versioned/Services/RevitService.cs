@@ -4,11 +4,17 @@ using AllO.Models;
 using AllO.Services;
 using AllO.Helpers;
 
-namespace AllO.Revit2025.Services;
+namespace AllO.Versioned.Services;
 
 /// <summary>
-/// Implementacion de IRevitService para Revit 2025.
+/// Implementacion de IRevitService compartida (Revit 2023/2024/2025).
+#if REVIT2023
+/// Usa ElementId.IntegerValue (int) en lugar de .Value (long).
+#elif REVIT2024
 /// Usa ElementId.Value (long) - API moderna sin deprecated warnings.
+#else
+/// Usa ElementId.Value (long) - API moderna sin deprecated warnings.
+#endif
 /// </summary>
 public class RevitService : IRevitService
 {
@@ -40,10 +46,22 @@ public class RevitService : IRevitService
             .Select(sheet =>
             {
                 string tbName = "No title block";
+#if REVIT2023
+                int tbTypeId = -1;
+#elif REVIT2024
                 long tbTypeId = -1;
+#else
+                long tbTypeId = -1;
+#endif
                 var tbInst = new FilteredElementCollector(Doc, sheet.Id)
                     .OfCategory(BuiltInCategory.OST_TitleBlocks).FirstOrDefault();
+#if REVIT2023
+                if (tbInst != null) { tbName = tbInst.Name; tbTypeId = tbInst.GetTypeId().IntegerValue; }
+#elif REVIT2024
                 if (tbInst != null) { tbName = tbInst.Name; tbTypeId = tbInst.GetTypeId().Value; }
+#else
+                if (tbInst != null) { tbName = tbInst.Name; tbTypeId = tbInst.GetTypeId().Value; }
+#endif
 
                 string approvedBy = "";
                 var approvedParam = sheet.get_Parameter(BuiltInParameter.SHEET_APPROVED_BY);
@@ -59,12 +77,24 @@ public class RevitService : IRevitService
 
                 return new SheetInfo
                 {
+#if REVIT2023
+                    ElementId = sheet.Id.IntegerValue,
+#elif REVIT2024
                     ElementId = (int)sheet.Id.Value,
+#else
+                    ElementId = (int)sheet.Id.Value,
+#endif
                     SheetNumber = sheet.SheetNumber,
                     OriginalName = sheet.Name,
                     PreviewName = sheet.Name,
                     TitleBlockName = tbName,
+#if REVIT2023
+                    TitleBlockTypeId = tbTypeId,
+#elif REVIT2024
                     TitleBlockTypeId = (int)tbTypeId,
+#else
+                    TitleBlockTypeId = (int)tbTypeId,
+#endif
                     ApprovedBy = approvedBy,
                     DesignedBy = designedBy,
                     SheetIssueDate = issueDate
@@ -83,7 +113,13 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renames)
             {
+#if REVIT2023
+                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+#elif REVIT2024
+                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+#else
                 var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
+#endif
                 var param = sheet?.get_Parameter(BuiltInParameter.SHEET_NAME);
                 if (param != null && !param.IsReadOnly) { param.Set(kvp.Value); count++; }
             }
@@ -109,7 +145,13 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renumbers)
             {
+#if REVIT2023
+                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+#elif REVIT2024
+                var sheet = Doc.GetElement(new ElementId(kvp.Key)) as ViewSheet;
+#else
                 var sheet = Doc.GetElement(new ElementId((long)kvp.Key)) as ViewSheet;
+#endif
                 var param = sheet?.get_Parameter(BuiltInParameter.SHEET_NUMBER);
                 if (param != null && !param.IsReadOnly) { param.Set(kvp.Value); count++; }
             }
@@ -135,7 +177,13 @@ public class RevitService : IRevitService
         {
             foreach (var id in elementIds)
             {
+#if REVIT2023
+                var eid = new ElementId(id);
+#elif REVIT2024
                 var eid = new ElementId((long)id);
+#else
+                var eid = new ElementId((long)id);
+#endif
                 if (Doc.GetElement(eid) != null) { Doc.Delete(eid); count++; }
             }
             tx.Commit();
@@ -158,13 +206,25 @@ public class RevitService : IRevitService
         tx.Start();
         try
         {
+#if REVIT2023
+            var tbTypeId = new ElementId(titleBlockTypeId);
+#elif REVIT2024
             var tbTypeId = new ElementId((long)titleBlockTypeId);
+#else
+            var tbTypeId = new ElementId((long)titleBlockTypeId);
+#endif
             foreach (var req in requests)
             {
                 var sheet = ViewSheet.Create(Doc, tbTypeId);
                 sheet.SheetNumber = req.Number;
                 sheet.Name = req.Name;
+#if REVIT2023
+                created.Add(sheet.Id.IntegerValue);
+#elif REVIT2024
                 created.Add((int)sheet.Id.Value);
+#else
+                created.Add((int)sheet.Id.Value);
+#endif
             }
             tx.Commit();
             Logging.Debug($"Created {created.Count} sheets");
@@ -188,7 +248,13 @@ public class RevitService : IRevitService
         {
             foreach (var id in elementIds)
             {
+#if REVIT2023
+                var original = Doc.GetElement(new ElementId(id)) as ViewSheet;
+#elif REVIT2024
                 var original = Doc.GetElement(new ElementId((long)id)) as ViewSheet;
+#else
+                var original = Doc.GetElement(new ElementId((long)id)) as ViewSheet;
+#endif
                 if (original == null) continue;
                 var tbInstance = new FilteredElementCollector(Doc, original.Id)
                     .OfCategory(BuiltInCategory.OST_TitleBlocks).FirstOrDefault();
@@ -218,12 +284,24 @@ public class RevitService : IRevitService
         tx.Start();
         try
         {
+#if REVIT2023
+            var sheet = Doc.GetElement(new ElementId(sheetElementId)) as ViewSheet;
+#elif REVIT2024
             var sheet = Doc.GetElement(new ElementId((long)sheetElementId)) as ViewSheet;
+#else
+            var sheet = Doc.GetElement(new ElementId((long)sheetElementId)) as ViewSheet;
+#endif
             if (sheet == null) { tx.RollBack(); return 0; }
             var tbInstance = new FilteredElementCollector(Doc, sheet.Id)
                 .OfCategory(BuiltInCategory.OST_TitleBlocks).FirstOrDefault();
             if (tbInstance == null) { tx.RollBack(); return 0; }
+#if REVIT2023
+            tbInstance.ChangeTypeId(new ElementId(newTitleBlockTypeId));
+#elif REVIT2024
             tbInstance.ChangeTypeId(new ElementId((long)newTitleBlockTypeId));
+#else
+            tbInstance.ChangeTypeId(new ElementId((long)newTitleBlockTypeId));
+#endif
             tx.Commit();
             Logging.Debug($"Changed title block for sheet {sheetElementId}");
             return 1;
@@ -245,7 +323,13 @@ public class RevitService : IRevitService
             .Cast<FamilySymbol>()
             .Select(fs => new TitleBlockInfo
             {
+#if REVIT2023
+                TypeId = fs.Id.IntegerValue,
+#elif REVIT2024
                 TypeId = (int)fs.Id.Value,
+#else
+                TypeId = (int)fs.Id.Value,
+#endif
                 FamilyName = fs.FamilyName,
                 TypeName = fs.Name
             })
@@ -293,7 +377,13 @@ public class RevitService : IRevitService
 
                 return new ViewInfo
                 {
+#if REVIT2023
+                    ElementId = v.Id.IntegerValue,
+#elif REVIT2024
                     ElementId = (int)v.Id.Value,
+#else
+                    ElementId = (int)v.Id.Value,
+#endif
                     Name = v.Name,
                     ViewType = v.ViewType.ToString(),
                     Discipline = discipline,
@@ -316,7 +406,13 @@ public class RevitService : IRevitService
         {
             foreach (var id in elementIds)
             {
+#if REVIT2023
+                var eid = new ElementId(id);
+#elif REVIT2024
                 var eid = new ElementId((long)id);
+#else
+                var eid = new ElementId((long)id);
+#endif
                 if (Doc.GetElement(eid) != null) { Doc.Delete(eid); count++; }
             }
             tx.Commit();
@@ -341,7 +437,13 @@ public class RevitService : IRevitService
         {
             foreach (var kvp in renames)
             {
+#if REVIT2023
+                var view = Doc.GetElement(new ElementId(kvp.Key)) as View;
+#elif REVIT2024
+                var view = Doc.GetElement(new ElementId(kvp.Key)) as View;
+#else
                 var view = Doc.GetElement(new ElementId((long)kvp.Key)) as View;
+#endif
                 if (view != null) { view.Name = kvp.Value; count++; }
             }
             tx.Commit();
@@ -366,7 +468,13 @@ public class RevitService : IRevitService
             .Cast<Revision>()
             .Select(r => new RevisionInfo
             {
+#if REVIT2023
+                ElementId = r.Id.IntegerValue,
+#elif REVIT2024
                 ElementId = (int)r.Id.Value,
+#else
+                ElementId = (int)r.Id.Value,
+#endif
                 Sequence = r.SequenceNumber,
                 Date = r.RevisionDate,
                 Description = r.Description,
@@ -392,7 +500,13 @@ public class RevitService : IRevitService
             rev.IssuedTo = issuedTo;
             tx.Commit();
             Logging.Debug($"Created revision: {description}");
+#if REVIT2023
+            return rev.Id.IntegerValue;
+#elif REVIT2024
             return (int)rev.Id.Value;
+#else
+            return (int)rev.Id.Value;
+#endif
         }
         catch (Exception ex)
         {
@@ -412,7 +526,13 @@ public class RevitService : IRevitService
         {
             foreach (var id in elementIds)
             {
+#if REVIT2023
+                var eid = new ElementId(id);
+#elif REVIT2024
                 var eid = new ElementId((long)id);
+#else
+                var eid = new ElementId((long)id);
+#endif
                 if (Doc.GetElement(eid) != null) { Doc.Delete(eid); count++; }
             }
             tx.Commit();
@@ -434,7 +554,13 @@ public class RevitService : IRevitService
         tx.Start();
         try
         {
+#if REVIT2023
+            var rev = Doc.GetElement(new ElementId(elementId)) as Revision;
+#elif REVIT2024
             var rev = Doc.GetElement(new ElementId((long)elementId)) as Revision;
+#else
+            var rev = Doc.GetElement(new ElementId((long)elementId)) as Revision;
+#endif
             if (rev == null) { tx.RollBack(); return 0; }
             rev.RevisionDate = date;
             rev.Description = description;
@@ -459,7 +585,13 @@ public class RevitService : IRevitService
         tx.Start();
         try
         {
+#if REVIT2023
+            var rev = Doc.GetElement(new ElementId(elementId)) as Revision;
+#elif REVIT2024
             var rev = Doc.GetElement(new ElementId((long)elementId)) as Revision;
+#else
+            var rev = Doc.GetElement(new ElementId((long)elementId)) as Revision;
+#endif
             if (rev == null) { tx.RollBack(); return 0; }
             rev.Issued = !rev.Issued;
             tx.Commit();
@@ -484,7 +616,13 @@ public class RevitService : IRevitService
             .Cast<ViewSheet>()
             .Select(s => new PublishSheetItem
             {
+#if REVIT2023
+                ElementId = s.Id.IntegerValue,
+#elif REVIT2024
                 ElementId = (int)s.Id.Value,
+#else
+                ElementId = (int)s.Id.Value,
+#endif
                 SheetNumber = s.SheetNumber,
                 SheetName = s.Name,
                 IsSelected = true,
@@ -500,7 +638,13 @@ public class RevitService : IRevitService
         if (Doc == null) return false;
         try
         {
+#if REVIT2023
+            var viewId = new ElementId(sheetElementId);
+#elif REVIT2024
             var viewId = new ElementId((long)sheetElementId);
+#else
+            var viewId = new ElementId((long)sheetElementId);
+#endif
             var sheet = Doc.GetElement(viewId) as ViewSheet;
             if (sheet == null) return false;
 
@@ -535,7 +679,13 @@ public class RevitService : IRevitService
         if (Doc == null) return false;
         try
         {
+#if REVIT2023
+            var viewId = new ElementId(sheetElementId);
+#elif REVIT2024
             var viewId = new ElementId((long)sheetElementId);
+#else
+            var viewId = new ElementId((long)sheetElementId);
+#endif
             var sheet = Doc.GetElement(viewId) as ViewSheet;
             if (sheet == null) return false;
 
@@ -576,7 +726,13 @@ public class RevitService : IRevitService
                         && v.ViewType != ViewType.Internal)
             .Select(v => new CropViewInfo
             {
+#if REVIT2023
+                ElementId = v.Id.IntegerValue,
+#elif REVIT2024
                 ElementId = (int)v.Id.Value,
+#else
+                ElementId = (int)v.Id.Value,
+#endif
                 Name = v.Name,
                 ViewType = v.ViewType.ToString(),
                 HasCropRegion = v.CropBoxActive || v.CropBoxVisible,
@@ -589,10 +745,22 @@ public class RevitService : IRevitService
     public bool CopyCropToSingleView(int sourceViewId, int targetViewId)
     {
         if (Doc == null) return false;
+#if REVIT2023
+        var sourceView = Doc.GetElement(new ElementId(sourceViewId)) as View;
+#elif REVIT2024
         var sourceView = Doc.GetElement(new ElementId((long)sourceViewId)) as View;
+#else
+        var sourceView = Doc.GetElement(new ElementId((long)sourceViewId)) as View;
+#endif
         if (sourceView == null || !sourceView.CropBoxActive) return false;
 
+#if REVIT2023
+        var target = Doc.GetElement(new ElementId(targetViewId)) as View;
+#elif REVIT2024
         var target = Doc.GetElement(new ElementId((long)targetViewId)) as View;
+#else
+        var target = Doc.GetElement(new ElementId((long)targetViewId)) as View;
+#endif
         if (target == null) return false;
 
         var sourceCrop = sourceView.CropBox;
@@ -631,7 +799,13 @@ public class RevitService : IRevitService
                 Document? ld = li.GetLinkDocument();
                 return new LinkDocumentInfo
                 {
+#if REVIT2023
+                    LinkInstanceId = li.Id.IntegerValue,
+#elif REVIT2024
                     LinkInstanceId = (int)li.Id.Value,
+#else
+                    LinkInstanceId = (int)li.Id.Value,
+#endif
                     Name = ld != null ? (string.IsNullOrEmpty(ld.Title) ? li.Name : ld.Title) : li.Name,
                     Path = ld?.PathName ?? string.Empty,
                     IsLoaded = ld != null
@@ -644,7 +818,13 @@ public class RevitService : IRevitService
     public List<LinkedCategoryInfo> GetCategoriesInLink(int linkInstanceId)
     {
         if (Doc == null) return new List<LinkedCategoryInfo>();
+#if REVIT2023
+        var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
+#elif REVIT2024
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#else
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#endif
         if (link == null) return new List<LinkedCategoryInfo>();
         Document? linkDoc = link.GetLinkDocument();
         if (linkDoc == null) return new List<LinkedCategoryInfo>();
@@ -655,7 +835,13 @@ public class RevitService : IRevitService
             if (f.IsInPlace) continue;
             Category? cat = f.FamilyCategory;
             if (cat == null) continue;
+#if REVIT2023
+            long cid = cat.Id.IntegerValue;
+#elif REVIT2024
             long cid = cat.Id.Value;
+#else
+            long cid = cat.Id.Value;
+#endif
             if (!map.ContainsKey(cid))
                 map[cid] = cat.Name;
         }
@@ -668,7 +854,13 @@ public class RevitService : IRevitService
     public List<LinkFamilyTypeInfo> GetFamilyTypesInLinkCategory(int linkInstanceId, long categoryId)
     {
         if (Doc == null) return new List<LinkFamilyTypeInfo>();
+#if REVIT2023
+        var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
+#elif REVIT2024
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#else
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#endif
         if (link == null) return new List<LinkFamilyTypeInfo>();
         Document? linkDoc = link.GetLinkDocument();
         if (linkDoc == null) return new List<LinkFamilyTypeInfo>();
@@ -677,13 +869,25 @@ public class RevitService : IRevitService
         foreach (Family f in new FilteredElementCollector(linkDoc).OfClass(typeof(Family)).Cast<Family>())
         {
             if (f.IsInPlace) continue;
+#if REVIT2023
+            if (f.FamilyCategory == null || (long)f.FamilyCategory.Id.IntegerValue != categoryId) continue;
+#elif REVIT2024
             if (f.FamilyCategory?.Id.Value != categoryId) continue;
+#else
+            if (f.FamilyCategory?.Id.Value != categoryId) continue;
+#endif
             foreach (ElementId fsId in f.GetFamilySymbolIds())
             {
                 if (linkDoc.GetElement(fsId) is not FamilySymbol sym) continue;
                 list.Add(new LinkFamilyTypeInfo
                 {
+#if REVIT2023
+                    FamilySymbolId = sym.Id.IntegerValue,
+#elif REVIT2024
                     FamilySymbolId = sym.Id.Value,
+#else
+                    FamilySymbolId = sym.Id.Value,
+#endif
                     DisplayName = $"{f.Name} : {sym.Name}"
                 });
             }
@@ -695,12 +899,25 @@ public class RevitService : IRevitService
     public int CopyFamilyInstancesFromLinkToHost(int linkInstanceId, long familySymbolId)
     {
         if (Doc == null) return 0;
+#if REVIT2023
+        var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
+#elif REVIT2024
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#else
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#endif
         if (link == null) return 0;
         Document? linkDoc = link.GetLinkDocument();
         if (linkDoc == null) return 0;
 
+#if REVIT2023
+        // Revit 2023: ElementId(int | BuiltInParameter) only — familySymbolId is narrowed to int.
+        if (linkDoc.GetElement(new ElementId((int)familySymbolId)) is not FamilySymbol sym) return 0;
+#elif REVIT2024
         if (linkDoc.GetElement(new ElementId(familySymbolId)) is not FamilySymbol sym) return 0;
+#else
+        if (linkDoc.GetElement(new ElementId(familySymbolId)) is not FamilySymbol sym) return 0;
+#endif
 
         var ids = new FilteredElementCollector(linkDoc)
             .OfClass(typeof(FamilyInstance))
@@ -756,11 +973,23 @@ public class RevitService : IRevitService
                 }
                 return new GridInfo
                 {
+#if REVIT2023
+                    ElementId = g.Id.IntegerValue,
+#elif REVIT2024
                     ElementId = (int)g.Id.Value,
+#else
+                    ElementId = (int)g.Id.Value,
+#endif
                     Name = g.Name,
                     NewName = g.Name,
                     Orientation = orientation,
+#if REVIT2023
+                    Length = UnitConverter.ToMeters(length) // Convert feet to meters
+#elif REVIT2024
                     Length = UnitConverter.ToMeters(length)
+#else
+                    Length = UnitConverter.ToMeters(length)
+#endif
                 };
             })
             .OrderBy(g => g.Name)
@@ -778,7 +1007,13 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in renames)
                 {
+#if REVIT2023
+                    var grid = Doc.GetElement(new ElementId(kvp.Key)) as Grid;
+#elif REVIT2024
                     var grid = Doc.GetElement(new ElementId((long)kvp.Key)) as Grid;
+#else
+                    var grid = Doc.GetElement(new ElementId((long)kvp.Key)) as Grid;
+#endif
                     if (grid == null) continue;
                     try { grid.Name = kvp.Value; count++; } catch { }
                 }
@@ -805,7 +1040,13 @@ public class RevitService : IRevitService
             {
                 foreach (var id in elementIds)
                 {
+#if REVIT2023
+                    try { Doc.Delete(new ElementId(id)); count++; } catch { }
+#elif REVIT2024
                     try { Doc.Delete(new ElementId((long)id)); count++; } catch { }
+#else
+                    try { Doc.Delete(new ElementId((long)id)); count++; } catch { }
+#endif
                 }
                 tx.Commit();
                 Logging.Debug($"Deleted {count} grids");
@@ -822,7 +1063,13 @@ public class RevitService : IRevitService
     public void PopulateGridSyncWarnings(int linkInstanceId, List<GridInfo> hostGrids)
     {
         if (Doc == null) return;
+#if REVIT2023
+        var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
+#elif REVIT2024
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#else
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#endif
         if (link == null) return;
         Document? linkDoc = link.GetLinkDocument();
         if (linkDoc == null) return;
@@ -836,7 +1083,13 @@ public class RevitService : IRevitService
             row.SyncWarning = null;
             row.HasSyncMismatch = false;
             if (!linkGrids.TryGetValue(row.Name, out var lg) || lg.Curve == null) continue;
+#if REVIT2023
+            var hostEl = Doc.GetElement(new ElementId(row.ElementId)) as Grid;
+#elif REVIT2024
             var hostEl = Doc.GetElement(new ElementId((long)row.ElementId)) as Grid;
+#else
+            var hostEl = Doc.GetElement(new ElementId((long)row.ElementId)) as Grid;
+#endif
             if (hostEl?.Curve == null) continue;
             Curve? cLink = lg.Curve.CreateTransformed(t);
             if (!CurvesMatch(hostEl.Curve, cLink, tolFeet))
@@ -850,7 +1103,13 @@ public class RevitService : IRevitService
     public int CopyGridsFromLink(int linkInstanceId, bool onlyNewNames)
     {
         if (Doc == null) return 0;
+#if REVIT2023
+        var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
+#elif REVIT2024
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#else
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#endif
         if (link == null) return 0;
         Document? linkDoc = link.GetLinkDocument();
         if (linkDoc == null) return 0;
@@ -888,7 +1147,13 @@ public class RevitService : IRevitService
     public int SyncGridsFromLink(int linkInstanceId)
     {
         if (Doc == null) return 0;
+#if REVIT2023
+        var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
+#elif REVIT2024
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#else
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#endif
         if (link == null) return 0;
         Document? linkDoc = link.GetLinkDocument();
         if (linkDoc == null) return 0;
@@ -942,10 +1207,22 @@ public class RevitService : IRevitService
             .Cast<Level>()
             .Select(l => new LevelInfo
             {
+#if REVIT2023
+                ElementId = l.Id.IntegerValue,
+#elif REVIT2024
                 ElementId = (int)l.Id.Value,
+#else
+                ElementId = (int)l.Id.Value,
+#endif
                 Name = l.Name,
                 NewName = l.Name,
+#if REVIT2023
+                Elevation = UnitConverter.ToMeters(l.Elevation), // Convert feet to meters
+#elif REVIT2024
                 Elevation = UnitConverter.ToMeters(l.Elevation),
+#else
+                Elevation = UnitConverter.ToMeters(l.Elevation),
+#endif
                 NewElevation = UnitConverter.ToMeters(l.Elevation),
                 IsStructural = l.get_Parameter(BuiltInParameter.LEVEL_IS_STRUCTURAL)?.AsInteger() == 1
             })
@@ -964,7 +1241,13 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in renames)
                 {
+#if REVIT2023
+                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
+#elif REVIT2024
+                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
+#else
                     var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
+#endif
                     if (level == null) continue;
                     try { level.Name = kvp.Value; count++; } catch { }
                 }
@@ -991,10 +1274,22 @@ public class RevitService : IRevitService
             {
                 foreach (var kvp in newElevations)
                 {
+#if REVIT2023
+                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
+#elif REVIT2024
+                    var level = Doc.GetElement(new ElementId(kvp.Key)) as Level;
+#else
                     var level = Doc.GetElement(new ElementId((long)kvp.Key)) as Level;
+#endif
                     if (level == null) continue;
                     try { 
+#if REVIT2023
+                        level.Elevation = UnitConverter.ToFeet(kvp.Value); // Convert meters to feet
+#elif REVIT2024
                         level.Elevation = UnitConverter.ToFeet(kvp.Value);
+#else
+                        level.Elevation = UnitConverter.ToFeet(kvp.Value);
+#endif
                         count++; 
                     } catch { }
                 }
@@ -1021,7 +1316,13 @@ public class RevitService : IRevitService
             {
                 foreach (var id in elementIds)
                 {
+#if REVIT2023
+                    try { Doc.Delete(new ElementId(id)); count++; } catch { }
+#elif REVIT2024
                     try { Doc.Delete(new ElementId((long)id)); count++; } catch { }
+#else
+                    try { Doc.Delete(new ElementId((long)id)); count++; } catch { }
+#endif
                 }
                 tx.Commit();
                 Logging.Debug($"Deleted {count} levels");
@@ -1038,7 +1339,13 @@ public class RevitService : IRevitService
     public void PopulateLevelSyncWarnings(int linkInstanceId, List<LevelInfo> hostLevels)
     {
         if (Doc == null) return;
+#if REVIT2023
+        var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
+#elif REVIT2024
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#else
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#endif
         if (link == null) return;
         Document? linkDoc = link.GetLinkDocument();
         if (linkDoc == null) return;
@@ -1052,7 +1359,13 @@ public class RevitService : IRevitService
             row.SyncWarning = null;
             row.HasSyncMismatch = false;
             if (!linkLevels.TryGetValue(row.Name, out var ll)) continue;
+#if REVIT2023
+            var hostEl = Doc.GetElement(new ElementId(row.ElementId)) as Level;
+#elif REVIT2024
             var hostEl = Doc.GetElement(new ElementId((long)row.ElementId)) as Level;
+#else
+            var hostEl = Doc.GetElement(new ElementId((long)row.ElementId)) as Level;
+#endif
             if (hostEl == null) continue;
             double expectedZ = t.OfPoint(new XYZ(0, 0, ll.Elevation)).Z;
             if (Math.Abs(hostEl.Elevation - expectedZ) > tolFeet)
@@ -1066,7 +1379,13 @@ public class RevitService : IRevitService
     public int CopyLevelsFromLink(int linkInstanceId, bool onlyNewNames)
     {
         if (Doc == null) return 0;
+#if REVIT2023
+        var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
+#elif REVIT2024
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#else
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#endif
         if (link == null) return 0;
         Document? linkDoc = link.GetLinkDocument();
         if (linkDoc == null) return 0;
@@ -1104,7 +1423,13 @@ public class RevitService : IRevitService
     public int SyncLevelsFromLink(int linkInstanceId)
     {
         if (Doc == null) return 0;
+#if REVIT2023
+        var link = Doc.GetElement(new ElementId(linkInstanceId)) as RevitLinkInstance;
+#elif REVIT2024
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#else
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+#endif
         if (link == null) return 0;
         Document? linkDoc = link.GetLinkDocument();
         if (linkDoc == null) return 0;
@@ -1156,7 +1481,13 @@ public class RevitService : IRevitService
             else if (el.Location is LocationCurve lc) { var mid = lc.Curve.Evaluate(0.5, true); x = mid.X; y = mid.Y; z = mid.Z; }
             result.Add(new AlignableElementInfo
             {
+#if REVIT2023
+                ElementId = el.Id.IntegerValue,
+#elif REVIT2024
                 ElementId = (int)el.Id.Value,
+#else
+                ElementId = (int)el.Id.Value,
+#endif
                 Name = el.Name ?? "Unknown",
                 Category = el.Category?.Name ?? "None",
                 X = Math.Round(x, 4), Y = Math.Round(y, 4), Z = Math.Round(z, 4)
@@ -1174,7 +1505,13 @@ public class RevitService : IRevitService
             tx.Start();
             try
             {
+#if REVIT2023
+                var elements = elementIds.Select(id => Doc.GetElement(new ElementId(id))).Where(e => e?.Location != null).ToList();
+#elif REVIT2024
                 var elements = elementIds.Select(id => Doc.GetElement(new ElementId((long)id))).Where(e => e?.Location != null).ToList();
+#else
+                var elements = elementIds.Select(id => Doc.GetElement(new ElementId((long)id))).Where(e => e?.Location != null).ToList();
+#endif
                 if (elements.Count < 2) { tx.RollBack(); return 0; }
                 var positions = new List<(Element el, XYZ pos)>();
                 foreach (var el in elements)
@@ -1219,7 +1556,13 @@ public class RevitService : IRevitService
     public int AlignToGrid(List<int> elementIds, int gridId)
     {
         if (Doc == null) return 0;
+#if REVIT2023
+        var grid = Doc.GetElement(new ElementId(gridId)) as Grid;
+#elif REVIT2024
         var grid = Doc.GetElement(new ElementId((long)gridId)) as Grid;
+#else
+        var grid = Doc.GetElement(new ElementId((long)gridId)) as Grid;
+#endif
         if (grid == null) return 0;
         int count = 0;
         using (var tx = new Transaction(Doc, "AllO Align to Grid"))
@@ -1230,7 +1573,13 @@ public class RevitService : IRevitService
                 var gridCurve = grid.Curve;
                 foreach (var id in elementIds)
                 {
+#if REVIT2023
+                    var el = Doc.GetElement(new ElementId(id));
+#elif REVIT2024
                     var el = Doc.GetElement(new ElementId((long)id));
+#else
+                    var el = Doc.GetElement(new ElementId((long)id));
+#endif
                     if (el?.Location == null) continue;
                     XYZ pos = el.Location is LocationPoint lp ? lp.Point : (el.Location is LocationCurve lc ? lc.Curve.Evaluate(0.5, true) : XYZ.Zero);
                     var closest = gridCurve.Project(pos).XYZPoint;
@@ -1253,7 +1602,13 @@ public class RevitService : IRevitService
     public int AlignToLevel(List<int> elementIds, int levelId)
     {
         if (Doc == null) return 0;
+#if REVIT2023
+        var level = Doc.GetElement(new ElementId(levelId)) as Level;
+#elif REVIT2024
         var level = Doc.GetElement(new ElementId((long)levelId)) as Level;
+#else
+        var level = Doc.GetElement(new ElementId((long)levelId)) as Level;
+#endif
         if (level == null) return 0;
         int count = 0;
         using (var tx = new Transaction(Doc, "AllO Align to Level"))
@@ -1264,7 +1619,13 @@ public class RevitService : IRevitService
                 double targetZ = level.Elevation;
                 foreach (var id in elementIds)
                 {
+#if REVIT2023
+                    var el = Doc.GetElement(new ElementId(id));
+#elif REVIT2024
                     var el = Doc.GetElement(new ElementId((long)id));
+#else
+                    var el = Doc.GetElement(new ElementId((long)id));
+#endif
                     if (el?.Location is LocationPoint lp)
                     {
                         var move = new XYZ(0, 0, targetZ - lp.Point.Z);
@@ -1296,7 +1657,13 @@ public class RevitService : IRevitService
                 var items = new List<(Element el, XYZ pos)>();
                 foreach (var id in elementIds)
                 {
+#if REVIT2023
+                    var el = Doc.GetElement(new ElementId(id));
+#elif REVIT2024
                     var el = Doc.GetElement(new ElementId((long)id));
+#else
+                    var el = Doc.GetElement(new ElementId((long)id));
+#endif
                     if (el?.Location == null) continue;
                     XYZ pos = el.Location is LocationPoint lp ? lp.Point : (el.Location is LocationCurve lc ? lc.Curve.Evaluate(0.5, true) : XYZ.Zero);
                     items.Add((el, pos));
@@ -1337,7 +1704,13 @@ public class RevitService : IRevitService
         var result = new List<DisconnectedConnectorInfo>();
         foreach (var el in new FilteredElementCollector(Doc).WhereElementIsNotElementType())
         {
+#if REVIT2023
             ConnectorManager? cm = null;
+#elif REVIT2024
+            ConnectorManager cm = null;
+#else
+            ConnectorManager? cm = null;
+#endif
             string category = "";
             if (el is Autodesk.Revit.DB.MEPCurve mep) { cm = mep.ConnectorManager; category = el.Category?.Name ?? "MEP"; }
             else if (el is Autodesk.Revit.DB.FamilyInstance fi && fi.MEPModel?.ConnectorManager != null) { cm = fi.MEPModel.ConnectorManager; category = el.Category?.Name ?? "MEP"; }
@@ -1353,6 +1726,11 @@ public class RevitService : IRevitService
                 try { foreach (Connector conn in cm.Connectors) { if (conn.MEPSystem != null) { systemType = conn.MEPSystem.Name; break; } } } catch { }
                 result.Add(new DisconnectedConnectorInfo
                 {
+#if REVIT2023
+                    ElementId = el.Id.IntegerValue, ElementName = el.Name ?? "Unknown", Category = category,
+                    SystemType = systemType, DisconnectedCount = disconnected,
+                    X = Math.Round(pos.X, 2), Y = Math.Round(pos.Y, 2), Z = Math.Round(pos.Z, 2)
+#elif REVIT2024
                     ElementId = (int)el.Id.Value,
                     ElementName = el.Name ?? "Unknown",
                     Category = category,
@@ -1361,6 +1739,16 @@ public class RevitService : IRevitService
                     X = Math.Round(pos.X, 2),
                     Y = Math.Round(pos.Y, 2),
                     Z = Math.Round(pos.Z, 2)
+#else
+                    ElementId = (int)el.Id.Value,
+                    ElementName = el.Name ?? "Unknown",
+                    Category = category,
+                    SystemType = systemType,
+                    DisconnectedCount = disconnected,
+                    X = Math.Round(pos.X, 2),
+                    Y = Math.Round(pos.Y, 2),
+                    Z = Math.Round(pos.Z, 2)
+#endif
                 });
             }
         }
@@ -1379,7 +1767,13 @@ public class RevitService : IRevitService
                 var openConnectors = new List<Autodesk.Revit.DB.Connector>();
                 foreach (var el in new FilteredElementCollector(Doc).WhereElementIsNotElementType())
                 {
+#if REVIT2023
                     ConnectorManager? cm = null;
+#elif REVIT2024
+                    ConnectorManager cm = null;
+#else
+                    ConnectorManager? cm = null;
+#endif
                     if (el is Autodesk.Revit.DB.MEPCurve mep) cm = mep.ConnectorManager;
                     else if (el is Autodesk.Revit.DB.FamilyInstance fi) cm = fi.MEPModel?.ConnectorManager;
                     if (cm == null) continue;
@@ -1417,16 +1811,36 @@ public class RevitService : IRevitService
             tx.Start();
             try
             {
+#if REVIT2023
+                var el1 = Doc.GetElement(new ElementId(elementId1));
+                var el2 = Doc.GetElement(new ElementId(elementId2));
+#elif REVIT2024
                 var el1 = Doc.GetElement(new ElementId((long)elementId1));
                 var el2 = Doc.GetElement(new ElementId((long)elementId2));
+#else
+                var el1 = Doc.GetElement(new ElementId((long)elementId1));
+                var el2 = Doc.GetElement(new ElementId((long)elementId2));
+#endif
                 if (el1 == null || el2 == null) { tx.RollBack(); return 0; }
+#if REVIT2023
                 ConnectorManager? cm1 = null, cm2 = null;
+#elif REVIT2024
+                ConnectorManager cm1 = null, cm2 = null;
+#else
+                ConnectorManager? cm1 = null, cm2 = null;
+#endif
                 if (el1 is Autodesk.Revit.DB.MEPCurve m1) cm1 = m1.ConnectorManager;
                 else if (el1 is Autodesk.Revit.DB.FamilyInstance f1) cm1 = f1.MEPModel?.ConnectorManager;
                 if (el2 is Autodesk.Revit.DB.MEPCurve m2) cm2 = m2.ConnectorManager;
                 else if (el2 is Autodesk.Revit.DB.FamilyInstance f2) cm2 = f2.MEPModel?.ConnectorManager;
                 if (cm1 == null || cm2 == null) { tx.RollBack(); return 0; }
+#if REVIT2023
                 Connector? best1 = null, best2 = null;
+#elif REVIT2024
+                Connector best1 = null, best2 = null;
+#else
+                Connector? best1 = null, best2 = null;
+#endif
                 double bestDist = double.MaxValue;
                 foreach (Connector c1 in cm1.Connectors) { if (c1.IsConnected) continue; foreach (Connector c2 in cm2.Connectors) { if (c2.IsConnected) continue; double d = c1.Origin.DistanceTo(c2.Origin); if (d < bestDist) { bestDist = d; best1 = c1; best2 = c2; } } }
                 if (best1 != null && best2 != null) { best1.ConnectTo(best2); tx.Commit(); Logging.Debug("Connected 2 MEP elements"); return 1; }
@@ -1450,8 +1864,16 @@ public class RevitService : IRevitService
             int connected = 0;
             foreach (var termId in terminalIds)
             {
+#if REVIT2023
+                var el1 = Doc.GetElement(new ElementId(mainId));
+                var el2 = Doc.GetElement(new ElementId(termId));
+#elif REVIT2024
                 var el1 = Doc.GetElement(new ElementId((long)mainId));
                 var el2 = Doc.GetElement(new ElementId((long)termId));
+#else
+                var el1 = Doc.GetElement(new ElementId((long)mainId));
+                var el2 = Doc.GetElement(new ElementId((long)termId));
+#endif
                 if (el1 == null || el2 == null) continue;
                 ConnectorManager cm1 = null, cm2 = null;
                 if (el1 is Autodesk.Revit.DB.MEPCurve m1) cm1 = m1.ConnectorManager;
@@ -1475,7 +1897,13 @@ public class RevitService : IRevitService
         if (_uiApp.ActiveUIDocument == null) return 0;
         try
         {
+#if REVIT2023
+            var id = new ElementId(elementId);
+#elif REVIT2024
             var id = new ElementId((long)elementId);
+#else
+            var id = new ElementId((long)elementId);
+#endif
             _uiApp.ActiveUIDocument.Selection.SetElementIds(new List<ElementId> { id });
             _uiApp.ActiveUIDocument.ShowElements(id);
             Logging.Debug($"Highlighted element {elementId}");
@@ -1506,7 +1934,13 @@ public class RevitService : IRevitService
                     var parts = desc.Split('|');
                     result.Add(new ExistingTableViewInfo
                     {
+#if REVIT2023
+                        ElementId = v.Id.IntegerValue,
+#elif REVIT2024
                         ElementId = (int)v.Id.Value,
+#else
+                        ElementId = (int)v.Id.Value,
+#endif
                         Name = v.Name,
                         ExcelPath = parts.Length > 1 ? parts[1] : "",
                         SheetName = parts.Length > 2 ? parts[2] : "",
@@ -1568,7 +2002,13 @@ public class RevitService : IRevitService
 
                 try { _uiApp.ActiveUIDocument.ActiveView = newView; } catch { }
                 Logging.Debug($"Imported Excel table as view: {newView.Name}");
+#if REVIT2023
+                return newView.Id.IntegerValue;
+#elif REVIT2024
                 return (int)newView.Id.Value;
+#else
+                return (int)newView.Id.Value;
+#endif
             }
         }
         catch (Exception ex)
@@ -1583,7 +2023,13 @@ public class RevitService : IRevitService
         if (Doc == null) return 0;
         try
         {
+#if REVIT2023
+            var view = Doc.GetElement(new ElementId(viewId)) as View;
+#elif REVIT2024
             var view = Doc.GetElement(new ElementId((long)viewId)) as View;
+#else
+            var view = Doc.GetElement(new ElementId((long)viewId)) as View;
+#endif
             if (view == null) return 0;
             using (var tx = new Transaction(Doc, "AllO Reload Table"))
             {
@@ -1626,7 +2072,13 @@ public class RevitService : IRevitService
                 tx.Start();
                 foreach (int id in viewIds)
                 {
+#if REVIT2023
+                    var eid = new ElementId(id);
+#elif REVIT2024
                     var eid = new ElementId((long)id);
+#else
+                    var eid = new ElementId((long)id);
+#endif
                     if (activeId != null && eid == activeId) continue;
                     try { Doc.Delete(eid); count++; } catch { }
                 }
@@ -1649,7 +2101,13 @@ public class RevitService : IRevitService
             using (var tx = new Transaction(Doc, "AllO Import Excel Key Schedule"))
             {
                 tx.Start();
+#if REVIT2023
+                var catId = new ElementId((int)BuiltInCategory.OST_GenericModel);
+#elif REVIT2024
                 var catId = new ElementId((long)BuiltInCategory.OST_GenericModel);
+#else
+                var catId = new ElementId((long)BuiltInCategory.OST_GenericModel);
+#endif
                 ViewSchedule? schedule = ViewSchedule.CreateKeySchedule(Doc, catId);
                 if (schedule == null) { tx.RollBack(); return 0; }
 
@@ -1682,7 +2140,13 @@ public class RevitService : IRevitService
                 tx.Commit();
                 try { _uiApp.ActiveUIDocument.ActiveView = schedule; } catch { }
                 Logging.Debug($"Imported Excel as key schedule: {schedule.Name}");
+#if REVIT2023
+                return schedule.Id.IntegerValue;
+#elif REVIT2024
                 return (int)schedule.Id.Value;
+#else
+                return (int)schedule.Id.Value;
+#endif
             }
         }
         catch (Exception ex)
@@ -1701,7 +2165,11 @@ public class RevitService : IRevitService
             def.RemoveField(f.FieldId);
         }
 
+#if REVIT2023
+#elif REVIT2024
+#else
         // KEY_VALUE = "Key Value" column (key name). Required for key schedules; must align with Excel column 0.
+#endif
         BuiltInParameter[] order =
         {
             BuiltInParameter.KEY_VALUE,
@@ -1715,7 +2183,13 @@ public class RevitService : IRevitService
         IList<SchedulableField> schedulable = def.GetSchedulableFields();
         foreach (var bp in order)
         {
+#if REVIT2023
+            ElementId pid = new ElementId((int)bp);
+#elif REVIT2024
             ElementId pid = new ElementId((long)bp);
+#else
+            ElementId pid = new ElementId((long)bp);
+#endif
             foreach (SchedulableField sf in schedulable)
             {
                 if (sf.ParameterId.Equals(pid))
@@ -1727,7 +2201,11 @@ public class RevitService : IRevitService
         }
     }
 
+#if REVIT2023
+#elif REVIT2024
+#else
     /// <summary>Match body row count to Excel rows (key schedule API forbids SetCellText on body — use key elements).</summary>
+#endif
     private static void EnsureKeyScheduleBodyRowCount(TableSectionData body, int desiredRows)
     {
         if (desiredRows < 1) return;
@@ -1764,14 +2242,24 @@ public class RevitService : IRevitService
                     break;
             }
         }
+#if REVIT2023
+        catch { }
+#elif REVIT2024
+        catch { }
+#else
         catch { /* wrong storage / units */ }
+#endif
     }
 
+#if REVIT2023
+#elif REVIT2024
+#else
     /// <summary>
     /// Key schedule body cells cannot use <see cref="TableSectionData.SetCellText"/> (Revit forbids it like standard schedules).
     /// Rows are created with <see cref="TableSectionData.InsertRow"/>; values are written to the per-row key elements
     /// (elements with <see cref="FilteredElementCollector.OwnedByView"/> = schedule).
     /// </summary>
+#endif
     private static void FillKeyScheduleBody(Document doc, ViewSchedule schedule, string[,] grid)
     {
         int fieldCount = schedule.Definition.GetFieldCount();
@@ -1789,13 +2277,28 @@ public class RevitService : IRevitService
             .WhereElementIsNotElementType()
             .ToList();
 
+#if REVIT2023
+        int gmId = (int)BuiltInCategory.OST_GenericModel;
+        var keys = owned.Where(e => e.Category != null && e.Category.Id.IntegerValue == gmId).ToList();
+#elif REVIT2024
         var keys = owned.Where(e =>
                 e.Category != null && e.Category.Id.Value == (long)BuiltInCategory.OST_GenericModel)
             .ToList();
+#else
+        var keys = owned.Where(e =>
+                e.Category != null && e.Category.Id.Value == (long)BuiltInCategory.OST_GenericModel)
+            .ToList();
+#endif
         if (keys.Count < rows)
             keys = owned;
 
+#if REVIT2023
+        keys.Sort((a, b) => a.Id.IntegerValue.CompareTo(b.Id.IntegerValue));
+#elif REVIT2024
         keys.Sort((a, b) => a.Id.Value.CompareTo(b.Id.Value));
+#else
+        keys.Sort((a, b) => a.Id.Value.CompareTo(b.Id.Value));
+#endif
 
         if (keys.Count < rows)
         {
@@ -1863,7 +2366,13 @@ public class RevitService : IRevitService
                 var createMethod = viewLegendType.GetMethod("Create",
                     System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
                 if (createMethod != null)
+#if REVIT2023
                     return createMethod.Invoke(null, new object[] { Doc!, legendTypeId }) as View;
+#elif REVIT2024
+                    return createMethod.Invoke(null, new object[] { Doc, legendTypeId }) as View;
+#else
+                    return createMethod.Invoke(null, new object[] { Doc!, legendTypeId }) as View;
+#endif
             }
         }
         catch (Exception ex)
@@ -1879,7 +2388,13 @@ public class RevitService : IRevitService
                 if (!v.IsTemplate && v.ViewType == ViewType.Legend)
                 {
                     var newId = v.Duplicate(ViewDuplicateOption.Duplicate);
+#if REVIT2023
                     return Doc!.GetElement(newId) as View;
+#elif REVIT2024
+                    return Doc.GetElement(newId) as View;
+#else
+                    return Doc!.GetElement(newId) as View;
+#endif
                 }
             }
         }
@@ -1910,7 +2425,13 @@ public class RevitService : IRevitService
         }
         try
         {
+#if REVIT2023
             var baseId = Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
+#elif REVIT2024
+            var baseId = Doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
+#else
+            var baseId = Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
+#endif
             var baseType = Doc.GetElement(baseId) as TextNoteType;
             if (baseType == null)
                 baseType = new FilteredElementCollector(Doc).OfClass(typeof(TextNoteType)).FirstElement() as TextNoteType;
@@ -1931,7 +2452,13 @@ public class RevitService : IRevitService
         {
             Logging.Error("Failed to get/create text note type", ex);
         }
+#if REVIT2023
         return Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
+#elif REVIT2024
+        return Doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
+#else
+        return Doc!.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType);
+#endif
     }
 
     private void DrawTableOnView(View view, ExcelTableData data)
@@ -2045,7 +2572,13 @@ public class RevitService : IRevitService
             .Where(v => !v.IsTemplate)
             .Select(v => new LinkDisplayViewItem
             {
+#if REVIT2023
+                ViewId = v.Id.IntegerValue,
+#elif REVIT2024
                 ViewId = (int)v.Id.Value,
+#else
+                ViewId = (int)v.Id.Value,
+#endif
                 Name = v.Name,
                 ViewType = v.ViewType.ToString()
             })
@@ -2056,6 +2589,31 @@ public class RevitService : IRevitService
 
     public LinkDisplayState GetLinkDisplayState(int linkInstanceId, int viewId)
     {
+#if REVIT2023
+#elif REVIT2024
+        if (Doc == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
+        var view = Doc.GetElement(new ElementId(viewId)) as View;
+        if (view == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
+
+        try
+        {
+            using var settings = view.GetLinkOverrides(link.Id);
+            if (settings != null)
+            {
+                return new LinkDisplayState
+                {
+                    LinkInstanceId = linkInstanceId,
+                    DisplayMode = settings.LinkVisibilityType.ToString()
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Warning($"Failed to read link display state: {ex.Message}");
+        }
+#else
         if (Doc == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
         if (link == null) return new LinkDisplayState { LinkInstanceId = linkInstanceId };
@@ -2078,11 +2636,53 @@ public class RevitService : IRevitService
         {
             Logging.Warning($"Failed to read link display state: {ex.Message}");
         }
+#endif
         return new LinkDisplayState { LinkInstanceId = linkInstanceId, DisplayMode = "ByHostView" };
     }
 
     public int ApplyLinkDisplaySettings(int linkInstanceId, List<int> viewIds, LinkDisplayState state)
     {
+#if REVIT2023
+        throw new NotSupportedException("Link Display Manager requires Revit 2024 or newer.");
+#elif REVIT2024
+        if (Doc == null || viewIds.Count == 0 || state == null) return 0;
+        var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
+        if (link == null) return 0;
+
+        using var tx = new Transaction(Doc, "AllO: Link Display");
+        tx.Start();
+        int modifiedViews = 0;
+        try
+        {
+            foreach (int vid in viewIds)
+            {
+                var view = Doc.GetElement(new ElementId(vid)) as View;
+                if (view == null) continue;
+
+                try
+                {
+                    using var current = view.GetLinkOverrides(link.Id) ?? new RevitLinkGraphicsSettings();
+                    if (Enum.TryParse<LinkVisibility>(state.DisplayMode, out var mode))
+                        current.LinkVisibilityType = mode;
+                    view.SetLinkOverrides(link.Id, current);
+                    modifiedViews++;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Warning($"Failed to set link display in view {view.Name}: {ex.Message}");
+                }
+            }
+            tx.Commit();
+            Logging.Debug($"Applied link display changes to {modifiedViews} view(s)");
+            return modifiedViews;
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("ApplyLinkDisplaySettings failed", ex);
+            if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
+            throw;
+        }
+#else
         if (Doc == null || viewIds.Count == 0 || state == null) return 0;
         var link = Doc.GetElement(new ElementId((long)linkInstanceId)) as RevitLinkInstance;
         if (link == null) return 0;
@@ -2120,6 +2720,13 @@ public class RevitService : IRevitService
             if (tx.GetStatus() == TransactionStatus.Started) tx.RollBack();
             throw;
         }
+#endif
     }
 }
 
+#if REVIT2023
+#elif REVIT2024
+
+#else
+
+#endif
