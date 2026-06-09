@@ -32,11 +32,19 @@ public static class RibbonBuilder
         if (!File.Exists(path))
             return null;
 
+        // IMPORTANTE: cargar vía StreamSource, NO UriSource. Si el BitmapImage
+        // conserva un UriSource de archivo (C:\...), Revit falla al serializar el
+        // layout del ribbon en File > New > Project con "The URI prefix is not
+        // recognized" → CLR exception (0xe0434352) → crash. Con StreamSource el
+        // bitmap no tiene URI que serializar.
         var bitmap = new BitmapImage();
-        bitmap.BeginInit();
-        bitmap.UriSource = new Uri(path, UriKind.Absolute);
-        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-        bitmap.EndInit();
+        using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+        {
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = stream;
+            bitmap.EndInit();
+        }
         bitmap.Freeze();
         return bitmap;
     }
