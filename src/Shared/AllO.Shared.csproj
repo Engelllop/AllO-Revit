@@ -14,7 +14,6 @@
     <LangVersion>latest</LangVersion>
     <RootNamespace>AllO</RootNamespace>
     <AssemblyName>AllO.Shared</AssemblyName>
-    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <!-- Usings explícitos (ImplicitUsings no funciona bien con net48) -->

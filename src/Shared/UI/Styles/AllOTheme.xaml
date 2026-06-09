@@ -2,7 +2,8 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
                     xmlns:styles="clr-namespace:AllO.UI.Styles"
-                    xmlns:converters="clr-namespace:AllO.UI.Converters">
+                    xmlns:converters="clr-namespace:AllO.UI.Converters"
+                    xmlns:helpers="clr-namespace:AllO.Helpers">
 
     <converters:InverseBoolConverter x:Key="InverseBool"/>
     <converters:TitleSuffixConverter x:Key="TitleSuffix"/>
@@ -627,6 +628,9 @@
                                                FontSize="13" FontWeight="SemiBold"
                                                Foreground="{StaticResource TextPrimary}"
                                                VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                    <TextBlock Text="{x:Static helpers:VersionInfo.Short}"
+                                               FontSize="10" Foreground="{StaticResource TextMuted}"
+                                               VerticalAlignment="Center" Margin="8,2,0,0"/>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top"
                                             shell:WindowChrome.IsHitTestVisibleInChrome="True">

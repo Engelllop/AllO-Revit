@@ -4,8 +4,7 @@ using Autodesk.Revit.DB;
 using AllO.Helpers;
 using AllO.UI.ViewModels;
 using AllO.UI.Views;
-using ToastHost = AllO.UI.Toast.ToastHost;
-using ToastKind = AllO.UI.Toast.ToastKind;
+using AllO.UI.Toast;
 
 namespace AllO.Commands;
 

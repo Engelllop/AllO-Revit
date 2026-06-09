@@ -2,6 +2,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 
 namespace AllO.UI.Toast;
@@ -52,14 +53,21 @@ public partial class ToastWindow : Window
             Margin = new Thickness(0, 2, 0, 0)
         });
         border.Child = sp;
+        border.Opacity = 0;
         ToastPanel.Children.Insert(0, border);
+        border.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, TimeSpan.FromMilliseconds(180)));
 
         var timer = new DispatcherTimer { Interval = toast.Duration };
         timer.Tick += (s, e) =>
         {
             timer.Stop();
-            ToastPanel.Children.Remove(border);
-            if (ToastPanel.Children.Count == 0) Hide();
+            var fadeOut = new DoubleAnimation(1, 0, TimeSpan.FromMilliseconds(220));
+            fadeOut.Completed += (_, _) =>
+            {
+                ToastPanel.Children.Remove(border);
+                if (ToastPanel.Children.Count == 0) Hide();
+            };
+            border.BeginAnimation(OpacityProperty, fadeOut);
         };
         timer.Start();
     }

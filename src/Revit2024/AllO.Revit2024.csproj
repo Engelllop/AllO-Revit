@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!-- ============================================================
-       AllO — Add-in for Revit 2023
-       Revit 2023 uses .NET Framework 4.8
+       AllO — Add-in for Revit 2024
+       Revit 2024 uses .NET Framework 4.8
        ============================================================ -->
 
   <PropertyGroup>
@@ -11,13 +11,12 @@
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
-    <RootNamespace>AllO.Revit2023</RootNamespace>
+    <RootNamespace>AllO.Revit2024</RootNamespace>
     <AssemblyName>AllO</AssemblyName>
     <OutputType>Library</OutputType>
-    <Version>1.0.0</Version>
-    <Description>AllO Add-in for Revit 2023</Description>
-    <RevitVersion>2023</RevitVersion>
-    <DefineConstants>$(DefineConstants);REVIT2023</DefineConstants>
+    <Description>AllO Add-in for Revit 2024</Description>
+    <RevitVersion>2024</RevitVersion>
+    <DefineConstants>$(DefineConstants);REVIT2024</DefineConstants>
   </PropertyGroup>
 
   <!-- App.cs + RevitService.cs compartidos: un solo source compilado contra el SDK
@@ -46,7 +45,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autodesk.Revit.SDK.Refs.2023" Version="*">
+    <PackageReference Include="Autodesk.Revit.SDK.Refs.2024" Version="*">
       <PrivateAssets>all</PrivateAssets>
       <ExcludeAssets>runtime</ExcludeAssets>
     </PackageReference>
@@ -57,7 +56,7 @@
        ContinueOnError ensures build NEVER fails even if Revit
        has the DLLs locked. Just restart Revit to pick up changes.
        ============================================================ -->
-  <Target Name="CopyToRevitAddins" AfterTargets="Build">
+  <Target Name="CopyToRevitAddins" AfterTargets="Build" Condition="'$(CI)' != 'true'">
     <PropertyGroup>
       <RevitAddinsFolder>$(AppData)\Autodesk\Revit\Addins\$(RevitVersion)</RevitAddinsFolder>
     </PropertyGroup>
