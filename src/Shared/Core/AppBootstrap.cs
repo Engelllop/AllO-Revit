@@ -270,11 +270,22 @@ public static class AppBootstrap
 
         var netTreeBtn = RibbonBuilder.Button("NetworkTree", "Network\nTree",
             "AllO.Commands.NetworkTreeCommand");
-        if (panel.AddItem(netTreeBtn) is PushButton nt)
+        var powerEachBtn = RibbonBuilder.Button("PowerEach", "Power\nEach",
+            "AllO.Commands.PowerEachCommand");
+
+        IList<RibbonItem> netStack = panel.AddStackedItems(netTreeBtn, powerEachBtn);
+
+        if (netStack.Count >= 1 && netStack[0] is PushButton nt)
             RibbonBuilder.Configure(nt, "netTree",
                 "Analyze a connected MEP network: lengths per run, elbows, tees/wyes, as a tree diagram.",
                 "AllO Network Tree. Pick any pipe/duct/conduit element and get total length, longest run, " +
                 "fitting counts and a branch-by-branch breakdown. Export to CSV.");
+
+        if (netStack.Count >= 2 && netStack[1] is PushButton pe)
+            RibbonBuilder.Configure(pe, "powerEach",
+                "Create ONE power circuit PER selected element and assign them all to a panel.",
+                "AllO Power Each. Native Revit puts the whole selection into a single circuit; " +
+                "this creates an independent circuit for each element on the chosen panel.");
     }
 
     private static void BuildToolsPanel(UIControlledApplication app)

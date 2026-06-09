@@ -292,6 +292,16 @@ def draw_net_tree(draw, s):
     for (x, y) in [(bx, y1), (bx - scale(s, 0.12), y2), (bx, y3)]:
         draw.ellipse([x - r, y - r, x + r, y + r], fill=FG)
 
+def draw_power_each(draw, s):
+    w = max(1, s // 16)
+    # two lightning bolts side by side
+    for ox in (scale(s, 0.22), scale(s, 0.58)):
+        top, bot = scale(s, 0.15), s - scale(s, 0.15)
+        mid = s // 2
+        kick = scale(s, 0.12)
+        draw.line([(ox + kick, top), (ox, mid), (ox + kick * 2, mid), (ox + kick, bot)],
+                  fill=FG, width=w, joint="curve")
+
 # ------------------------------------------------------------------
 ICONS = {
     "sheetList": draw_sheet_list,
@@ -324,6 +334,7 @@ ICONS = {
     "linkFamily": draw_link_family,
     "linkVisibility": draw_link_visibility,
     "netTree": draw_net_tree,
+    "powerEach": draw_power_each,
 }
 
 def gen(name, size):
