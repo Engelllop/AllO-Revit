@@ -35,15 +35,12 @@ public class AutoSectionBoxCommand : IExternalCommand
                 var bbox = elem.get_BoundingBox(null);
                 if (bbox == null) continue;
 
-                // Transform to project coordinates if the element has a transform
-                var transform = Transform.Identity;
-                if (elem is FamilyInstance fi && fi.HasSpatialElementCalculationPoint)
-                {
-                    transform = fi.GetTransform();
-                }
-
-                var min = transform.OfPoint(bbox.Min);
-                var max = transform.OfPoint(bbox.Max);
+                // get_BoundingBox(null) ya devuelve coordenadas de modelo (mundo).
+                // NO se aplica fi.GetTransform(): causaba doble transformación y dejaba
+                // el section box en la posición equivocada. (HasSpatialElementCalculationPoint
+                // además no tiene relación con tener un transform.)
+                var min = bbox.Min;
+                var max = bbox.Max;
 
                 if (combined == null)
                 {
