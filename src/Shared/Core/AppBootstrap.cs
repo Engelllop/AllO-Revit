@@ -183,31 +183,6 @@ public static class AppBootstrap
             RibbonBuilder.Configure(pp, "paramPush",
                 "Push a parameter value from a source element to multiple targets.",
                 "AllO Parameter Push. Mass-copy parameter values across elements.");
-
-        // Row 2: Connector, MultiConnect, SplitPipe
-        var connBtn = RibbonBuilder.Button("Connector", "Connector",
-            "AllO.Commands.ConnectorCommand");
-        var multiConnBtn = RibbonBuilder.Button("MultiConnect", "Multi\nConnect",
-            "AllO.Commands.MultiConnectCommand");
-        var splitBtn = RibbonBuilder.Button("SplitPipe", "Split\nPipe",
-            "AllO.Commands.SplitPipeCommand");
-
-        IList<RibbonItem> stack2 = panel.AddStackedItems(connBtn, multiConnBtn, splitBtn);
-
-        if (stack2.Count >= 1 && stack2[0] is PushButton c)
-            RibbonBuilder.Configure(c, "connector",
-                "Select 2 MEP elements and connect them.",
-                "AllO Connector. Aligns and connects MEP elements.");
-
-        if (stack2.Count >= 2 && stack2[1] is PushButton mc)
-            RibbonBuilder.Configure(mc, "multiConnect",
-                "Connect multiple terminals to a main pipe or duct at once.",
-                "AllO Multi-Connect. Batch-connect MEP terminals to a main branch.");
-
-        if (stack2.Count >= 3 && stack2[2] is PushButton sp)
-            RibbonBuilder.Configure(sp, "splitPipe",
-                "Split a pipe or duct at a point, optionally with a gap.",
-                "AllO Split Pipe. Divide MEP curves with optional expansion gap.");
     }
 
     private static void BuildMepPanel(UIControlledApplication app)
@@ -231,6 +206,31 @@ public static class AppBootstrap
             RibbonBuilder.Configure(rb, "reroute",
                 "Reroute a pipe or duct around an obstacle with a directional offset.",
                 "AllO Reroute Around. Create directional bypasses on MEP curves.");
+
+        // Connector, MultiConnect, SplitPipe (movidos desde Productivity: son MEP)
+        var connBtn = RibbonBuilder.Button("Connector", "Connector",
+            "AllO.Commands.ConnectorCommand");
+        var multiConnBtn = RibbonBuilder.Button("MultiConnect", "Multi\nConnect",
+            "AllO.Commands.MultiConnectCommand");
+        var splitBtn = RibbonBuilder.Button("SplitPipe", "Split\nPipe",
+            "AllO.Commands.SplitPipeCommand");
+
+        IList<RibbonItem> connStack = panel.AddStackedItems(connBtn, multiConnBtn, splitBtn);
+
+        if (connStack.Count >= 1 && connStack[0] is PushButton c)
+            RibbonBuilder.Configure(c, "connector",
+                "Select 2 MEP elements and connect them.",
+                "AllO Connector. Aligns and connects MEP elements.");
+
+        if (connStack.Count >= 2 && connStack[1] is PushButton mc)
+            RibbonBuilder.Configure(mc, "multiConnect",
+                "Connect multiple terminals to a main pipe or duct at once.",
+                "AllO Multi-Connect. Batch-connect MEP terminals to a main branch.");
+
+        if (connStack.Count >= 3 && connStack[2] is PushButton sp)
+            RibbonBuilder.Configure(sp, "splitPipe",
+                "Split a pipe or duct at a point, optionally with a gap.",
+                "AllO Split Pipe. Divide MEP curves with optional expansion gap.");
 
         // Elbow Direction pulldown
         var elbowData = new PulldownButtonData("ElbowDir", "Elbow\nDir");
