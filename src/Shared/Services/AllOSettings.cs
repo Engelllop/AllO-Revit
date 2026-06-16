@@ -16,6 +16,7 @@ public sealed class AllOSettings
     [DataMember] public string LastTableGenFolder { get; set; } = string.Empty;
     [DataMember] public double DefaultAlignTolerance { get; set; } = 1.0;
     [DataMember] public bool ColorCoderEnabledOnStartup { get; set; } = false;
+    [DataMember] public bool AnimatedRibbonIcons { get; set; } = true;
 
     // Propieddas preexistentes (mantenidas para compatibilidad)
     [DataMember] public string LastTableTemplate { get; set; } = string.Empty;

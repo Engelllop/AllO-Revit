@@ -22,6 +22,7 @@
     <Compile Include="..\Shared\Models\NetworkTree.cs" Link="Pure\NetworkTree.cs" />
     <Compile Include="..\Shared\UI\Converters\TitleSuffixConverter.cs" Link="Pure\TitleSuffixConverter.cs" />
     <Compile Include="..\Shared\UI\Converters\InverseBoolConverter.cs" Link="Pure\InverseBoolConverter.cs" />
+    <Compile Include="..\Shared\Services\Mcp\JsonLite.cs" Link="Pure\JsonLite.cs" />
   </ItemGroup>
 
 </Project>

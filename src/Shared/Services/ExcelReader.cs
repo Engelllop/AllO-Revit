@@ -17,6 +17,7 @@ public static class ExcelReader
     private const int XL_V_TOP = -4160;
     private const int XL_V_BOTTOM = -4107;
     private const int XL_LINE_NONE = -4142;
+    private const int XL_PATTERN_NONE = -4142;
 
     public const string USED_RANGE = "Used Range";
     public const string PRINT_AREA = "Print Area";
@@ -124,6 +125,44 @@ public static class ExcelReader
             int rows = rng.Rows.Count;
             int cols = rng.Columns.Count;
 
+            // El UsedRange suele venir inflado por formato residual (hasta 1M filas) y la
+            // lectura es celda-a-celda COM (~10 llamadas/celda) → colgaría Revit. Tope duro
+            // primero y luego recorte al contenido real con una sola lectura bulk de Value2.
+            const int maxRows = 1000, maxCols = 60;
+            if (rows > maxRows || cols > maxCols)
+            {
+                rows = Math.Min(rows, maxRows);
+                cols = Math.Min(cols, maxCols);
+                rng = rng.Resize[rows, cols];
+            }
+            if (rows > 1 || cols > 1)
+            {
+                try
+                {
+                    if (rng.Value2 is object[,] vals)
+                    {
+                        int lastR = 0, lastC = 0;
+                        int lb1 = vals.GetLowerBound(0), lb2 = vals.GetLowerBound(1);
+                        for (int r = 0; r < rows; r++)
+                        {
+                            for (int c = 0; c < cols; c++)
+                            {
+                                if (vals[r + lb1, c + lb2] == null) continue;
+                                if (r + 1 > lastR) lastR = r + 1;
+                                if (c + 1 > lastC) lastC = c + 1;
+                            }
+                        }
+                        if (lastR > 0 && (lastR < rows || lastC < cols))
+                        {
+                            rows = lastR;
+                            cols = lastC;
+                            rng = rng.Resize[rows, cols];
+                        }
+                    }
+                }
+                catch { }
+            }
+
             // Column widths
             var colWidths = new List<double>();
             for (int c = 1; c <= cols; c++)
@@ -172,19 +211,26 @@ public static class ExcelReader
                         if ((c - 1) + cSpan > cols) cSpan = cols - (c - 1);
                         if ((r - 1) + rSpan > rows) rSpan = rows - (r - 1);
 
-                        // Value
+                        // Value: prefer the displayed text (number formats, dates, currency).
+                        // Excel shows "####" when the column is too narrow — fall back to the raw value.
                         string text = "";
                         try
                         {
-                            object? val = cell.Value2;
-                            if (val != null)
+                            try { text = (string)(cell.Text ?? ""); } catch { }
+                            if (text.Length > 0 && text.Trim('#').Length == 0)
+                                text = "";
+                            if (text.Length == 0)
                             {
-                                if (val is double d && d % 1 == 0)
-                                    text = ((int)d).ToString();
-                                else
-                                    text = val.ToString() ?? "";
-                                text = text.Replace("\r\n", "\n").Replace("\r", "\n");
+                                object? val = cell.Value2;
+                                if (val != null)
+                                {
+                                    if (val is double d && d % 1 == 0)
+                                        text = ((int)d).ToString();
+                                    else
+                                        text = val.ToString() ?? "";
+                                }
                             }
+                            text = text.Replace("\r\n", "\n").Replace("\r", "\n");
                         }
                         catch { }
 
@@ -193,6 +239,22 @@ public static class ExcelReader
                         int vAlign = XL_V_TOP;
                         try { hAlign = (int)cell.HorizontalAlignment; } catch { }
                         try { vAlign = (int)cell.VerticalAlignment; } catch { }
+
+                        // Font / fill (Excel devuelve colores en BGR)
+                        bool bold = false;
+                        double fontSize = 0;
+                        int fontRgb = -1, fillRgb = -1;
+                        string fontName = "";
+                        try { fontName = (string)(cell.Font.Name ?? ""); } catch { }
+                        try { if (cell.Font.Bold is bool fb) bold = fb; } catch { }
+                        try { fontSize = (double)cell.Font.Size; } catch { }
+                        try { fontRgb = BgrToRgb((double)cell.Font.Color); } catch { }
+                        try
+                        {
+                            if ((int)cell.Interior.Pattern != XL_PATTERN_NONE)
+                                fillRgb = BgrToRgb((double)cell.Interior.Color);
+                        }
+                        catch { }
 
                         // Borders
                         bool bTop = false, bBottom = false, bLeft = false, bRight = false;
@@ -214,7 +276,9 @@ public static class ExcelReader
                             Text = text,
                             HAlign = hAlign, VAlign = vAlign,
                             BorderTop = bTop, BorderBottom = bBottom,
-                            BorderLeft = bLeft, BorderRight = bRight
+                            BorderLeft = bLeft, BorderRight = bRight,
+                            Bold = bold, FontName = fontName, FontSizePt = fontSize,
+                            FontColorRgb = fontRgb, FillColorRgb = fillRgb
                         });
                     }
                     catch { }
@@ -236,6 +300,13 @@ public static class ExcelReader
         {
             CleanupExcel(xlApp, xlWb, xlWs);
         }
+    }
+
+    private static int BgrToRgb(double bgr)
+    {
+        int v = (int)bgr;
+        int r = v & 0xFF, g = (v >> 8) & 0xFF, b = (v >> 16) & 0xFF;
+        return (r << 16) | (g << 8) | b;
     }
 
     private static dynamic? CreateExcelApp()

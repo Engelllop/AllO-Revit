@@ -18,6 +18,13 @@ public class ExcelCellData
     public bool BorderBottom { get; set; }
     public bool BorderLeft { get; set; }
     public bool BorderRight { get; set; }
+    public bool Bold { get; set; }
+    public string FontName { get; set; } = "";
+    public double FontSizePt { get; set; }
+    /// <summary>RGB empaquetado (0xRRGGBB); -1 = default.</summary>
+    public int FontColorRgb { get; set; } = -1;
+    /// <summary>RGB empaquetado (0xRRGGBB); -1 = sin relleno.</summary>
+    public int FillColorRgb { get; set; } = -1;
 }
 
 /// <summary>

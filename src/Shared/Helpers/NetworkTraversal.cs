@@ -11,7 +11,7 @@ public static class NetworkTraversal
 
     public static (NetNode Root, NetRun? RootRun, int ElementCount, bool Truncated) Build(Element start)
     {
-        var visited = new HashSet<long> { start.Id.Value };
+        var visited = new HashSet<long> { start.Id.ToLong() };
         int count = 1, runIndex = 0;
         bool truncated = false;
 
@@ -33,7 +33,7 @@ public static class NetworkTraversal
 
         while (true)
         {
-            visited.Add(current.Id.Value);
+            visited.Add(current.Id.ToLong());
             count++;
             if (count >= MaxElements) truncated = true;
 
@@ -99,14 +99,25 @@ public static class NetworkTraversal
         var seen = new HashSet<long>();
         foreach (Connector c in cm.Connectors)
         {
-            if (c.ConnectorType == ConnectorType.Logical || !c.IsConnected) continue;
-            foreach (Connector r in c.AllRefs)
+            if (c.ConnectorType == ConnectorType.Logical) continue;
+            // IsConnected/AllRefs solo existen en conectores PhysicalConn; otros tipos
+            // no-físicos (visto en equipos VRF) lanzan InvalidOperationException.
+            bool connected;
+            try { connected = c.IsConnected; }
+            catch { continue; }
+            if (!connected) continue;
+
+            ConnectorSet refs;
+            try { refs = c.AllRefs; }
+            catch { continue; }
+
+            foreach (Connector r in refs)
             {
                 if (r.ConnectorType == ConnectorType.Logical) continue;
                 var owner = r.Owner;
                 if (owner == null || owner.Id == el.Id) continue;
                 if (owner is not MEPCurve && owner is not FamilyInstance) continue;
-                if (visited.Contains(owner.Id.Value) || !seen.Add(owner.Id.Value)) continue;
+                if (visited.Contains(owner.Id.ToLong()) || !seen.Add(owner.Id.ToLong())) continue;
                 yield return owner;
             }
         }

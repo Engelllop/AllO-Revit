@@ -77,7 +77,7 @@ public class ParameterPushCommand : IExternalCommand
                     case StorageType.String: tp.Set(valueToPush); applied++; break;
                     case StorageType.Double when double.TryParse(valueToPush, out var dv): tp.Set(dv); applied++; break;
                     case StorageType.Integer when int.TryParse(valueToPush, out var iv): tp.Set(iv); applied++; break;
-                    case StorageType.ElementId when long.TryParse(valueToPush, out var ev): tp.Set(new ElementId(ev)); applied++; break;
+                    case StorageType.ElementId when long.TryParse(valueToPush, out var ev): tp.Set(ev.ToElementId()); applied++; break;
                 }
             }
             tx.Commit();

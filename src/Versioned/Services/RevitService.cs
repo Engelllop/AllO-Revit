@@ -748,9 +748,16 @@ public class RevitService : IRevitService
             foreach (var c in System.IO.Path.GetInvalidFileNameChars())
                 fileName = fileName.Replace(c, '_');
 
+            // Combine debe ser true para que Revit respete FileName; con false
+            // ignora FileName y aplica su regla nativa ("Sheet-..."). Cada llamada
+            // exporta una sola lámina, así que el resultado es un PDF con ese nombre.
             var options = new PDFExportOptions();
             options.FileName = fileName;
-            options.Combine = false;
+            options.Combine = true;
+            options.HideUnreferencedViewTags = true;
+            options.HideReferencePlane = true;
+            options.HideScopeBoxes = true;
+            options.HideCropBoundaries = true;
 
             var result = Doc.Export(outputFolder, singleList, options);
             if (result) Logging.Debug($"Exported sheet {sheetElementId} to PDF");
@@ -789,7 +796,7 @@ public class RevitService : IRevitService
             foreach (var c in System.IO.Path.GetInvalidFileNameChars())
                 fileName = fileName.Replace(c, '_');
 
-            var dwgOptions = new DWGExportOptions();
+            var dwgOptions = new DWGExportOptions { MergedViews = true };
             var result = Doc.Export(outputFolder, fileName, singleList, dwgOptions);
             if (result) Logging.Debug($"Exported sheet {sheetElementId} to DWG");
             else Logging.Warning($"Export to DWG failed for sheet {sheetElementId}");
@@ -2016,8 +2023,8 @@ public class RevitService : IRevitService
     public int ImportExcelAsTable(ExcelTableData data, string viewName, string viewType)
     {
         if (Doc == null) return 0;
-        if (string.Equals(viewType, TableGenConstants.OutputKeySchedule, StringComparison.OrdinalIgnoreCase))
-            return ImportExcelAsKeySchedule(data, viewName);
+        if (string.Equals(viewType, TableGenConstants.OutputSchedule, StringComparison.OrdinalIgnoreCase))
+            return ImportExcelAsFormattedSchedule(data, viewName);
         try
         {
             using (var tx = new Transaction(Doc, "AllO Import Excel Table"))
@@ -2095,8 +2102,15 @@ public class RevitService : IRevitService
                 tx.Start();
                 if (view is ViewSchedule vs)
                 {
-                    var grid = TableGenGridConverter.BuildGrid(data);
-                    FillKeyScheduleBody(Doc, vs, grid);
+                    if (vs.Definition.IsKeySchedule)
+                    {
+                        var grid = TableGenGridConverter.BuildGrid(data);
+                        PopulateKeySchedule(vs, grid, data.ColWidths);
+                    }
+                    else
+                    {
+                        FillScheduleHeaderTable(vs, data);
+                    }
                 }
                 else
                 {
@@ -2152,12 +2166,17 @@ public class RevitService : IRevitService
         return count;
     }
 
-    private int ImportExcelAsKeySchedule(ExcelTableData data, string viewName)
+    /// <summary>
+    /// Importa el Excel como schedule SIN campos cuyo header se usa de lienzo (técnica DiRoots):
+    /// la sección Header sí permite SetCellText, MergeCells, SetCellStyle y anchos/altos exactos,
+    /// todo lo que el body de un schedule prohíbe.
+    /// </summary>
+    private int ImportExcelAsFormattedSchedule(ExcelTableData data, string viewName)
     {
         if (Doc == null) return 0;
         try
         {
-            using (var tx = new Transaction(Doc, "AllO Import Excel Key Schedule"))
+            using (var tx = new Transaction(Doc, "AllO Import Excel Schedule"))
             {
                 tx.Start();
 #if REVIT2023
@@ -2167,8 +2186,9 @@ public class RevitService : IRevitService
 #else
                 var catId = new ElementId((long)BuiltInCategory.OST_GenericModel);
 #endif
-                ViewSchedule? schedule = ViewSchedule.CreateKeySchedule(Doc, catId);
+                ViewSchedule? schedule = ViewSchedule.CreateSchedule(Doc, catId);
                 if (schedule == null) { tx.RollBack(); return 0; }
+                try { schedule.Definition.ShowHeaders = false; } catch { }
 
                 var metaParts = viewName.Split('|');
                 string filePath = metaParts.Length > 0 ? metaParts[0] : viewName;
@@ -2185,9 +2205,7 @@ public class RevitService : IRevitService
                     catch { if (++counter > 20) break; }
                 }
 
-                ConfigureKeyScheduleFields(schedule);
-                var grid = TableGenGridConverter.BuildGrid(data);
-                FillKeyScheduleBody(Doc, schedule, grid);
+                FillScheduleHeaderTable(schedule, data);
 
                 try
                 {
@@ -2198,7 +2216,7 @@ public class RevitService : IRevitService
 
                 tx.Commit();
                 try { _uiApp.ActiveUIDocument.ActiveView = schedule; } catch { }
-                Logging.Debug($"Imported Excel as key schedule: {schedule.Name}");
+                Logging.Debug($"Imported Excel as formatted schedule: {schedule.Name}");
 #if REVIT2023
                 return schedule.Id.IntegerValue;
 #elif REVIT2024
@@ -2210,51 +2228,296 @@ public class RevitService : IRevitService
         }
         catch (Exception ex)
         {
-            Logging.Error("Failed to import Excel key schedule", ex);
+            Logging.Error("Failed to import Excel as formatted schedule", ex);
             return 0;
         }
     }
 
-    private static void ConfigureKeyScheduleFields(ViewSchedule schedule)
+    private void FillScheduleHeaderTable(ViewSchedule schedule, ExcelTableData data)
     {
-        ScheduleDefinition def = schedule.Definition;
-        while (def.GetFieldCount() > 0)
+        int rows = data.RowHeights.Count;
+        int cols = data.ColWidths.Count;
+        if (rows == 0 || cols == 0) return;
+
+        TableSectionData header = schedule.GetTableData().GetSectionData(SectionType.Header);
+
+        // Reset a 1x1 con conteos fijos (limpia merges/estilos en reloads; NUNCA while
+        // sobre NumberOf*: no se actualizan hasta el Regenerate → loop infinito).
+        int cur = header.NumberOfRows;
+        for (int i = cur; i > 1; i--)
         {
-            ScheduleField f = def.GetField(0);
-            def.RemoveField(f.FieldId);
+            try { header.RemoveRow(header.LastRowNumber); } catch { break; }
+        }
+        cur = header.NumberOfColumns;
+        for (int i = cur; i > 1; i--)
+        {
+            try { header.RemoveColumn(header.LastColumnNumber); } catch { break; }
         }
 
-#if REVIT2023
-#elif REVIT2024
-#else
-        // KEY_VALUE = "Key Value" column (key name). Required for key schedules; must align with Excel column 0.
-#endif
-        BuiltInParameter[] order =
+        for (int i = 1; i < cols; i++)
         {
-            BuiltInParameter.KEY_VALUE,
-            BuiltInParameter.ALL_MODEL_MARK,
-            BuiltInParameter.ALL_MODEL_INSTANCE_COMMENTS,
-            BuiltInParameter.ALL_MODEL_TYPE_COMMENTS,
-            BuiltInParameter.ALL_MODEL_MANUFACTURER,
-            BuiltInParameter.ALL_MODEL_MODEL
+            try { header.InsertColumn(header.FirstColumnNumber + i); } catch { break; }
+        }
+        for (int i = 1; i < rows; i++)
+        {
+            try { header.InsertRow(header.FirstRowNumber + i); } catch { break; }
+        }
+
+        int r0 = header.FirstRowNumber, c0 = header.FirstColumnNumber;
+        double PtsToFt(double pts) => pts / 864.0;
+
+        // Revit mide el texto con su propio render + padding: 6% extra de ancho y un alto
+        // mínimo por fila según fuente y nº de líneas, o el texto se recorta con "...".
+        var minRowPts = new double[rows];
+        foreach (var cell in data.Cells)
+        {
+            if (string.IsNullOrEmpty(cell.Text)) continue;
+            int lines = 1 + cell.Text.Count(ch => ch == '\n');
+            double fpt = cell.FontSizePt > 0 ? cell.FontSizePt : 11.0;
+            double perRow = lines * fpt * 1.5 / Math.Max(1, cell.RowSpan);
+            for (int r = cell.Row; r < cell.Row + cell.RowSpan && r < rows; r++)
+            {
+                if (perRow > minRowPts[r]) minRowPts[r] = perRow;
+            }
+        }
+
+        for (int c = 0; c < cols; c++)
+        {
+            try { header.SetColumnWidth(c0 + c, PtsToFt(data.ColWidths[c] * 1.06)); } catch { }
+        }
+        for (int r = 0; r < rows; r++)
+        {
+            try { header.SetRowHeight(r0 + r, PtsToFt(Math.Max(data.RowHeights[r], minRowPts[r]))); } catch { }
+        }
+
+        ElementId lineStyleId = GetTableLineStyleId();
+
+        foreach (var cell in data.Cells)
+        {
+            int r = r0 + cell.Row, c = c0 + cell.Col;
+            if (cell.RowSpan > 1 || cell.ColSpan > 1)
+            {
+                try
+                {
+                    header.MergeCells(new TableMergedCell
+                    {
+                        Top = r,
+                        Left = c,
+                        Bottom = r + cell.RowSpan - 1,
+                        Right = c + cell.ColSpan - 1
+                    });
+                }
+                catch { }
+            }
+
+            if (!string.IsNullOrEmpty(cell.Text))
+            {
+                try { header.SetCellText(r, c, cell.Text); } catch { }
+            }
+
+            try { header.SetCellStyle(r, c, BuildCellStyle(cell, lineStyleId)); } catch { }
+        }
+    }
+
+    private static TableCellStyle BuildCellStyle(ExcelCellData cell, ElementId lineStyleId)
+    {
+        var opts = new TableCellStyleOverrideOptions
+        {
+            HorizontalAlignment = true,
+            VerticalAlignment = true,
+            Bold = true
         };
+        var style = new TableCellStyle();
+
+        style.FontHorizontalAlignment =
+            cell.HAlign == (int)ExcelHAlign.Center ? HorizontalAlignmentStyle.Center :
+            cell.HAlign == (int)ExcelHAlign.Right ? HorizontalAlignmentStyle.Right :
+            HorizontalAlignmentStyle.Left;
+        style.FontVerticalAlignment =
+            cell.VAlign == (int)ExcelVAlign.Center ? VerticalAlignmentStyle.Middle :
+            cell.VAlign == (int)ExcelVAlign.Bottom ? VerticalAlignmentStyle.Bottom :
+            VerticalAlignmentStyle.Top;
+        style.IsFontBold = cell.Bold;
+
+        if (!string.IsNullOrEmpty(cell.FontName))
+        {
+            opts.Font = true;
+            style.FontName = cell.FontName;
+        }
+        if (cell.FontSizePt > 0)
+        {
+            opts.FontSize = true;
+            style.TextSize = cell.FontSizePt;
+        }
+        if (cell.FontColorRgb >= 0)
+        {
+            opts.FontColor = true;
+            style.TextColor = new Color(
+                (byte)((cell.FontColorRgb >> 16) & 0xFF),
+                (byte)((cell.FontColorRgb >> 8) & 0xFF),
+                (byte)(cell.FontColorRgb & 0xFF));
+        }
+        if (cell.FillColorRgb >= 0)
+        {
+            opts.BackgroundColor = true;
+            style.BackgroundColor = new Color(
+                (byte)((cell.FillColorRgb >> 16) & 0xFF),
+                (byte)((cell.FillColorRgb >> 8) & 0xFF),
+                (byte)(cell.FillColorRgb & 0xFF));
+        }
+        if (lineStyleId != ElementId.InvalidElementId)
+        {
+            if (cell.BorderTop) { opts.BorderTopLineStyle = true; style.BorderTopLineStyle = lineStyleId; }
+            if (cell.BorderBottom) { opts.BorderBottomLineStyle = true; style.BorderBottomLineStyle = lineStyleId; }
+            if (cell.BorderLeft) { opts.BorderLeftLineStyle = true; style.BorderLeftLineStyle = lineStyleId; }
+            if (cell.BorderRight) { opts.BorderRightLineStyle = true; style.BorderRightLineStyle = lineStyleId; }
+        }
+
+        style.SetCellStyleOverrideOptions(opts);
+        return style;
+    }
+
+    private ElementId GetTableLineStyleId()
+    {
+        try
+        {
+            var linesCat = Doc!.Settings.Categories.get_Item(BuiltInCategory.OST_Lines);
+            var gs = linesCat?.GetGraphicsStyle(GraphicsStyleType.Projection);
+            if (gs != null) return gs.Id;
+        }
+        catch { }
+        return ElementId.InvalidElementId;
+    }
+
+    private const string TableGenColParamPrefix = "AllO Col ";
+
+    /// <summary>
+    /// One text project parameter per Excel column, bound to Generic Models instances
+    /// (key schedule columns can only be schedulable instance parameters of the category).
+    /// </summary>
+    private void EnsureTableGenParameters(int colCount)
+    {
+        var doc = Doc!;
+        var app = _uiApp.Application;
+
+        var bound = new HashSet<string>();
+        var it = doc.ParameterBindings.ForwardIterator();
+        while (it.MoveNext())
+        {
+            try { bound.Add(((Definition)it.Key).Name); } catch { }
+        }
+
+        var needed = new List<string>();
+        for (int c = 1; c <= colCount; c++)
+        {
+            string name = TableGenColParamPrefix + c;
+            if (!bound.Contains(name)) needed.Add(name);
+        }
+        if (needed.Count == 0) return;
+
+        string? originalFile = null;
+        try { originalFile = app.SharedParametersFilename; } catch { }
+        string tempFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "AllO_TableGen_SharedParams.txt");
+        try
+        {
+            if (!System.IO.File.Exists(tempFile)) System.IO.File.WriteAllText(tempFile, "");
+            app.SharedParametersFilename = tempFile;
+            var defFile = app.OpenSharedParameterFile();
+            if (defFile == null) return;
+
+            var group = defFile.Groups.get_Item("AllO") ?? defFile.Groups.Create("AllO");
+
+            var cats = app.Create.NewCategorySet();
+            cats.Insert(doc.Settings.Categories.get_Item(BuiltInCategory.OST_GenericModel));
+            var binding = app.Create.NewInstanceBinding(cats);
+
+            foreach (string name in needed)
+            {
+                var extDef = group.Definitions.get_Item(name) as ExternalDefinition;
+                if (extDef == null)
+                {
+                    var opts = new ExternalDefinitionCreationOptions(name, SpecTypeId.String.Text);
+                    extDef = group.Definitions.Create(opts) as ExternalDefinition;
+                }
+                if (extDef != null)
+                {
+                    try { doc.ParameterBindings.Insert(extDef, binding, GroupTypeId.Data); }
+                    catch (Exception ex) { Logging.Warning($"Failed to bind {name}: {ex.Message}"); }
+                }
+            }
+        }
+        finally
+        {
+            try { app.SharedParametersFilename = originalFile; } catch { }
+        }
+    }
+
+    private void PopulateKeySchedule(ViewSchedule schedule, string[,] grid, List<double>? colWidthsPts = null)
+    {
+        int rows = grid.GetLength(0);
+        int cols = grid.GetLength(1);
+        if (rows == 0 || cols == 0) return;
+
+        EnsureTableGenParameters(cols);
+        Doc!.Regenerate();
+        ConfigureKeyScheduleFields(schedule, grid, colWidthsPts);
+        FillKeyScheduleBody(Doc!, schedule, grid);
+    }
+
+    /// <summary>
+    /// Keeps the mandatory Key Name field (Revit forbids removing it) but hides it — the key name
+    /// stores a zero-padded row index so the schedule's forced sort-by-key preserves Excel row order.
+    /// Excel row 0 becomes the column headings.
+    /// </summary>
+    private void ConfigureKeyScheduleFields(ViewSchedule schedule, string[,] grid, List<double>? colWidthsPts)
+    {
+        ScheduleDefinition def = schedule.Definition;
+        int cols = grid.GetLength(1);
+
+        var fieldNames = new HashSet<string>();
+        for (int i = 0; i < def.GetFieldCount(); i++)
+        {
+            try { fieldNames.Add(def.GetField(i).GetName()); } catch { }
+        }
 
         IList<SchedulableField> schedulable = def.GetSchedulableFields();
-        foreach (var bp in order)
+        for (int c = 1; c <= cols; c++)
         {
-#if REVIT2023
-            ElementId pid = new ElementId((int)bp);
-#elif REVIT2024
-            ElementId pid = new ElementId((long)bp);
-#else
-            ElementId pid = new ElementId((long)bp);
-#endif
+            string pname = TableGenColParamPrefix + c;
+            if (fieldNames.Contains(pname)) continue;
             foreach (SchedulableField sf in schedulable)
             {
-                if (sf.ParameterId.Equals(pid))
+                string sfName;
+                try { sfName = sf.GetName(Doc!); } catch { continue; }
+                if (sfName == pname)
                 {
-                    try { def.AddField(sf); } catch { }
+                    try { def.AddField(sf); } catch (Exception ex) { Logging.Warning($"AddField {pname}: {ex.Message}"); }
                     break;
+                }
+            }
+        }
+
+        for (int i = 0; i < def.GetFieldCount(); i++)
+        {
+            ScheduleField f = def.GetField(i);
+            string name;
+            try { name = f.GetName(); } catch { continue; }
+
+            if (!name.StartsWith(TableGenColParamPrefix, StringComparison.Ordinal))
+            {
+                try { f.IsHidden = true; } catch { }
+                continue;
+            }
+
+            if (int.TryParse(name.Substring(TableGenColParamPrefix.Length), out int col) && col >= 1 && col <= cols)
+            {
+                string heading = grid[0, col - 1]?.Trim() ?? "";
+                // " " y no "": las celdas vacías de la fila 1 (merges) dejaban ver "AllO Col N".
+                try { f.ColumnHeading = heading.Length > 0 ? heading : " "; } catch { }
+
+                if (colWidthsPts != null && col <= colWidthsPts.Count)
+                {
+                    try { f.GridColumnWidth = Math.Max(colWidthsPts[col - 1] / 864.0, 0.01); } catch { }
                 }
             }
         }
@@ -2268,25 +2531,33 @@ public class RevitService : IRevitService
     private static void EnsureKeyScheduleBodyRowCount(TableSectionData body, int desiredRows)
     {
         if (desiredRows < 1) return;
-        while (body.NumberOfRows > desiredRows)
+        // Conteos fijos, NUNCA while sobre NumberOfRows: no se actualiza hasta el
+        // Regenerate y el while gira infinito congelando Revit (bug real reportado).
+        int existing = body.NumberOfRows;
+
+        int excess = existing - desiredRows;
+        for (int i = 0; i < excess; i++)
         {
             try { body.RemoveRow(body.LastRowNumber); }
             catch { break; }
         }
 
-        while (body.NumberOfRows < desiredRows)
-            body.InsertRow(body.FirstRowNumber + body.NumberOfRows);
+        for (int i = existing; i < desiredRows; i++)
+        {
+            try { body.InsertRow(body.FirstRowNumber + i); }
+            catch { break; }
+        }
     }
 
     private static void TrySetKeyScheduleParameter(Parameter? p, string value)
     {
-        if (p == null || p.IsReadOnly || string.IsNullOrEmpty(value)) return;
+        if (p == null || p.IsReadOnly) return;
         try
         {
             switch (p.StorageType)
             {
                 case StorageType.String:
-                    p.Set(value);
+                    p.Set(value ?? "");
                     break;
                 case StorageType.Double:
                     if (double.TryParse(value, System.Globalization.NumberStyles.Any,
@@ -2321,16 +2592,16 @@ public class RevitService : IRevitService
 #endif
     private static void FillKeyScheduleBody(Document doc, ViewSchedule schedule, string[,] grid)
     {
-        int fieldCount = schedule.Definition.GetFieldCount();
-        if (fieldCount == 0 || grid.GetLength(0) == 0) return;
+        int totalRows = grid.GetLength(0);
+        int cols = grid.GetLength(1);
+        if (totalRows <= 1 || cols == 0) return;
+        int rows = totalRows - 1;
 
         TableSectionData body = schedule.GetTableData().GetSectionData(SectionType.Body);
-        int rows = grid.GetLength(0);
         EnsureKeyScheduleBodyRowCount(body, rows);
 
         doc.Regenerate();
 
-        ScheduleDefinition def = schedule.Definition;
         var owned = new FilteredElementCollector(doc)
             .OwnedByView(schedule.Id)
             .WhereElementIsNotElementType()
@@ -2368,22 +2639,12 @@ public class RevitService : IRevitService
         int n = Math.Min(rows, keys.Count);
         for (int r = 0; r < n; r++)
         {
-            string[] rowVals = TableGenGridConverter.GetRowForSchedule(grid, r, fieldCount);
             Element el = keys[r];
-            for (int c = 0; c < fieldCount && c < rowVals.Length; c++)
+            try { el.Name = (r + 1).ToString("D4"); } catch { }
+            for (int c = 0; c < cols; c++)
             {
-                ScheduleField field = def.GetField(c);
-                ElementId pid = field.ParameterId;
-                Parameter? p = el.LookupParameter(field.GetName());
-                if (p == null && pid != ElementId.InvalidElementId)
-                {
-                    foreach (Parameter pr in el.Parameters)
-                    {
-                        if (pr.Id.Equals(pid)) { p = pr; break; }
-                    }
-                }
-
-                TrySetKeyScheduleParameter(p, rowVals[c]);
+                Parameter? p = el.LookupParameter(TableGenColParamPrefix + (c + 1));
+                TrySetKeyScheduleParameter(p, grid[r + 1, c]?.Trim() ?? "");
             }
         }
 
@@ -2531,18 +2792,30 @@ public class RevitService : IRevitService
                 double boxW = x2 - x1, boxH = y1 - y2;
                 double xIns = x1 + boxW * 0.02, yIns = y1 - boxH * 0.05;
                 var hAlignRevit = HorizontalTextAlignment.Left;
-                
-                // Use ExcelConstants for alignment
+                var vAlignRevit = VerticalTextAlignment.Top;
+
                 if (cell.HAlign == (int)ExcelHAlign.Center) { xIns = x1 + boxW / 2.0; hAlignRevit = HorizontalTextAlignment.Center; }
                 else if (cell.HAlign == (int)ExcelHAlign.Right) { xIns = x2 - boxW * 0.02; hAlignRevit = HorizontalTextAlignment.Right; }
-                
-                if (cell.VAlign == (int)ExcelVAlign.Center) yIns = y1 - boxH / 2.0;
-                else if (cell.VAlign == (int)ExcelVAlign.Bottom) yIns = y2 + boxH * 0.05;
-                
+
+                if (cell.VAlign == (int)ExcelVAlign.Center) { yIns = y1 - boxH / 2.0; vAlignRevit = VerticalTextAlignment.Middle; }
+                else if (cell.VAlign == (int)ExcelVAlign.Bottom) { yIns = y2 + boxH * 0.05; vAlignRevit = VerticalTextAlignment.Bottom; }
+
                 try
                 {
-                    var tn = TextNote.Create(Doc!, view.Id, new XYZ(xIns, yIns, 0), cell.Text, txtTypeId);
-                    tn.HorizontalAlignment = hAlignRevit;
+                    // Fixed width makes Revit wrap long text inside the cell instead of overflowing it
+                    double noteW = boxW * 0.96;
+                    try
+                    {
+                        noteW = Math.Max(noteW, TextNote.GetMinimumAllowedWidth(Doc!, txtTypeId));
+                        noteW = Math.Min(noteW, TextNote.GetMaximumAllowedWidth(Doc!, txtTypeId));
+                    }
+                    catch { }
+                    var opts = new TextNoteOptions(txtTypeId)
+                    {
+                        HorizontalAlignment = hAlignRevit,
+                        VerticalAlignment = vAlignRevit
+                    };
+                    TextNote.Create(Doc!, view.Id, new XYZ(xIns, yIns, 0), noteW, cell.Text, opts);
                 }
                 catch (Exception ex)
                 {

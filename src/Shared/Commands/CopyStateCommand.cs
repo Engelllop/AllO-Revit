@@ -46,7 +46,7 @@ public class CopyStateCommand : IExternalCommand
             {
                 try
                 {
-                    state.CategoryVisibility[cat.Id.Value] = view.GetCategoryHidden(cat.Id);
+                    state.CategoryVisibility[cat.Id.ToLong()] = view.GetCategoryHidden(cat.Id);
                 }
                 catch { }
             }
@@ -54,9 +54,9 @@ public class CopyStateCommand : IExternalCommand
             // View filters and overrides
             foreach (ElementId filterId in view.GetFilters())
             {
-                state.ActiveFilters.Add(filterId.Value);
+                state.ActiveFilters.Add(filterId.ToLong());
                 var overrides = view.GetFilterOverrides(filterId);
-                state.FilterOverrides[filterId.Value] = overrides;
+                state.FilterOverrides[filterId.ToLong()] = overrides;
             }
 
             // View detail level and display style

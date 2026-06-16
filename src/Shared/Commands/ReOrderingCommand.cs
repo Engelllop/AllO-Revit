@@ -1,6 +1,7 @@
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
+using AllO.Helpers;
 using AllO.Models;
 using AllO.UI.ViewModels;
 using AllO.UI.Views;
@@ -69,7 +70,7 @@ public class ReOrderingCommand : IExternalCommand
 
                     return new ReorderItem
                     {
-                        ElementId = e.Id.Value,
+                        ElementId = e.Id.ToLong(),
                         ElementName = e.Name,
                         Category = e.Category?.Name ?? "",
                         CurrentValue = currentVal,
@@ -114,7 +115,7 @@ public class ReOrderingCommand : IExternalCommand
             int current = vm.StartNumber;
             foreach (var item in selectedItems)
             {
-                var elem = doc.GetElement(new ElementId(item.ElementId));
+                var elem = doc.GetElement(item.ElementId.ToElementId());
                 if (elem == null) continue;
 
                 var p = elem.LookupParameter(paramName);

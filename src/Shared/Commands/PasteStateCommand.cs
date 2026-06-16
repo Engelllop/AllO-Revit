@@ -56,7 +56,7 @@ public class PasteStateCommand : IExternalCommand
             // Apply category visibility
             foreach (var kvp in state.CategoryVisibility)
             {
-                var catId = new ElementId(kvp.Key);
+                var catId = kvp.Key.ToElementId();
                 try
                 {
                     view.SetCategoryHidden(catId, kvp.Value);
@@ -68,7 +68,7 @@ public class PasteStateCommand : IExternalCommand
             // Apply filters
             foreach (long filterIdInt in state.ActiveFilters)
             {
-                var filterId = new ElementId(filterIdInt);
+                var filterId = filterIdInt.ToElementId();
                 try
                 {
                     if (!view.GetFilters().Contains(filterId))

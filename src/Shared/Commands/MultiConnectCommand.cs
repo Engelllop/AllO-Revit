@@ -2,6 +2,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.DB;
 using AllO.Core;
+using AllO.Helpers;
 using AllO.Services;
 using AllO.UI.Toast;
 
@@ -21,14 +22,14 @@ public class MultiConnectCommand : IExternalCommand
         {
             var mainRef = uiDoc.Selection.PickObject(Autodesk.Revit.UI.Selection.ObjectType.Element,
                 "Select main pipe/duct/branch");
-            var mainId = doc.GetElement(mainRef).Id.Value;
+            var mainId = doc.GetElement(mainRef).Id.ToLong();
 
             var termRefs = uiDoc.Selection.PickObjects(Autodesk.Revit.UI.Selection.ObjectType.Element,
                 "Select terminal elements to connect to main");
 
             if (termRefs == null || termRefs.Count == 0) return Result.Cancelled;
 
-            var termIds = termRefs.Select(r => doc.GetElement(r).Id.Value).ToList();
+            var termIds = termRefs.Select(r => doc.GetElement(r).Id.ToLong()).ToList();
             int connected = service.ConnectElementsBatch(mainId, termIds);
 
             ToastHost.Show("Multi Connect", $"Connected {connected} of {termIds.Count} element(s).", ToastKind.Success);

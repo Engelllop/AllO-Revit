@@ -1,346 +1,286 @@
-"""Generate 16×16 and 32×32 PNG ribbon icons for AllO."""
+"""Generate 16x16 and 32x32 PNG ribbon icons for AllO.
+
+Two-tone, rounded strokes, transparent background, supersampled (draw at x8
+then downscale with LANCZOS) for crisp anti-aliased edges. Single accent color
+= AllO terracotta #D97757 used on one element per icon.
+"""
 from PIL import Image, ImageDraw
 import os
 
-BG = (250, 249, 245)      # #FAF9F5
-FG = (20, 20, 19)          # #141413
+SS = 8                              # supersampling factor
 OUT = os.path.dirname(os.path.abspath(__file__))
 
-def new(size):
-    img = Image.new("RGBA", (size, size), (*BG, 255))
-    return img, ImageDraw.Draw(img)
+NEUTRAL = (42, 42, 40, 255)         # #2A2A28  main strokes
+LIGHT   = (176, 174, 165, 255)      # #B0AEA5  secondary lines
+ACCENT  = (217, 119, 87, 255)       # #D97757  terracotta accent
+SOFT    = (245, 233, 227, 255)      # #F5E9E3  accent fill (dim)
 
-def save(img, name, size):
-    img.save(os.path.join(OUT, f"{name}_{size}.png"))
 
-def scale(size, f):
-    return round(size * f)
+def f(s, x):
+    return round(s * x)
 
-# ------------------------------------------------------------------
-def draw_sheet_list(draw, s):
-    margin = scale(s, 0.1875)
-    x1, y1 = margin, margin
-    x2, y2 = s - margin, s - margin
-    draw.rectangle([x1, y1, x2, y2], outline=FG, width=max(1, s // 16))
-    for i in range(1, 4):
-        y = y1 + (y2 - y1) * i // 4
-        draw.line([(x1 + 2, y), (x2 - 2, y)], fill=FG, width=max(1, s // 16))
+# --- primitives (round caps + joints) -----------------------------------
+def rline(d, pts, w, fill):
+    pts = [(round(x), round(y)) for x, y in pts]
+    if len(pts) > 1:
+        d.line(pts, fill=fill, width=int(round(w)), joint="curve")
+    r = w / 2
+    for x, y in pts:
+        d.ellipse([x - r, y - r, x + r, y + r], fill=fill)
 
-def draw_view_list(draw, s):
-    margin = scale(s, 0.1875)
-    x1, y1 = margin, margin
-    x2, y2 = s - margin, s - margin
-    draw.rectangle([x1, y1, x2, y2], outline=FG, width=max(1, s // 16))
-    draw.line([(x1 + 2, y1 + (y2-y1)//3), (x2 - 2, y1 + (y2-y1)//3)], fill=FG, width=max(1, s // 16))
-    draw.line([(x1 + 2, y1 + 2*(y2-y1)//3), (x2 - 2, y1 + 2*(y2-y1)//3)], fill=FG, width=max(1, s // 16))
+def rrect(d, box, w, outline, fill=None, rad=None):
+    x1, y1, x2, y2 = box
+    if rad is None:
+        rad = (x2 - x1) * 0.14
+    d.rounded_rectangle([x1, y1, x2, y2], radius=rad, outline=outline,
+                        fill=fill, width=int(round(w)))
 
-def draw_revisions(draw, s):
-    cx, cy = s // 2, s // 2
-    r = s // 3
-    draw.ellipse([cx-r, cy-r, cx+r, cy+r], outline=FG, width=max(1, s // 16))
-    # checkmark
-    p1 = (cx - r//2, cy)
-    p2 = (cx - r//4, cy + r//2)
-    p3 = (cx + r//2, cy - r//3)
-    draw.line([p1, p2, p3], fill=FG, width=max(1, s // 12))
+def dot(d, c, r, fill):
+    x, y = c
+    d.ellipse([x - r, y - r, x + r, y + r], fill=fill)
 
-def draw_publish(draw, s):
-    cx = s // 2
-    base_y = s - scale(s, 0.25)
-    top_y = scale(s, 0.2)
-    draw.polygon([(cx, top_y), (cx - scale(s, 0.15), top_y + scale(s, 0.2)),
-                  (cx - scale(s, 0.05), top_y + scale(s, 0.2)),
-                  (cx - scale(s, 0.05), base_y),
-                  (cx + scale(s, 0.05), base_y),
-                  (cx + scale(s, 0.05), top_y + scale(s, 0.2)),
-                  (cx + scale(s, 0.15), top_y + scale(s, 0.2))], fill=FG)
-    draw.line([(cx - scale(s, 0.2), base_y), (cx + scale(s, 0.2), base_y)], fill=FG, width=max(1, s // 16))
+def circle(d, c, r, w, outline, fill=None):
+    x, y = c
+    d.ellipse([x - r, y - r, x + r, y + r], outline=outline, fill=fill,
+              width=int(round(w)))
 
-def draw_table_gen(draw, s):
-    m = scale(s, 0.2)
-    step = (s - 2*m) // 3
-    for i in range(4):
-        x = m + i*step
-        draw.line([(x, m), (x, s-m)], fill=FG, width=max(1, s // 16))
-    for j in range(4):
-        y = m + j*step
-        draw.line([(m, y), (s-m, y)], fill=FG, width=max(1, s // 16))
+# ------------------------------------------------------------------------
+def sheet_list(d, s):
+    w = f(s, 0.07)
+    rrect(d, (f(s,.30), f(s,.14), f(s,.78), f(s,.70)), w, NEUTRAL, fill=(255,255,255,255))
+    rrect(d, (f(s,.18), f(s,.26), f(s,.66), f(s,.82)), w, NEUTRAL, fill=(255,255,255,255))
+    d.rounded_rectangle([f(s,.26), f(s,.34), f(s,.58), f(s,.40)], radius=f(s,.02), fill=ACCENT)
+    for fr in (.50, .60, .70):
+        rline(d, [(f(s,.26), f(s,fr)), (f(s,.58), f(s,fr))], f(s,.045), LIGHT)
 
-def draw_copy_crop(draw, s):
-    m = scale(s, 0.18)
-    draw.rectangle([m, m, s - m, s - m], outline=FG, width=max(1, s // 16))
-    m2 = scale(s, 0.30)
-    draw.rectangle([m2, m2, s - m2 + 1, s - m2 + 1], outline=FG, width=max(1, s // 16))
+def view_list(d, s):
+    w = f(s, 0.07)
+    rrect(d, (f(s,.20), f(s,.22), f(s,.80), f(s,.78)), w, NEUTRAL, fill=(255,255,255,255))
+    d.rounded_rectangle([f(s,.28), f(s,.31), f(s,.72), f(s,.38)], radius=f(s,.02), fill=ACCENT)
+    for fr in (.52, .65):
+        rline(d, [(f(s,.28), f(s,fr)), (f(s,.72), f(s,fr))], f(s,.05), LIGHT)
 
-def draw_grids(draw, s):
-    m = scale(s, 0.15)
-    draw.line([(s//2, m), (s//2, s-m)], fill=FG, width=max(1, s // 16))
-    draw.line([(m, s//2), (s-m, s//2)], fill=FG, width=max(1, s // 16))
-    draw.line([(s//4, m), (s//4, s-m)], fill=FG, width=max(1, s // 16))
-    draw.line([(3*s//4, m), (3*s//4, s-m)], fill=FG, width=max(1, s // 16))
+def revisions(d, s):
+    w = f(s, 0.07)
+    circle(d, (f(s,.5), f(s,.5)), f(s,.32), w, NEUTRAL)
+    rline(d, [(f(s,.35), f(s,.52)), (f(s,.46), f(s,.63)), (f(s,.66), f(s,.38))], f(s,.085), ACCENT)
 
-def draw_levels(draw, s):
-    m = scale(s, 0.2)
-    for i, frac in enumerate([0.25, 0.5, 0.75]):
-        y = m + int((s - 2*m) * frac)
-        draw.line([(m, y), (s-m, y)], fill=FG, width=max(1, s // 16))
-        # small tick
-        draw.line([(m, y-1), (m, y+1)], fill=FG, width=max(1, s // 16))
-        draw.line([(s-m, y-1), (s-m, y+1)], fill=FG, width=max(1, s // 16))
+def publish(d, s):
+    w = f(s, 0.07)
+    cx = f(s,.5)
+    rline(d, [(f(s,.26), f(s,.62)), (f(s,.26), f(s,.80)), (f(s,.74), f(s,.80)), (f(s,.74), f(s,.62))], w, NEUTRAL)
+    rline(d, [(cx, f(s,.74)), (cx, f(s,.24))], f(s,.085), ACCENT)
+    rline(d, [(f(s,.36), f(s,.37)), (cx, f(s,.22)), (f(s,.64), f(s,.37))], f(s,.085), ACCENT)
 
-def draw_color_coder(draw, s):
-    cx, cy = s // 2, s // 2
-    r = s // 3
-    draw.pieslice([cx-r, cy-r, cx+r, cy+r], start=0, end=120, fill=FG)
-    draw.pieslice([cx-r, cy-r, cx+r, cy+r], start=120, end=240, outline=FG, width=max(1, s // 16))
-    draw.pieslice([cx-r, cy-r, cx+r, cy+r], start=240, end=360, outline=FG, width=max(1, s // 16))
+def table_gen(d, s):
+    w = f(s, 0.07)
+    box = (f(s,.18), f(s,.18), f(s,.82), f(s,.82))
+    d.rounded_rectangle(box, radius=f(s,.04), fill=(255,255,255,255))
+    d.rectangle([f(s,.18), f(s,.18), f(s,.82), f(s,.34)], fill=SOFT)
+    for fr in (.42, .58, .66, .82):
+        if fr in (.42, .58):
+            rline(d, [(f(s,.18), f(s,fr)), (f(s,.82), f(s,fr))], f(s,.04), LIGHT)
+    for fr in (.40, .60):
+        rline(d, [(f(s,fr), f(s,.18)), (f(s,fr), f(s,.82))], f(s,.04), LIGHT)
+    rline(d, [(f(s,.18), f(s,.34)), (f(s,.82), f(s,.34))], f(s,.05), ACCENT)
+    rrect(d, box, w, NEUTRAL, rad=f(s,.04))
 
-def draw_match_elev(draw, s):
-    m = scale(s, 0.25)
-    draw.line([(m, m), (s-m, m)], fill=FG, width=max(1, s // 16))
-    draw.line([(m, s-m), (s-m, s-m)], fill=FG, width=max(1, s // 16))
-    cx = s // 2
-    draw.line([(cx, m+2), (cx, s-m-2)], fill=FG, width=max(1, s // 16))
-    # arrow heads
-    draw.polygon([(cx, m), (cx-2, m+3), (cx+2, m+3)], fill=FG)
-    draw.polygon([(cx, s-m), (cx-2, s-m-3), (cx+2, s-m-3)], fill=FG)
+def copy_crop(d, s):
+    w = f(s, 0.07)
+    rrect(d, (f(s,.16), f(s,.16), f(s,.64), f(s,.64)), w, NEUTRAL, rad=f(s,.03))
+    rrect(d, (f(s,.36), f(s,.36), f(s,.84), f(s,.84)), w, ACCENT, rad=f(s,.03))
 
-def draw_param_push(draw, s):
-    m = scale(s, 0.2)
-    # box
-    draw.rectangle([m, s//2, s-m, s-m], outline=FG, width=max(1, s // 16))
-    # arrow pointing down
-    cx = s // 2
-    draw.line([(cx, m), (cx, s//2 - 1)], fill=FG, width=max(1, s // 16))
-    draw.polygon([(cx, s//2 - 1), (cx-2, s//2 - 4), (cx+2, s//2 - 4)], fill=FG)
+def grids(d, s):
+    rline(d, [(f(s,.5), f(s,.14)), (f(s,.5), f(s,.86))], f(s,.06), ACCENT)
+    rline(d, [(f(s,.14), f(s,.5)), (f(s,.86), f(s,.5))], f(s,.06), ACCENT)
+    for x in (.26, .74):
+        rline(d, [(f(s,x), f(s,.14)), (f(s,x), f(s,.86))], f(s,.045), LIGHT)
+        rline(d, [(f(s,.14), f(s,x)), (f(s,.86), f(s,x))], f(s,.045), LIGHT)
 
-def draw_connector(draw, s):
-    m = scale(s, 0.2)
-    cy = s // 2
-    draw.line([(m, cy), (s-m, cy)], fill=FG, width=max(1, s // 16))
-    r = max(2, s // 8)
-    draw.ellipse([s//2 - r, cy - r, s//2 + r, cy + r], outline=FG, width=max(1, s // 16))
+def levels(d, s):
+    for fr, col in ((.30, LIGHT), (.5, ACCENT), (.70, LIGHT)):
+        y = f(s, fr)
+        rline(d, [(f(s,.18), y), (f(s,.82), y)], f(s,.055), col)
+        dot(d, (f(s,.18), y), f(s,.05), col)
+        dot(d, (f(s,.82), y), f(s,.05), col)
 
-def draw_multi_connect(draw, s):
-    m = scale(s, 0.2)
-    cy = s // 2
-    # trunk
-    draw.line([(m, cy), (s//2, cy)], fill=FG, width=max(1, s // 16))
-    # branches
-    draw.line([(s//2, cy), (s-m, m)], fill=FG, width=max(1, s // 16))
-    draw.line([(s//2, cy), (s-m, s-m)], fill=FG, width=max(1, s // 16))
+def color_coder(d, s):
+    w = f(s, 0.06)
+    rrect(d, (f(s,.40), f(s,.16), f(s,.78), f(s,.54)), w, NEUTRAL, fill=(255,255,255,255), rad=f(s,.06))
+    rrect(d, (f(s,.28), f(s,.30), f(s,.66), f(s,.68)), w, NEUTRAL, fill=(231,230,224,255), rad=f(s,.06))
+    rrect(d, (f(s,.16), f(s,.44), f(s,.54), f(s,.82)), w, NEUTRAL, fill=ACCENT, rad=f(s,.06))
 
-def draw_split_pipe(draw, s):
-    m = scale(s, 0.2)
-    cy = s // 2
-    # trunk from top
-    draw.line([(s//2, m), (s//2, cy)], fill=FG, width=max(1, s // 16))
-    # branches
-    draw.line([(s//2, cy), (m, s-m)], fill=FG, width=max(1, s // 16))
-    draw.line([(s//2, cy), (s-m, s-m)], fill=FG, width=max(1, s // 16))
+def match_elev(d, s):
+    rline(d, [(f(s,.24), f(s,.26)), (f(s,.76), f(s,.26))], f(s,.06), NEUTRAL)
+    rline(d, [(f(s,.24), f(s,.74)), (f(s,.76), f(s,.74))], f(s,.06), NEUTRAL)
+    cx = f(s,.5)
+    rline(d, [(cx, f(s,.30)), (cx, f(s,.70))], f(s,.06), ACCENT)
+    rline(d, [(f(s,.44), f(s,.36)), (cx, f(s,.29)), (f(s,.56), f(s,.36))], f(s,.06), ACCENT)
+    rline(d, [(f(s,.44), f(s,.64)), (cx, f(s,.71)), (f(s,.56), f(s,.64))], f(s,.06), ACCENT)
 
-def draw_bloom(draw, s):
-    cx, cy = s // 2, s // 2
-    r = max(1, s // 5)
-    # center
-    draw.ellipse([cx-r, cy-r, cx+r, cy+r], fill=FG)
-    # petals
-    for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
-        px, py = cx + dx*2*r, cy + dy*2*r
-        pr = max(1, s // 8)
-        draw.ellipse([px-pr, py-pr, px+pr, py+pr], outline=FG, width=max(1, s // 16))
+def param_push(d, s):
+    w = f(s, 0.07)
+    rrect(d, (f(s,.24), f(s,.52), f(s,.76), f(s,.84)), w, NEUTRAL, rad=f(s,.03))
+    cx = f(s,.5)
+    rline(d, [(cx, f(s,.16)), (cx, f(s,.46))], f(s,.08), ACCENT)
+    rline(d, [(f(s,.40), f(s,.34)), (cx, f(s,.48)), (f(s,.60), f(s,.34))], f(s,.08), ACCENT)
 
-def draw_reroute(draw, s):
-    m = scale(s, 0.2)
-    # line that goes down, right, up
-    pts = [(m, m), (m, s-m), (s-m, s-m), (s-m, m+scale(s,0.1))]
-    draw.line(pts, fill=FG, width=max(1, s // 16))
-    # arrow at end
-    draw.polygon([(s-m, m), (s-m-3, m+3), (s-m+3, m+3)], fill=FG)
+def connector(d, s):
+    cy = f(s,.5)
+    rline(d, [(f(s,.20), cy), (f(s,.80), cy)], f(s,.06), NEUTRAL)
+    circle(d, (f(s,.20), cy), f(s,.07), f(s,.05), NEUTRAL, fill=(255,255,255,255))
+    circle(d, (f(s,.80), cy), f(s,.07), f(s,.05), NEUTRAL, fill=(255,255,255,255))
+    dot(d, (f(s,.5), cy), f(s,.085), ACCENT)
 
-def draw_elbow_dir(draw, s):
-    m = scale(s, 0.2)
-    # L shape
-    draw.line([(m, m), (m, s-m), (s-m, s-m)], fill=FG, width=max(1, s // 16))
-    # arrow at end
-    draw.polygon([(s-m, s-m), (s-m-3, s-m-3), (s-m-3, s-m+3)], fill=FG)
+def multi_connect(d, s):
+    cy = f(s,.5)
+    rline(d, [(f(s,.18), cy), (f(s,.5), cy)], f(s,.06), NEUTRAL)
+    rline(d, [(f(s,.5), cy), (f(s,.82), f(s,.22))], f(s,.06), ACCENT)
+    rline(d, [(f(s,.5), cy), (f(s,.82), f(s,.78))], f(s,.06), ACCENT)
+    dot(d, (f(s,.5), cy), f(s,.06), NEUTRAL)
 
-def draw_one_filter(draw, s):
-    m = scale(s, 0.2)
-    top_y = m
-    mid_y = s//2 + scale(s,0.05)
-    bot_y = s - m
-    draw.polygon([(s//2, top_y), (m, mid_y), (s-m, mid_y)], outline=FG, width=max(1, s // 16))
-    draw.line([(s//2, mid_y), (s//2, bot_y)], fill=FG, width=max(1, s // 16))
-    draw.line([(s//2 - scale(s,0.05), bot_y), (s//2 + scale(s,0.05), bot_y)], fill=FG, width=max(1, s // 16))
+def split_pipe(d, s):
+    cx = f(s,.5)
+    rline(d, [(cx, f(s,.16)), (cx, f(s,.42))], f(s,.06), NEUTRAL)
+    rline(d, [(cx, f(s,.58)), (f(s,.22), f(s,.84))], f(s,.06), NEUTRAL)
+    rline(d, [(cx, f(s,.58)), (f(s,.78), f(s,.84))], f(s,.06), NEUTRAL)
+    rline(d, [(f(s,.38), f(s,.50)), (f(s,.62), f(s,.50))], f(s,.07), ACCENT)
 
-def draw_re_ordering(draw, s):
-    cx = s // 2
-    m = scale(s, 0.2)
-    # up arrow
-    draw.line([(cx, s-m), (cx, m+4)], fill=FG, width=max(1, s // 16))
-    draw.polygon([(cx, m), (cx-2, m+3), (cx+2, m+3)], fill=FG)
-    # down arrow
-    draw.line([(cx+scale(s,0.12), m), (cx+scale(s,0.12), s-m-4)], fill=FG, width=max(1, s // 16))
-    draw.polygon([(cx+scale(s,0.12), s-m), (cx+scale(s,0.12)-2, s-m-3), (cx+scale(s,0.12)+2, s-m-3)], fill=FG)
+def bloom(d, s):
+    cx, cy = f(s,.5), f(s,.5)
+    for dx, dy in [(0,-1),(0,1),(-1,0),(1,0)]:
+        circle(d, (cx+dx*f(s,.26), cy+dy*f(s,.26)), f(s,.13), f(s,.05), NEUTRAL)
+    dot(d, (cx, cy), f(s,.15), ACCENT)
 
-def draw_family_export(draw, s):
-    m = scale(s, 0.2)
-    # box
-    draw.rectangle([m, m, s-m, s-m], outline=FG, width=max(1, s // 16))
-    # arrow out
-    cx = s // 2
-    draw.line([(cx, m+2), (cx, m-scale(s,0.05))], fill=FG, width=max(1, s // 16))
-    draw.polygon([(cx, m-scale(s,0.05)), (cx-2, m+1), (cx+2, m+1)], fill=FG)
+def reroute(d, s):
+    rline(d, [(f(s,.20), f(s,.22)), (f(s,.20), f(s,.78)), (f(s,.74), f(s,.78))], f(s,.06), NEUTRAL)
+    rline(d, [(f(s,.62), f(s,.40)), (f(s,.78), f(s,.24)), (f(s,.62), f(s,.24))], f(s,.07), ACCENT)
+    rline(d, [(f(s,.78), f(s,.24)), (f(s,.78), f(s,.42))], f(s,.07), ACCENT)
 
-def draw_view_manager(draw, s):
-    cx, cy = s // 2, s // 2
-    r = s // 3
-    # eye shape
-    draw.arc([cx-r, cy-r//2, cx+r, cy+r//2], start=0, end=180, fill=FG, width=max(1, s // 16))
-    draw.arc([cx-r, cy-r//2, cx+r, cy+r//2], start=180, end=360, fill=FG, width=max(1, s // 16))
-    draw.ellipse([cx-r//3, cy-r//3, cx+r//3, cy+r//3], outline=FG, width=max(1, s // 16))
+def elbow_dir(d, s):
+    rline(d, [(f(s,.22), f(s,.20)), (f(s,.22), f(s,.78)), (f(s,.80), f(s,.78))], f(s,.06), NEUTRAL)
+    rline(d, [(f(s,.66), f(s,.66)), (f(s,.82), f(s,.78)), (f(s,.66), f(s,.90))], f(s,.07), ACCENT)
 
-def draw_wipe(draw, s):
-    m = scale(s, 0.2)
-    # broom handle
-    draw.line([(s-m, m), (m, s-m)], fill=FG, width=max(1, s // 12))
-    # bristles
-    draw.line([(m, s-m), (m-scale(s,0.05), s-m+scale(s,0.05))], fill=FG, width=max(1, s // 16))
-    draw.line([(m, s-m), (m+scale(s,0.05), s-m+scale(s,0.05))], fill=FG, width=max(1, s // 16))
+def one_filter(d, s):
+    rline(d, [(f(s,.20), f(s,.24)), (f(s,.80), f(s,.24))], f(s,.07), NEUTRAL)
+    rline(d, [(f(s,.20), f(s,.24)), (f(s,.44), f(s,.52))], f(s,.07), NEUTRAL)
+    rline(d, [(f(s,.80), f(s,.24)), (f(s,.56), f(s,.52))], f(s,.07), NEUTRAL)
+    rline(d, [(f(s,.44), f(s,.52)), (f(s,.44), f(s,.80))], f(s,.07), ACCENT)
+    rline(d, [(f(s,.56), f(s,.52)), (f(s,.56), f(s,.70))], f(s,.07), ACCENT)
 
-def draw_sync_views(draw, s):
-    m = scale(s, 0.15)
-    w = (s - 2*m) // 2 - 1
-    h = s - 2*m
-    # left rect
-    draw.rectangle([m, m, m+w, m+h], outline=FG, width=max(1, s // 16))
-    # right rect
-    draw.rectangle([m+w+2, m, m+2*w+2, m+h], outline=FG, width=max(1, s // 16))
-    # arrow between
-    cx = m + w + 1
-    draw.line([(cx, m+h//3), (cx, m+2*h//3)], fill=FG, width=max(1, s // 16))
-    draw.polygon([(cx, m+h//3), (cx-2, m+h//3+2), (cx+2, m+h//3+2)], fill=FG)
-    draw.polygon([(cx, m+2*h//3), (cx-2, m+2*h//3-2), (cx+2, m+2*h//3-2)], fill=FG)
+def re_ordering(d, s):
+    rline(d, [(f(s,.36), f(s,.78)), (f(s,.36), f(s,.26))], f(s,.06), ACCENT)
+    rline(d, [(f(s,.28), f(s,.36)), (f(s,.36), f(s,.24)), (f(s,.44), f(s,.36))], f(s,.06), ACCENT)
+    rline(d, [(f(s,.64), f(s,.22)), (f(s,.64), f(s,.74))], f(s,.06), NEUTRAL)
+    rline(d, [(f(s,.56), f(s,.64)), (f(s,.64), f(s,.76)), (f(s,.72), f(s,.64))], f(s,.06), NEUTRAL)
 
-def draw_copy_state(draw, s):
-    m = scale(s, 0.2)
-    draw.rectangle([m, m, s-m-2, s-m-2], outline=FG, width=max(1, s // 16))
-    draw.rectangle([m+3, m+3, s-m+1, s-m+1], outline=FG, width=max(1, s // 16))
+def family_export(d, s):
+    w = f(s, 0.07)
+    rrect(d, (f(s,.20), f(s,.34), f(s,.80), f(s,.82)), w, NEUTRAL, rad=f(s,.03))
+    cx = f(s,.5)
+    rline(d, [(cx, f(s,.52)), (cx, f(s,.16))], f(s,.08), ACCENT)
+    rline(d, [(f(s,.40), f(s,.30)), (cx, f(s,.16)), (f(s,.60), f(s,.30))], f(s,.08), ACCENT)
 
-def draw_paste_state(draw, s):
-    m = scale(s, 0.2)
-    # clipboard
-    draw.rectangle([m, m+2, s-m, s-m], outline=FG, width=max(1, s // 16))
-    # clip
-    draw.rectangle([s//2 - scale(s,0.06), m, s//2 + scale(s,0.06), m+4], outline=FG, width=max(1, s // 16))
-    # lines
-    draw.line([(m+2, m+6), (s-m-2, m+6)], fill=FG, width=max(1, s // 16))
-    draw.line([(m+2, m+9), (s-m-2, m+9)], fill=FG, width=max(1, s // 16))
+def view_manager(d, s):
+    cx, cy = f(s,.5), f(s,.5)
+    rline(d, [(f(s,.18), cy), (f(s,.32), f(s,.34)), (f(s,.68), f(s,.34)), (f(s,.82), cy),
+              (f(s,.68), f(s,.66)), (f(s,.32), f(s,.66)), (f(s,.18), cy)], f(s,.055), NEUTRAL)
+    dot(d, (cx, cy), f(s,.11), ACCENT)
 
-def draw_match(draw, s):
-    m = scale(s, 0.25)
-    cy = s // 2
-    draw.line([(m, cy-1), (s-m, cy-1)], fill=FG, width=max(1, s // 12))
-    draw.line([(m, cy+1), (s-m, cy+1)], fill=FG, width=max(1, s // 12))
+def auto_section_box(d, s):
+    w = f(s, 0.05)
+    top = [(f(s,.5),f(s,.16)),(f(s,.82),f(s,.32)),(f(s,.5),f(s,.48)),(f(s,.18),f(s,.32))]
+    d.polygon(top, fill=SOFT)
+    d.line(top + [top[0]], fill=ACCENT, width=int(w), joint="curve")
+    rline(d, [(f(s,.18),f(s,.32)),(f(s,.5),f(s,.48)),(f(s,.5),f(s,.84)),(f(s,.18),f(s,.68)),(f(s,.18),f(s,.32))], w, NEUTRAL)
+    rline(d, [(f(s,.82),f(s,.32)),(f(s,.5),f(s,.48)),(f(s,.5),f(s,.84)),(f(s,.82),f(s,.68)),(f(s,.82),f(s,.32))], w, NEUTRAL)
 
-def draw_auto_section_box(draw, s):
-    m = scale(s, 0.22)
-    d = scale(s, 0.12)  # depth offset (perspectiva)
-    w = max(1, s // 16)
-    fx1, fy1, fx2, fy2 = m, m + d, s - m - d, s - m          # cara frontal
-    bx1, by1, bx2, by2 = m + d, m, s - m, s - m - d          # cara trasera
-    draw.rectangle([fx1, fy1, fx2, fy2], outline=FG, width=w)
-    draw.rectangle([bx1, by1, bx2, by2], outline=FG, width=w)
-    draw.line([(fx1, fy1), (bx1, by1)], fill=FG, width=w)
-    draw.line([(fx2, fy1), (bx2, by1)], fill=FG, width=w)
-    draw.line([(fx1, fy2), (bx1, by2)], fill=FG, width=w)
-    draw.line([(fx2, fy2), (bx2, by2)], fill=FG, width=w)
+def wipe(d, s):
+    rline(d, [(f(s,.78), f(s,.20)), (f(s,.40), f(s,.62))], f(s,.075), NEUTRAL)
+    for dx in (-.10, 0, .10):
+        rline(d, [(f(s,.40), f(s,.62)), (f(s,.30+dx), f(s,.84))], f(s,.05), ACCENT)
 
-def draw_link_family(draw, s):
-    m = scale(s, 0.25)
-    cy = s // 2
-    # two chain links (ovals)
-    draw.ellipse([m, cy-scale(s,0.08), m+scale(s,0.15), cy+scale(s,0.08)], outline=FG, width=max(1, s // 16))
-    draw.ellipse([s-m-scale(s,0.15), cy-scale(s,0.08), s-m, cy+scale(s,0.08)], outline=FG, width=max(1, s // 16))
+def sync_views(d, s):
+    w = f(s, 0.06)
+    rrect(d, (f(s,.14), f(s,.20), f(s,.44), f(s,.80)), w, NEUTRAL, fill=(255,255,255,255), rad=f(s,.03))
+    rrect(d, (f(s,.56), f(s,.20), f(s,.86), f(s,.80)), w, NEUTRAL, fill=(255,255,255,255), rad=f(s,.03))
+    cx = f(s,.5)
+    rline(d, [(f(s,.45), f(s,.40)), (f(s,.55), f(s,.40))], f(s,.05), ACCENT)
+    rline(d, [(f(s,.51), f(s,.34)), (f(s,.57), f(s,.40)), (f(s,.51), f(s,.46))], f(s,.05), ACCENT)
+    rline(d, [(f(s,.55), f(s,.60)), (f(s,.45), f(s,.60))], f(s,.05), ACCENT)
+    rline(d, [(f(s,.49), f(s,.54)), (f(s,.43), f(s,.60)), (f(s,.49), f(s,.66))], f(s,.05), ACCENT)
 
-def draw_link_visibility(draw, s):
-    cx, cy = s // 2, s // 2
-    r = s // 3
-    draw.arc([cx-r, cy-r//2, cx+r, cy+r//2], start=0, end=180, fill=FG, width=max(1, s // 16))
-    draw.arc([cx-r, cy-r//2, cx+r, cy+r//2], start=180, end=360, fill=FG, width=max(1, s // 16))
-    draw.ellipse([cx-r//3, cy-r//3, cx+r//3, cy+r//3], outline=FG, width=max(1, s // 16))
-    # link line under
-    draw.line([(cx-r//2, cy+r//2+1), (cx+r//2, cy+r//2+1)], fill=FG, width=max(1, s // 16))
+def copy_state(d, s):
+    w = f(s, 0.06)
+    rrect(d, (f(s,.18), f(s,.18), f(s,.62), f(s,.62)), w, NEUTRAL, fill=(255,255,255,255), rad=f(s,.03))
+    rrect(d, (f(s,.38), f(s,.38), f(s,.82), f(s,.82)), w, ACCENT, fill=(255,255,255,255), rad=f(s,.03))
 
-def draw_net_tree(draw, s):
-    m = scale(s, 0.2)
-    w = max(1, s // 16)
-    trunk_x = m + scale(s, 0.1)
-    # trunk
-    draw.line([(trunk_x, m), (trunk_x, s - m)], fill=FG, width=w)
-    # branches
-    y1 = m + scale(s, 0.15)
-    y2 = s // 2
-    y3 = s - m - scale(s, 0.1)
-    bx = s - m
-    draw.line([(trunk_x, y1), (bx, y1)], fill=FG, width=w)
-    draw.line([(trunk_x, y2), (bx - scale(s, 0.12), y2)], fill=FG, width=w)
-    draw.line([(trunk_x, y3), (bx, y3)], fill=FG, width=w)
-    # leaf dots
-    r = max(1, scale(s, 0.06))
-    for (x, y) in [(bx, y1), (bx - scale(s, 0.12), y2), (bx, y3)]:
-        draw.ellipse([x - r, y - r, x + r, y + r], fill=FG)
+def paste_state(d, s):
+    w = f(s, 0.06)
+    rrect(d, (f(s,.22), f(s,.24), f(s,.78), f(s,.84)), w, NEUTRAL, fill=(255,255,255,255), rad=f(s,.04))
+    d.rounded_rectangle([f(s,.40), f(s,.14), f(s,.60), f(s,.28)], radius=f(s,.03), fill=ACCENT)
+    for fr in (.46, .58, .70):
+        rline(d, [(f(s,.32), f(s,fr)), (f(s,.68), f(s,fr))], f(s,.045), LIGHT)
 
-def draw_power_each(draw, s):
-    w = max(1, s // 16)
-    # two lightning bolts side by side
-    for ox in (scale(s, 0.22), scale(s, 0.58)):
-        top, bot = scale(s, 0.15), s - scale(s, 0.15)
-        mid = s // 2
-        kick = scale(s, 0.12)
-        draw.line([(ox + kick, top), (ox, mid), (ox + kick * 2, mid), (ox + kick, bot)],
-                  fill=FG, width=w, joint="curve")
+def match(d, s):
+    rline(d, [(f(s,.22), f(s,.40)), (f(s,.78), f(s,.40))], f(s,.07), NEUTRAL)
+    rline(d, [(f(s,.22), f(s,.60)), (f(s,.78), f(s,.60))], f(s,.07), ACCENT)
 
-# ------------------------------------------------------------------
+def link_family(d, s):
+    w = f(s, 0.06)
+    d.arc([f(s,.16), f(s,.34), f(s,.52), f(s,.66)], 40, 320, fill=NEUTRAL, width=int(w))
+    d.arc([f(s,.48), f(s,.34), f(s,.84), f(s,.66)], 220, 140, fill=ACCENT, width=int(w))
+
+def link_visibility(d, s):
+    cx, cy = f(s,.5), f(s,.44)
+    rline(d, [(f(s,.20), cy), (f(s,.34), f(s,.30)), (f(s,.66), f(s,.30)), (f(s,.80), cy),
+              (f(s,.66), f(s,.58)), (f(s,.34), f(s,.58)), (f(s,.20), cy)], f(s,.05), NEUTRAL)
+    dot(d, (cx, cy), f(s,.10), ACCENT)
+    rline(d, [(f(s,.34), f(s,.74)), (f(s,.66), f(s,.74))], f(s,.05), LIGHT)
+
+def net_tree(d, s):
+    tx = f(s,.28)
+    rline(d, [(tx, f(s,.18)), (tx, f(s,.82))], f(s,.055), NEUTRAL)
+    for y, x in ((.26, .78), (.5, .66), (.74, .78)):
+        rline(d, [(tx, f(s,y)), (f(s,x), f(s,y))], f(s,.055), NEUTRAL)
+        dot(d, (f(s,x), f(s,y)), f(s,.07), ACCENT)
+
+def ai_connector(d, s):
+    cx, cy = f(s,.40), f(s,.40)
+    r = f(s,.22)
+    for dx, dy in [(1,0),(0,1),(0.7,0.7),(0.7,-0.7)]:
+        rline(d, [(cx-r*dx, cy-r*dy), (cx+r*dx, cy+r*dy)], f(s,.06), ACCENT)
+    rline(d, [(cx+r*0.5, cy+r*0.5), (f(s,.80), f(s,.80))], f(s,.05), NEUTRAL)
+    dot(d, (f(s,.80), f(s,.80)), f(s,.085), NEUTRAL)
+
+def power_each(d, s):
+    for ox, col in ((.30, NEUTRAL), (.62, ACCENT)):
+        rline(d, [(f(s,ox+.06), f(s,.16)), (f(s,ox-.04), f(s,.50)),
+                  (f(s,ox+.10), f(s,.50)), (f(s,ox), f(s,.84))], f(s,.055), col)
+
 ICONS = {
-    "sheetList": draw_sheet_list,
-    "viewList": draw_view_list,
-    "revisions": draw_revisions,
-    "publish": draw_publish,
-    "tableGen": draw_table_gen,
-    "copyCrop": draw_copy_crop,
-    "grids": draw_grids,
-    "levels": draw_levels,
-    "colorCoder": draw_color_coder,
-    "matchElev": draw_match_elev,
-    "paramPush": draw_param_push,
-    "connector": draw_connector,
-    "multiConnect": draw_multi_connect,
-    "splitPipe": draw_split_pipe,
-    "bloom": draw_bloom,
-    "reroute": draw_reroute,
-    "elbowDir": draw_elbow_dir,
-    "oneFilter": draw_one_filter,
-    "reOrdering": draw_re_ordering,
-    "familyExport": draw_family_export,
-    "viewManager": draw_view_manager,
-    "autoSectionBox": draw_auto_section_box,
-    "wipe": draw_wipe,
-    "syncViews": draw_sync_views,
-    "copyState": draw_copy_state,
-    "pasteState": draw_paste_state,
-    "match": draw_match,
-    "linkFamily": draw_link_family,
-    "linkVisibility": draw_link_visibility,
-    "netTree": draw_net_tree,
-    "powerEach": draw_power_each,
+    "sheetList": sheet_list, "viewList": view_list, "revisions": revisions,
+    "publish": publish, "tableGen": table_gen, "copyCrop": copy_crop,
+    "grids": grids, "levels": levels, "colorCoder": color_coder,
+    "matchElev": match_elev, "paramPush": param_push, "connector": connector,
+    "multiConnect": multi_connect, "splitPipe": split_pipe, "bloom": bloom,
+    "reroute": reroute, "elbowDir": elbow_dir, "oneFilter": one_filter,
+    "reOrdering": re_ordering, "familyExport": family_export,
+    "viewManager": view_manager, "autoSectionBox": auto_section_box,
+    "wipe": wipe, "syncViews": sync_views, "copyState": copy_state,
+    "pasteState": paste_state, "match": match, "linkFamily": link_family,
+    "linkVisibility": link_visibility, "netTree": net_tree,
+    "powerEach": power_each, "aiConnector": ai_connector,
 }
 
+
 def gen(name, size):
-    img, draw = new(size)
-    ICONS[name](draw, size)
-    save(img, name, size)
+    S = size * SS
+    img = Image.new("RGBA", (S, S), (0, 0, 0, 0))
+    ICONS[name](ImageDraw.Draw(img), S)
+    img = img.resize((size, size), Image.LANCZOS)
+    img.save(os.path.join(OUT, f"{name}_{size}.png"))
+
 
 if __name__ == "__main__":
     for name in ICONS:

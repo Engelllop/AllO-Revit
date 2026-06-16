@@ -7,6 +7,7 @@ public static class TableGenConstants
 {
     public const string OutputDrafting = "Drafting View";
     public const string OutputLegend = "Legend";
-    /// <summary>Revit key schedule (Generic Models category). Excel columns map to built-in parameters.</summary>
-    public const string OutputKeySchedule = "Key Schedule (generic)";
+    /// <summary>Schedule sin campos cuyo HEADER se usa como lienzo: SetCellText + MergeCells +
+    /// SetCellStyle reproducen el formato del Excel (técnica estilo DiRoots).</summary>
+    public const string OutputSchedule = "Schedule";
 }

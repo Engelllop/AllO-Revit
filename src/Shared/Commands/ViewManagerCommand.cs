@@ -21,33 +21,33 @@ public class ViewManagerCommand : IExternalCommand
         {
             var levels = new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>()
                 .OrderBy(l => l.Elevation)
-                .Select(l => new LevelOption { Id = l.Id.Value, Name = l.Name })
+                .Select(l => new LevelOption { Id = l.Id.ToLong(), Name = l.Name })
                 .ToList();
 
             var templates = new List<NamedOption> { new() { Id = -1, Name = "— No template —" } };
             templates.AddRange(new FilteredElementCollector(doc).OfClass(typeof(View)).Cast<View>()
                 .Where(v => v.IsTemplate).OrderBy(v => v.Name)
-                .Select(v => new NamedOption { Id = v.Id.Value, Name = v.Name }));
+                .Select(v => new NamedOption { Id = v.Id.ToLong(), Name = v.Name }));
 
             var titleBlocks = new List<NamedOption> { new() { Id = -1, Name = "— None —" } };
             titleBlocks.AddRange(new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_TitleBlocks).WhereElementIsElementType()
                 .Cast<ElementType>().OrderBy(t => t.Name)
-                .Select(t => new NamedOption { Id = t.Id.Value, Name = $"{t.FamilyName} : {t.Name}" }));
+                .Select(t => new NamedOption { Id = t.Id.ToLong(), Name = $"{t.FamilyName} : {t.Name}" }));
 
             var scopeBoxes = new List<NamedOption> { new() { Id = -1, Name = "— No scope box —" } };
             scopeBoxes.AddRange(new FilteredElementCollector(doc)
                 .OfCategory(BuiltInCategory.OST_VolumeOfInterest).WhereElementIsNotElementType()
                 .OrderBy(e => e.Name)
-                .Select(e => new NamedOption { Id = e.Id.Value, Name = e.Name }));
+                .Select(e => new NamedOption { Id = e.Id.ToLong(), Name = e.Name }));
 
             var vm = new ViewManagerViewModel(levels, templates, titleBlocks, scopeBoxes);
             if (!new ViewManagerWindow(vm).ShowDialogAndGetResult()) return Result.Cancelled;
 
-            var templateId = vm.SelectedTemplate is { Id: >= 0 } t2 ? new ElementId(t2.Id) : ElementId.InvalidElementId;
-            var scopeBoxId = vm.SelectedScopeBox is { Id: >= 0 } sbId ? new ElementId(sbId.Id) : ElementId.InvalidElementId;
+            var templateId = vm.SelectedTemplate is { Id: >= 0 } t2 ? t2.Id.ToElementId() : ElementId.InvalidElementId;
+            var scopeBoxId = vm.SelectedScopeBox is { Id: >= 0 } sbId ? sbId.Id.ToElementId() : ElementId.InvalidElementId;
             var titleBlockId = vm.CreateSheets && vm.SelectedTitleBlock is { Id: >= 0 } tb
-                ? new ElementId(tb.Id) : ElementId.InvalidElementId;
+                ? tb.Id.ToElementId() : ElementId.InvalidElementId;
             var selectedLevelIds = vm.SelectedLevelIds.ToHashSet();
 
             using var tx = new Transaction(doc, "AllO - View Manager");
@@ -61,7 +61,7 @@ public class ViewManagerCommand : IExternalCommand
                 var vft = FindVft(doc, family);
                 if (vft == null) { tx.RollBack(); TaskDialog.Show("View Manager", "No plan ViewFamilyType found."); return Result.Failed; }
                 foreach (var level in new FilteredElementCollector(doc).OfClass(typeof(Level)).Cast<Level>()
-                             .Where(l => selectedLevelIds.Contains(l.Id.Value)))
+                             .Where(l => selectedLevelIds.Contains(l.Id.ToLong())))
                 {
                     var view = ViewPlan.Create(doc, vft.Id, level.Id);
                     view.Name = UniqueViewName(doc, $"{vm.Prefix}{level.Name}{vm.Suffix}");

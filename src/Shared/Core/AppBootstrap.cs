@@ -66,6 +66,10 @@ public static class AppBootstrap
         BuildToolsPanel(application);
         StartupLog.Write("  BuildToolsPanel done");
 
+        StartupLog.Write("  BuildAiPanel...");
+        BuildAiPanel(application);
+        StartupLog.Write("  BuildAiPanel done");
+
         StartupLog.Write("  BuildCoordinationPanel...");
         BuildCoordinationPanel(application);
         StartupLog.Write("  BuildCoordinationPanel done");
@@ -78,11 +82,25 @@ public static class AppBootstrap
         BuildLinksPanel(application);
         StartupLog.Write("  BuildLinksPanel done");
 
+        // El ribbon de AdWindows ya tiene los items al terminar la init de Revit;
+        // antes de ApplicationInitialized puede no estar poblado.
+        StartupLog.Write("  RibbonAnimator hook...");
+        try
+        {
+            application.ControlledApplication.ApplicationInitialized += (_, _) => RibbonAnimator.Start();
+        }
+        catch
+        {
+        }
+        StartupLog.Write("  RibbonAnimator hook done");
+
         StartupLog.Write("AppBootstrap.Initialize complete");
     }
 
     public static void Shutdown(UIControlledApplication application)
     {
+        RibbonAnimator.Stop();
+        AllO.Services.Mcp.McpServerHost.Stop();
         ColorCoderOverlayHost.Shutdown();
     }
 
@@ -166,6 +184,13 @@ public static class AppBootstrap
             RibbonBuilder.Configure(sb, "autoSectionBox",
                 "Create a 3D view with a section box fit to the selected elements.",
                 "AllO Auto Section Box. Aísla la selección en una vista 3D con section box ajustado.");
+
+        var viewManBtn = RibbonBuilder.Button("ViewManager", "View\nManager",
+            "AllO.Commands.ViewManagerCommand");
+        if (panel.AddItem(viewManBtn) is PushButton vm)
+            RibbonBuilder.Configure(vm, "viewManager",
+                "Batch-create views and sheets from levels with templates.",
+                "AllO View Manager. Mass view/sheet creation.");
     }
 
     private static void BuildProductivityPanel(UIControlledApplication app)
@@ -298,8 +323,6 @@ public static class AppBootstrap
             "AllO.Commands.ReOrderingCommand");
         var familyExpBtn = RibbonBuilder.Button("FamilyExport", "Family\nExport",
             "AllO.Commands.FamilyExportCommand");
-        var viewManBtn = RibbonBuilder.Button("ViewManager", "View\nManager",
-            "AllO.Commands.ViewManagerCommand");
 
         IList<RibbonItem> stack = panel.AddStackedItems(oneFilterBtn, reorderBtn, familyExpBtn);
 
@@ -317,11 +340,19 @@ public static class AppBootstrap
             RibbonBuilder.Configure(fe, "familyExport",
                 "Export all loaded families to a destination folder.",
                 "AllO Family Export. Bulk family library extraction.");
+    }
 
-        if (panel.AddItem(viewManBtn) is PushButton vm)
-            RibbonBuilder.Configure(vm, "viewManager",
-                "Batch-create views and sheets from levels with templates.",
-                "AllO View Manager. Mass view/sheet creation.");
+    private static void BuildAiPanel(UIControlledApplication app)
+    {
+        var panel = app.CreateRibbonPanel(TabName, "A.I.");
+
+        var aiBtn = RibbonBuilder.Button("AiConnector", "A.I.\nConnector",
+            "AllO.Commands.AiConnectorCommand");
+        if (panel.AddItem(aiBtn) is PushButton ai)
+            RibbonBuilder.Configure(ai, "aiConnector",
+                "Connect Claude (Code/Desktop) to this Revit session via a local MCP server.",
+                "AllO A.I. Connector. Starts a localhost MCP server so Claude can read the model, " +
+                "inspect/create elements (pipes, families…) and write parameters from chat.");
     }
 
     private static void BuildAuditPanel(UIControlledApplication app)

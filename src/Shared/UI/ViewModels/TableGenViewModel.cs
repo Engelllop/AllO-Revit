@@ -41,7 +41,7 @@ public class TableGenViewModel : ViewModelBase
     {
         TableGenConstants.OutputDrafting,
         TableGenConstants.OutputLegend,
-        TableGenConstants.OutputKeySchedule
+        TableGenConstants.OutputSchedule
     };
 
     // ── Manage tab ─────────────────────────────────────────────

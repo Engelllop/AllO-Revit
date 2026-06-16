@@ -16,12 +16,13 @@ public class AutoSectionBoxCommand : IExternalCommand
 
         try
         {
-            var refs = uiDoc.Selection.PickObjects(
+            var pickRef = uiDoc.Selection.PickObject(
                 Autodesk.Revit.UI.Selection.ObjectType.Element,
-                "Select element(s) to focus the 3D section box on");
-            if (refs == null || refs.Count == 0) return Result.Cancelled;
+                "Select an element to focus the 3D section box on");
+            if (pickRef == null) return Result.Cancelled;
 
-            var selectedElements = refs.Select(r => doc.GetElement(r)).Where(e => e != null).ToList();
+            var picked = doc.GetElement(pickRef);
+            var selectedElements = picked != null ? new List<Element> { picked } : new List<Element>();
             if (selectedElements.Count == 0)
             {
                 TaskDialog.Show("Auto Section Box", "No valid elements selected.");

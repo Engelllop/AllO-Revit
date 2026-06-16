@@ -9,7 +9,27 @@ public class ColorCoderViewModel : ViewModelBase
 {
     private readonly UIApplication _uiApp;
 
-    private bool _modeFill = true;
+    private bool _modeTabs = true;
+    public bool ModeTabs
+    {
+        get => _modeTabs;
+        set
+        {
+            if (!SetProperty(ref _modeTabs, value)) return;
+            if (!value) return;
+            _modeFill = false;
+            _modeBorder = false;
+            _modeLine = false;
+            OnPropertyChanged(nameof(ModeFill));
+            OnPropertyChanged(nameof(ModeBorder));
+            OnPropertyChanged(nameof(ModeLine));
+            ColorCoderState.DisplayMode = ColorCoderDisplayMode.Tabs;
+            OnPropertyChanged(nameof(DisplayModeDescription));
+            ColorCoderOverlayHost.RefreshIfActive();
+        }
+    }
+
+    private bool _modeFill;
     public bool ModeFill
     {
         get => _modeFill;
@@ -17,8 +37,10 @@ public class ColorCoderViewModel : ViewModelBase
         {
             if (!SetProperty(ref _modeFill, value)) return;
             if (!value) return;
+            _modeTabs = false;
             _modeBorder = false;
             _modeLine = false;
+            OnPropertyChanged(nameof(ModeTabs));
             OnPropertyChanged(nameof(ModeBorder));
             OnPropertyChanged(nameof(ModeLine));
             ColorCoderState.DisplayMode = ColorCoderDisplayMode.FillBar;
@@ -35,8 +57,10 @@ public class ColorCoderViewModel : ViewModelBase
         {
             if (!SetProperty(ref _modeBorder, value)) return;
             if (!value) return;
+            _modeTabs = false;
             _modeFill = false;
             _modeLine = false;
+            OnPropertyChanged(nameof(ModeTabs));
             OnPropertyChanged(nameof(ModeFill));
             OnPropertyChanged(nameof(ModeLine));
             ColorCoderState.DisplayMode = ColorCoderDisplayMode.Border;
@@ -53,8 +77,10 @@ public class ColorCoderViewModel : ViewModelBase
         {
             if (!SetProperty(ref _modeLine, value)) return;
             if (!value) return;
+            _modeTabs = false;
             _modeFill = false;
             _modeBorder = false;
+            OnPropertyChanged(nameof(ModeTabs));
             OnPropertyChanged(nameof(ModeFill));
             OnPropertyChanged(nameof(ModeBorder));
             ColorCoderState.DisplayMode = ColorCoderDisplayMode.BottomLine;
@@ -67,6 +93,7 @@ public class ColorCoderViewModel : ViewModelBase
     {
         get
         {
+            if (ModeTabs) return "Paints the native view tabs. Opacity controls the tint; inactive tabs are dimmed automatically.";
             if (ModeFill) return "Soft glow from the top edge (diffuse light wash, not a hard line).";
             if (ModeBorder) return "Outline around the entire view window.";
             return "Soft glow from the bottom edge.";
@@ -108,24 +135,10 @@ public class ColorCoderViewModel : ViewModelBase
     {
         _uiApp = uiApp;
 
-        switch (ColorCoderState.DisplayMode)
-        {
-            case ColorCoderDisplayMode.FillBar:
-                _modeFill = true;
-                _modeBorder = false;
-                _modeLine = false;
-                break;
-            case ColorCoderDisplayMode.Border:
-                _modeFill = false;
-                _modeBorder = true;
-                _modeLine = false;
-                break;
-            case ColorCoderDisplayMode.BottomLine:
-                _modeFill = false;
-                _modeBorder = false;
-                _modeLine = true;
-                break;
-        }
+        _modeTabs = ColorCoderState.DisplayMode == ColorCoderDisplayMode.Tabs;
+        _modeFill = ColorCoderState.DisplayMode == ColorCoderDisplayMode.FillBar;
+        _modeBorder = ColorCoderState.DisplayMode == ColorCoderDisplayMode.Border;
+        _modeLine = ColorCoderState.DisplayMode == ColorCoderDisplayMode.BottomLine;
 
         _opacity = ColorCoderState.Opacity;
         _barThickness = ColorCoderState.BarThicknessDip;

@@ -26,7 +26,7 @@ public static class ColorCoderState
 
     public static bool IsActive { get; set; }
 
-    public static ColorCoderDisplayMode DisplayMode { get; set; } = ColorCoderDisplayMode.FillBar;
+    public static ColorCoderDisplayMode DisplayMode { get; set; } = ColorCoderDisplayMode.Tabs;
 
     public static double Opacity { get; set; } = 0.88;
 

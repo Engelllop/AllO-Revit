@@ -8,13 +8,9 @@ using AppServicesApplication = Autodesk.Revit.ApplicationServices.Application;
 namespace AllO.Services;
 
 /// <summary>
-/// Manages semi-transparent overlays on top of each open Revit UIView drawing rectangle.
+/// Manages Color Coder visuals: native document tab painting (<see cref="DocumentTabColorizer"/>,
+/// modo Tabs) o overlays semitransparentes sobre el rectángulo de cada UIView (modos legacy).
 /// </summary>
-/// <remarks>
-/// pyRevit "Tab Coloring" uses <c>DocumentTabEventUtils</c> from the IronPython-bound <c>pyrevit.runtime</c> assembly
-/// (see <c>pyrevit/revit/tabs.py</c>) to paint native document tabs. That API is not part of the public Revit SDK and is
-/// not shipped as a standalone reference we can call from AllO without bundling pyRevit's runtime DLLs and matching Revit versions.
-/// </remarks>
 public static class ColorCoderOverlayHost
 {
     private static bool _registered;
@@ -127,6 +123,12 @@ public static class ColorCoderOverlayHost
 
         if (!ColorCoderState.IsActive) return;
 
+        if (ColorCoderState.DisplayMode == ColorCoderDisplayMode.Tabs)
+        {
+            DocumentTabColorizer.Apply(uiApp);
+            return;
+        }
+
         AppServicesApplication app = uiApp.Application;
 
         foreach (Document doc in app.Documents)
@@ -189,6 +191,7 @@ public static class ColorCoderOverlayHost
 
     public static void ClearOverlays()
     {
+        DocumentTabColorizer.Clear();
         foreach (var w in Overlays)
         {
             try

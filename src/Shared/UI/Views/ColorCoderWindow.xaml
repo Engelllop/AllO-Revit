@@ -43,10 +43,6 @@
                 </StackPanel>
                 <TextBlock Text="First ribbon click turns colors on. Second click opens this panel."
                            FontSize="12" Foreground="{StaticResource TextSecondary}" TextWrapping="Wrap"/>
-                <TextBlock Margin="0,10,0,0" FontSize="11" Foreground="{StaticResource TextMuted}" TextWrapping="Wrap">
-                    <Run FontWeight="SemiBold" Foreground="{StaticResource TextSecondary}" Text="About view tabs: "/>
-                    <Run Text="Revit's API does not let add-ins paint the native view tab strip. Highlights are drawn on the drawing surface at the edge of the view window—not on Autodesk's tab control."/>
-                </TextBlock>
             </StackPanel>
         </Border>
 
@@ -57,6 +53,14 @@
                 <Border Background="{StaticResource Card}" CornerRadius="8" BorderBrush="{StaticResource Border}"
                         BorderThickness="1" Padding="14,12">
                     <StackPanel>
+                        <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
+                                     IsChecked="{Binding ModeTabs}"
+                                     ToolTip="Paint the native view tabs with each document's color">
+                            <TextBlock TextWrapping="Wrap" Foreground="{StaticResource TextPrimary}">
+                                <Run FontWeight="SemiBold" Text="View tabs"/><Run Text=" — "/>
+                                <Run Text="Colors the document tab strip itself, like NonicaTab. Active tab full color, inactive dimmed."/>
+                            </TextBlock>
+                        </RadioButton>
                         <RadioButton Style="{StaticResource ModeToggle}" GroupName="DisplayMode"
                                      IsChecked="{Binding ModeFill}"
                                      ToolTip="Highlight elements with a diffuse glow from the top edge">

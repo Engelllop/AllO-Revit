@@ -14,6 +14,9 @@ namespace AllO.Helpers;
 /// </summary>
 public static class RibbonBuilder
 {
+    /// <summary>Button name → icon name, para que <see cref="RibbonAnimator"/> localice el PNG base de cada botón.</summary>
+    public static readonly Dictionary<string, string> IconByButtonName = new();
+
     /// <summary>Path al ensamblado Shared, calculado relativo al ensamblado de la versión.</summary>
     public static string SharedAssemblyPath()
     {
@@ -62,6 +65,7 @@ public static class RibbonBuilder
         button.LongDescription = longDescription;
         button.Image = LoadIcon(iconName, 16);
         button.LargeImage = LoadIcon(iconName, 32);
+        IconByButtonName[button.Name] = iconName;
     }
 
     public static void Configure(PulldownButton button, string iconName, string tooltip)
@@ -69,6 +73,7 @@ public static class RibbonBuilder
         button.ToolTip = tooltip;
         button.Image = LoadIcon(iconName, 16);
         button.LargeImage = LoadIcon(iconName, 32);
+        IconByButtonName[button.Name] = iconName;
     }
 
     public static void Configure(SplitButton button, string iconName, string tooltip)
@@ -76,5 +81,6 @@ public static class RibbonBuilder
         button.ToolTip = tooltip;
         button.Image = LoadIcon(iconName, 16);
         button.LargeImage = LoadIcon(iconName, 32);
+        IconByButtonName[button.Name] = iconName;
     }
 }
